@@ -1,7 +1,6 @@
 package xyz.breakit.leaderboard.rest;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import xyz.breakit.leaderboard.service.ImmutableLeaderboardEntry;
 import xyz.breakit.leaderboard.service.*;
@@ -11,8 +10,8 @@ import java.util.List;
 @RestController
 public class LeaderboardController {
 
-    @GetMapping("/top10")
-    public Mono<List<AbstractLeaderboardEntry>> top10() {
+    @GetMapping("/top/{k}")
+    public Mono<List<AbstractLeaderboardEntry>> top10(@PathVariable int k) {
         Mono<List<AbstractLeaderboardEntry>> result = Mono.just(Arrays.asList(
                 ImmutableLeaderboardEntry.builder().name("a").score(100).build(),
                 ImmutableLeaderboardEntry.builder().name("b").score(99).build(),
@@ -26,6 +25,11 @@ public class LeaderboardController {
                 ImmutableLeaderboardEntry.builder().name("k").score(91).build()
         ));
         return result;
+    }
+
+    @PostMapping(name = "/scores/*", consumes = "application/json")
+    public void submit(@RequestBody ImmutableLeaderboardEntry score) {
+
     }
 
 }
