@@ -1,0 +1,47 @@
+// API definition for API Gateway service.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "xyz.breakit.gateway";
+option java_outer_classname = "GatewayProto";
+
+package gateway;
+
+/*
+ * Service to request game fixture, line by line.
+ */
+service FixtureService {
+    /*
+     * Return next line of a game fixture.
+     */
+    rpc GetFixtureLine (GetFixtureLineRequest) returns (FixtureLineResponse);
+}
+
+/*
+ * Request to recieve next horizontal line of a fixutre.
+ */
+message GetFixtureLineRequest {
+    /*
+     * Line width: max number of elements in one sceen horizontal line
+     */
+    int32 line_width = 1;
+}
+
+/*
+ * Respose contains geese and clouds position in a horizontal line.
+ */
+message FixtureLineResponse {
+    /*
+     * Array of geese. Numbers in the array represent vertical positions
+     * of geese. For example, [1, 3] array means there are geese in the first
+     * and third column of the line.
+     */
+    repeated int32 goose_positions = 1;
+    /*
+     * Array of clouds. Numbers in the array represent vertical positions
+     * of clouds. For example, [2, 4] array means there are geese in the second
+     * and fourth column of the line.
+     */
+    repeated int32 cloud_positions = 2;
+}
