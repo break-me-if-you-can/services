@@ -2,6 +2,12 @@
 /build/
 !gradle/wrapper/gradle-wrapper.jar
 
+idea-build
+idea-test-build
+src/generated
+src/generated_tests
+
+
 ### STS ###
 .apt_generated
 .classpath
