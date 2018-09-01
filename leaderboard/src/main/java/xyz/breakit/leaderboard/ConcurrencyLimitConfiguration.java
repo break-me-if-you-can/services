@@ -11,7 +11,7 @@ import javax.servlet.Filter;
 public class ConcurrencyLimitConfiguration {
 
     @Bean
-    public Filter limiterFilter() {
+    public LimiterFilter limiterFilter() {
         return new LimiterFilter();
     }
 }
