@@ -1,0 +1,9 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+apply plugin: 'java'
+
+apply from: '../common/common.gradle'
+
