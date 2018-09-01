@@ -8,18 +8,21 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.OngoingStubbing;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import xyz.breakit.leaderboard.service.ImmutableLeaderboardEntry;
-import xyz.breakit.leaderboard.service.LeaderboardEntry;
 import xyz.breakit.leaderboard.service.LeaderboardService;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LeaderboardControllerTest {
 
@@ -29,11 +32,11 @@ public class LeaderboardControllerTest {
     @Mock
     private LeaderboardService leaderboardService;
 
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
 
     @Before
     public void setup() {
-        webTestClient = WebTestClient.bindToController(new LeaderboardController(leaderboardService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new LeaderboardController(leaderboardService)).build();
     }
 
     @Test
@@ -42,15 +45,14 @@ public class LeaderboardControllerTest {
         twoEntriesInLeaderboard();
 
         // when
-        webTestClient.get().uri("/top/2")
-                .exchange()
+        mockMvc.perform(get("/top/2"))
                 // then
-                .expectStatus().isOk()
-                .expectBody().json(top2());
+                .andExpect(status().isOk())
+                .andExpect(content().json(top2()));
     }
 
-    private OngoingStubbing<List<LeaderboardEntry>> twoEntriesInLeaderboard() {
-        return when(leaderboardService.getTopScores(2)).thenReturn(
+    private void twoEntriesInLeaderboard() {
+        when(leaderboardService.getTopScores(2)).thenReturn(
                 Arrays.asList(
                         ImmutableLeaderboardEntry.builder().name("a").score(100).build(),
                         ImmutableLeaderboardEntry.builder().name("b").score(99).build()
@@ -60,10 +62,11 @@ public class LeaderboardControllerTest {
 
     @Test
     public void testSubmit() throws Exception {
-        webTestClient.post().uri("/scores/submit")
-                .syncBody(ImmutableLeaderboardEntry.builder().name("name").score(100).build())
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(
+                post("/scores/submit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"a\", \"score\": 100}")
+        ).andExpect(status().isOk());
     }
 
     private String top2() throws IOException {

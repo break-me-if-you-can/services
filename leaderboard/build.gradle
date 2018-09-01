@@ -38,9 +38,11 @@ dependencies {
     compileOnly "org.immutables:value:2.7.1:annotations"
     annotationProcessor "org.immutables:value:2.7.1"
 
-    compile('org.springframework.boot:spring-boot-starter-webflux')
+    compile('org.springframework.boot:spring-boot-starter-web')
     compile 'com.google.guava:guava:23.0'
     compile 'javax.validation:validation-api:2.0.1.Final'
+    compile 'com.netflix.concurrency-limits:concurrency-limits-servlet:0.0.49'
+
 //    compile 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
 //    compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
 //    compile 'io.zipkin.brave:brave-instrumentation-grpc:4.9.1'
