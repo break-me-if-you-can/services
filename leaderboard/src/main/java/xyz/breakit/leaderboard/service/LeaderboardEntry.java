@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @JsonSerialize
 @JsonDeserialize
-public interface AbstractLeaderboardEntry {
+public interface LeaderboardEntry {
     String name();
     int score();
 }
