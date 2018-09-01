@@ -3,10 +3,12 @@ package xyz.breakit.leaderboard.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.breakit.leaderboard.service.LeaderboardService;
 
 @RestController
+@RequestMapping("/magic")
 public class SpecialController {
 
     private final LeaderboardService leaderboardService;

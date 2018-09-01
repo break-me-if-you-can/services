@@ -23,7 +23,7 @@ public class LimiterFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (enabled) {
+        if (enabled && !((HttpServletRequest) request).getRequestURI().startsWith("/magic")) {
             limitingFilter.doFilter(request, response, chain);
         } else {
             chain.doFilter(request, response);
