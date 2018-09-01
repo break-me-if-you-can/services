@@ -9,33 +9,47 @@ option java_outer_classname = "GeeseProto";
 package geese;
 
 /*
- * Service to request geese positions.
+ * Unary service to request goose positions.
  */
 service GeeseService {
     /*
      * Return next line of geese positions.
      */
-    rpc GetGeese (GetGeeseLineRequest) returns (GeeseLineResponse);
+    rpc GetGeese (GetGeeseRequest) returns (GeeseResponse);
 }
 
 /*
- * Request to recieve next horizontal line of geese.
+ * Request to recieve next lines of geese.
  */
-message GetGeeseLineRequest {
+message GetGeeseRequest {
+    /*
+     * Number of requested horizontal lines.
+     */
+    int32 lines_count = 1;
     /*
      * Line width: max number of geese in one sceen horizontal line.
      */
-    int32 line_width = 1;
+    int32 line_width = 2;
 }
 
 /*
- * Respose contains positions of geese in a horizontal line.
+ * Contains list of horizontal lines with geese.
  */
-message GeeseLineResponse {
+message GeeseResponse {
+    /*
+     * Horizontal lines with geese, up to a requested number.
+     */
+    repeated GeeseLine lines = 1;
+}
+
+/*
+ * Contains goose positions in a horizontal line.
+ */
+message GeeseLine {
     /*
      * Array of geese. Numbers in the array represent vertical positions
      * of geese. For example, [1, 3] array means there are geese in the first
      * and third column of the line.
      */
-    repeated int32 goose_positions = 1;
+    repeated int32 geese_positions = 1;
 }

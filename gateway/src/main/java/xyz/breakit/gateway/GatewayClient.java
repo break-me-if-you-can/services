@@ -15,7 +15,12 @@ public class GatewayClient {
                 .usePlaintext().build();
         FixtureServiceBlockingStub client = FixtureServiceGrpc.newBlockingStub(channel);
 
-        FixtureLineResponse response = client.getFixtureLine(GetFixtureLineRequest.getDefaultInstance());
+        GetFixtureRequest request = GetFixtureRequest.newBuilder()
+                .setLinesCount(10)
+                .setLineWidth(10)
+                .build();
+
+        FixtureResponse response = client.getFixture(request);
         System.out.println("Response: " + response);
     }
 
