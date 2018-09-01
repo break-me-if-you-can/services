@@ -3,28 +3,24 @@ package xyz.breakit.leaderboard.rest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import xyz.breakit.leaderboard.service.ImmutableLeaderboardEntry;
-import xyz.breakit.leaderboard.service.*;
-import java.util.Arrays;
+import xyz.breakit.leaderboard.service.LeaderboardEntry;
+import xyz.breakit.leaderboard.service.LeaderboardService;
+
 import java.util.List;
 
 @RestController
 public class LeaderboardController {
 
+    private final LeaderboardService leaderboardService;
+
+    public LeaderboardController(LeaderboardService leaderboardService) {
+        this.leaderboardService = leaderboardService;
+    }
+
+
     @GetMapping("/top/{k}")
-    public Mono<List<AbstractLeaderboardEntry>> top10(@PathVariable int k) {
-        Mono<List<AbstractLeaderboardEntry>> result = Mono.just(Arrays.asList(
-                ImmutableLeaderboardEntry.builder().name("a").score(100).build(),
-                ImmutableLeaderboardEntry.builder().name("b").score(99).build(),
-                ImmutableLeaderboardEntry.builder().name("c").score(98).build(),
-                ImmutableLeaderboardEntry.builder().name("d").score(97).build(),
-                ImmutableLeaderboardEntry.builder().name("e").score(96).build(),
-                ImmutableLeaderboardEntry.builder().name("f").score(95).build(),
-                ImmutableLeaderboardEntry.builder().name("g").score(94).build(),
-                ImmutableLeaderboardEntry.builder().name("h").score(93).build(),
-                ImmutableLeaderboardEntry.builder().name("j").score(92).build(),
-                ImmutableLeaderboardEntry.builder().name("k").score(91).build()
-        ));
-        return result;
+    public Mono<List<LeaderboardEntry>> top10(@PathVariable int k) {
+        return Mono.just(leaderboardService.getTopScores(k));
     }
 
     @PostMapping(name = "/scores/*", consumes = "application/json")
