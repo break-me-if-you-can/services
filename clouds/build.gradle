@@ -1,0 +1,60 @@
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+
+buildscript {
+    repositories {
+        maven {
+            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+        }
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+    }
+}
+
+repositories {
+    maven {
+        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+    }
+    jcenter()
+    mavenLocal()
+}
+
+def grpcVersion = '1.14.0'
+def protobufVersion = '3.5.1'
+
+dependencies {
+    compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
+    compile "io.grpc:grpc-alts:${grpcVersion}"
+    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compileOnly "javax.annotation:javax.annotation-api:1.2"
+
+    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    compile "xyz.breakit:grpc-api"
+
+    testCompile "io.grpc:grpc-testing:${grpcVersion}"
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+apply plugin: 'idea'
+
+apply plugin: 'application'
+
+startScripts.enabled = false
+
+def mainClassName = "xyz.breakit.clouds.CloudsServer"
+
+jar {
+    manifest {
+        attributes "Main-Class": "${mainClassName}"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+apply from: '../common/common.gradle'

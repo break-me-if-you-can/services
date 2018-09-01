@@ -1,0 +1,3 @@
+rootProject.name = 'geese'
+
+includeBuild '../grpc-api'
