@@ -33,6 +33,7 @@ public class Gateway {
 
         Server server = ServerBuilder.forPort(8080)
                 .addService(new FixtureService(geeseClient, cloudsClient))
+                .addService(new LeaderboardService())
                 .build();
         server.start();
 
