@@ -19,6 +19,20 @@ service FixtureService {
 }
 
 /*
+ * Leaderbaord, service to keep track of top players.
+ */
+service LeaderboardService {
+    /*
+     * Returns current top scores (up to a requested number).
+     */
+    rpc GetTopScores (TopScoresRequest) returns (TopScoresResponse);
+    /*
+     * Updates single player's score.
+     */
+    rpc UpdateScore (UpdateScoreRequest) returns (UpdateScoreResponse);
+}
+
+/*
  * Request to recieve next lines.
  */
 message GetFixtureRequest {
@@ -58,4 +72,55 @@ message FixtureLine {
      * and fourth column of the line.
      */
     repeated int32 cloud_positions = 2;
+}
+
+/*
+ * Contains single player's score.
+ */
+message PlayerScore {
+    /*
+     * Player's unique id.
+     */
+    string player_id = 1;
+    /*
+     * Current player's score.
+     */
+    int32 score = 2;
+}
+
+/*
+ * Request to request current top scores.
+ */
+message TopScoresRequest {
+    /*
+     * Max number of scores to return.
+     */
+    int32 size = 1;
+}
+
+/*
+ * Contains current top scores.
+ */
+message TopScoresResponse {
+    /*
+     * List of top scores.
+     * Position in this list represents player'sc position in the leaderboard.
+     */
+    repeated PlayerScore top_scores = 1;
+}
+
+/*
+ * Request to update player's score.
+ */
+message UpdateScoreRequest {
+    /*
+     * Contains player's unique id and new score.
+     */
+    PlayerScore player_score = 1;
+}
+
+/*
+ * Response message, currently empty.
+ */
+message UpdateScoreResponse {
 }
