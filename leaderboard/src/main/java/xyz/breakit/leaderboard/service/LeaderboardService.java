@@ -25,17 +25,13 @@ public class LeaderboardService {
     }
 
     public void recordScore(String name, int newScore) {
-        if (broken.get()) {
-            try {
-                Thread.sleep(700);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        delayIfBroken();
         scores.put(name, newScore);
     }
 
     public List<LeaderboardEntry> getTopScores(int k) {
+        delayIfBroken();
+
         Map<String, Integer> currentScores = ImmutableMap.copyOf(scores);
 
         return currentScores.entrySet()
@@ -60,6 +56,16 @@ public class LeaderboardService {
 
     public void unbreak() {
         broken.set(false);
+    }
+
+    private void delayIfBroken() {
+        if (broken.get()) {
+            try {
+                Thread.sleep(700);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
 }
