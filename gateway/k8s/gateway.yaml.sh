@@ -26,6 +26,10 @@ spec:
               value: "clouds"
             - name: clouds_port
               value: "8100"
+            - name: leaderboard_host
+              value: "leaderboard"
+            - name: leaderboard_port
+              value: "8080"
             - name: foobar
               value: "$(date +%s)"
             - name: ZIPKIN_SERVICE_HOST

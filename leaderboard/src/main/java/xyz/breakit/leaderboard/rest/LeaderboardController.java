@@ -23,7 +23,7 @@ public class LeaderboardController {
 
     @PostMapping(value = "/scores/*", consumes = "application/json")
     public void submit(@RequestBody LeaderboardEntry score) {
-
+        leaderboardService.recordScore(score.name(), score.score());
     }
 
 }
