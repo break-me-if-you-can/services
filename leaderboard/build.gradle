@@ -38,6 +38,8 @@ dependencies {
     compileOnly "org.immutables:value:2.7.1:annotations"
     annotationProcessor "org.immutables:value:2.7.1"
 
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
+
     compile('org.springframework.boot:spring-boot-starter-web')
     compile 'com.google.guava:guava:23.0'
     compile 'javax.validation:validation-api:2.0.1.Final'

@@ -2,6 +2,13 @@ package xyz.breakit.gateway;
 
 import io.grpc.stub.StreamObserver;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
+import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of gateway leaderboard service.
@@ -10,26 +17,50 @@ import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
  */
 public class LeaderboardService extends LeaderboardServiceImplBase {
 
+    private final LeaderboardClient leaderboardClient;
+
+    public LeaderboardService(LeaderboardClient leaderboardClient) {
+        this.leaderboardClient = leaderboardClient;
+    }
+
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
 
-        // Mykyta: Make call to leaderboard service here and convert its response to TopScoresResponse
-        TopScoresResponse response = TopScoresResponse.newBuilder()
-                .addTopScores(PlayerScore.newBuilder().setPlayerId("Petro").setScore(100500).build())
-                .addTopScores(PlayerScore.newBuilder().setPlayerId("Vasyl").setScore(321).build())
-                .addTopScores(PlayerScore.newBuilder().setPlayerId("Hanna").setScore(42).build())
-                .build();
+        try {
+            List<LeaderboardEntry> top5 = leaderboardClient.top5();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            List<PlayerScore> playerScores = top5.stream()
+                    .map(e -> PlayerScore.newBuilder().setPlayerId(e.name()).setScore(e.score()).build())
+                    .collect(Collectors.toList());
+
+            TopScoresResponse response = TopScoresResponse.newBuilder()
+                    .addAllTopScores(playerScores)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            responseObserver.onError(e);
+        }
     }
 
     @Override
     public void updateScore(UpdateScoreRequest request,
                             StreamObserver<UpdateScoreResponse> responseObserver) {
-        // Mykyta: Make call to leaderboard service here
-        responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
-        responseObserver.onCompleted();
+
+        LeaderboardEntry entry = ImmutableLeaderboardEntry
+                .builder()
+                .name(request.getPlayerScore().getPlayerId())
+                .score(request.getPlayerScore().getScore())
+                .build();
+
+        try {
+            leaderboardClient.updateScore(entry);
+            responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            responseObserver.onError(e);
+        }
     }
 }

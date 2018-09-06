@@ -6,6 +6,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 
@@ -24,6 +25,10 @@ public class Gateway {
         String cloudsHost = System.getenv("clouds_host");
         int cloudsPort = Integer.valueOf(System.getenv("clouds_port"));
 
+        String lbHost = System.getenv("leaderboard_host");
+        int lbPort = Integer.valueOf(System.getenv("leaderboard_port"));
+        String lbUrl = "http://"+lbHost+":"+lbPort;
+
         Channel geeseChannel = ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort).usePlaintext().build();
         GeeseServiceFutureStub geeseClient = GeeseServiceGrpc.newFutureStub(geeseChannel);
@@ -33,7 +38,7 @@ public class Gateway {
 
         Server server = ServerBuilder.forPort(8080)
                 .addService(new FixtureService(geeseClient, cloudsClient))
-                .addService(new LeaderboardService())
+                .addService(new LeaderboardService(new LeaderboardClient(lbUrl)))
                 .build();
         server.start();
 
