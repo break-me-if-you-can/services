@@ -9,7 +9,6 @@ import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
