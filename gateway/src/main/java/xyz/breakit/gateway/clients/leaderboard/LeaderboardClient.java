@@ -1,12 +1,12 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class LeaderboardClient {
@@ -26,28 +26,59 @@ public class LeaderboardClient {
         objectMapper = new ObjectMapper();
     }
 
-    public List<LeaderboardEntry> top5() throws IOException {
+    public CompletableFuture<List<LeaderboardEntry>> top5() throws IOException {
         Request request = new Request.Builder()
-                .url(leaderboardUrl+"/top/5")
+                .url(leaderboardUrl + "/top/5")
                 .get()
                 .build();
 
-        return objectMapper.readValue(
-                httpClient.newCall(request).execute().body().string(),
-                new TypeReference<List<LeaderboardEntry>> () {}
-                );
+
+        CompletableFuture<List<LeaderboardEntry>> result = new CompletableFuture<>();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                result.completeExceptionally(e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                result.complete(
+                        objectMapper.readValue(
+                                response.body().bytes(),
+                                new TypeReference<List<LeaderboardEntry>>() {
+                                }
+                        ));
+            }
+        });
+
+        return result;
     }
 
     public void updateScore(LeaderboardEntry newScore) throws IOException {
         Request request = new Request.Builder()
-                .url(leaderboardUrl+"/scores")
+                .url(leaderboardUrl + "/scores")
                 .post(RequestBody.create(MediaType.get("application/json"), objectMapper.writeValueAsBytes(newScore)))
                 .build();
 
-        Response response = httpClient.newCall(request).execute();
-        if (response.code() == 200) {
-            throw new RuntimeException("Got error code while updating a score: "+ response.toString());
-        }
+        httpClient
+                .newCall(request)
+                .enqueue(new Callback() {
+                             @Override
+                             public void onFailure(Call call, IOException e) {
+                                 throw new RuntimeException(e);
+                             }
+
+                             @Override
+                             public void onResponse(Call call, Response response)  {
+                                 if (response.code() == 200) {
+                                     throw new RuntimeException("Got error code while updating a score: " + response.toString());
+                                 }
+                             }
+                         }
+
+                );
+
     }
 
 

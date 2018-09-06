@@ -8,6 +8,7 @@ import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -28,18 +29,24 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                              StreamObserver<TopScoresResponse> responseObserver) {
 
         try {
-            List<LeaderboardEntry> top5 = leaderboardClient.top5();
+            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+            top5.whenComplete((l, e) -> {
+                if (e != null) {
+                    responseObserver.onError(e);
+                } else {
 
-            List<PlayerScore> playerScores = top5.stream()
-                    .map(e -> PlayerScore.newBuilder().setPlayerId(e.name()).setScore(e.score()).build())
-                    .collect(Collectors.toList());
+                    List<PlayerScore> playerScores = l.stream()
+                            .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
+                            .collect(Collectors.toList());
 
-            TopScoresResponse response = TopScoresResponse.newBuilder()
-                    .addAllTopScores(playerScores)
-                    .build();
+                    TopScoresResponse response = TopScoresResponse.newBuilder()
+                            .addAllTopScores(playerScores)
+                            .build();
 
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
+                    responseObserver.onNext(response);
+                    responseObserver.onCompleted();
+                }
+            });
         } catch (IOException e) {
             responseObserver.onError(e);
         }
