@@ -1,16 +1,19 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
@@ -20,7 +23,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class LeaderboardClient {
+
+    public static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
 
     // one per core
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(4);
@@ -36,14 +42,16 @@ public class LeaderboardClient {
             .withMaxRetries(5);
 
     private final String leaderboardUrl;
-    private final ObjectMapper objectMapper;
     private final WebClient httpClient;
 
-    public LeaderboardClient(String leaderboardUrl) {
-        objectMapper = new ObjectMapper();
-
-        this.leaderboardUrl = leaderboardUrl;
-        httpClient = WebClient.builder().build();
+    @Autowired
+    public LeaderboardClient(
+            @Value("${rest.leaderboard.host}") String leaderboardHost,
+            @Value("${rest.leaderboard.port}") int leaderboardPort,
+            WebClient webClient) {
+        this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
+        LOG.info("LB URL: {}", leaderboardUrl);
+        httpClient = webClient.mutate().baseUrl(leaderboardUrl).build();
     }
 
     public CompletableFuture<List<LeaderboardEntry>> top5() throws IOException {
@@ -57,29 +65,21 @@ public class LeaderboardClient {
     public void updateScore(LeaderboardEntry newScore) throws IOException {
         httpClient
                 .post()
-                .uri(leaderboardUrl + "/top/5")
+                .uri("/scores/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .syncBody(newScore)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
-                .subscribeOn(Schedulers.elastic());
+                .timeout(Duration.ofMillis(500));
     }
 
     private CompletableFuture<List<LeaderboardEntry>> top5Request() throws IOException {
-        Mono<ClientResponse> response = httpClient
+        LOG.info("Issuing top 5 request");
+        return httpClient
                 .get()
-                .uri(leaderboardUrl + "/top/5")
-                .exchange().timeout(Duration.ofMillis(500))
-                .subscribeOn(Schedulers.elastic());
-
-        return response
-                .flatMap(cr -> {
-                    if (cr.statusCode().value() != 200) {
-                        throw new RuntimeException("HTTP Error: " + cr.statusCode().value());
-                    } else {
-                        return cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {});
-                    }
-                })
+                .uri("/top/5")
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {}))
                 .toFuture();
     }
 }

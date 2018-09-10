@@ -33,13 +33,16 @@ def protobufVersion = '3.5.1'
 repositories {
     jcenter()
     maven {
+        url 'https://repo.spring.io/libs-snapshot'
+    }
+    maven {
         url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
     }
 }
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.1.RELEASE'
+        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.2.BUILD-SNAPSHOT'
     }
 }
 
@@ -76,6 +79,7 @@ dependencies {
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
     testCompile "org.mockito:mockito-core:1.9.5"
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
 
 apply plugin: 'idea'
