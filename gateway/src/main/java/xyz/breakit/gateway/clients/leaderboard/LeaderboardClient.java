@@ -1,13 +1,20 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import okhttp3.*;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -29,82 +36,50 @@ public class LeaderboardClient {
             .withMaxRetries(5);
 
     private final String leaderboardUrl;
-    private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
-
+    private final WebClient httpClient;
 
     public LeaderboardClient(String leaderboardUrl) {
-        this.leaderboardUrl = leaderboardUrl;
-        httpClient = new OkHttpClient.Builder()
-                .connectTimeout(2, TimeUnit.SECONDS)
-                .writeTimeout(500, TimeUnit.MILLISECONDS)
-                .readTimeout(500, TimeUnit.MILLISECONDS)
-                .build();
-
         objectMapper = new ObjectMapper();
+
+        this.leaderboardUrl = leaderboardUrl;
+        httpClient = WebClient.builder().build();
     }
 
     public CompletableFuture<List<LeaderboardEntry>> top5() throws IOException {
-        Request request = new Request.Builder()
-                .url(leaderboardUrl + "/top/5")
-                .get()
-                .build();
-
-
         return Failsafe
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
                 .with(EXECUTOR)
-                .future(() -> enqueueHttpRequest(request));
-    }
-
-    private CompletableFuture<List<LeaderboardEntry>> enqueueHttpRequest(Request request) throws IOException {
-        CompletableFuture<List<LeaderboardEntry>> result = new CompletableFuture<>();
-
-        httpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                result.completeExceptionally(e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                result.complete(
-                        objectMapper.readValue(
-                                response.body().bytes(),
-                                new TypeReference<List<LeaderboardEntry>>() {
-                                }
-                        ));
-            }
-        });
-        return result;
+                .future(this::top5Request);
     }
 
     public void updateScore(LeaderboardEntry newScore) throws IOException {
-        Request request = new Request.Builder()
-                .url(leaderboardUrl + "/scores")
-                .post(RequestBody.create(MediaType.get("application/json"), objectMapper.writeValueAsBytes(newScore)))
-                .build();
-
         httpClient
-                .newCall(request)
-                .enqueue(new Callback() {
-                             @Override
-                             public void onFailure(Call call, IOException e) {
-                                 throw new RuntimeException(e);
-                             }
-
-                             @Override
-                             public void onResponse(Call call, Response response) {
-                                 if (response.code() == 200) {
-                                     throw new RuntimeException("Got error code while updating a score: " + response.toString());
-                                 }
-                             }
-                         }
-
-                );
-
+                .post()
+                .uri(leaderboardUrl + "/top/5")
+                .contentType(MediaType.APPLICATION_JSON)
+                .syncBody(newScore)
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .subscribeOn(Schedulers.elastic());
     }
 
+    private CompletableFuture<List<LeaderboardEntry>> top5Request() throws IOException {
+        Mono<ClientResponse> response = httpClient
+                .get()
+                .uri(leaderboardUrl + "/top/5")
+                .exchange().timeout(Duration.ofMillis(500))
+                .subscribeOn(Schedulers.elastic());
 
+        return response
+                .flatMap(cr -> {
+                    if (cr.statusCode().value() != 200) {
+                        throw new RuntimeException("HTTP Error: " + cr.statusCode().value());
+                    } else {
+                        return cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {});
+                    }
+                })
+                .toFuture();
+    }
 }
