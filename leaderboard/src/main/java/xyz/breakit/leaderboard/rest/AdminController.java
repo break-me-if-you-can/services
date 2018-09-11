@@ -5,34 +5,25 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.breakit.leaderboard.service.LeaderboardService;
+import xyz.breakit.leaderboard.service.AbstractLeaderboardService;
+import xyz.breakit.leaderboard.service.Scores;
 
 @RestController
 @RequestMapping("/magic")
-public class SpecialController {
+public class AdminController {
 
-    private final LeaderboardService leaderboardService;
+    private final Scores scores;
     private final LimiterFilter limiterFilter;
 
     @Autowired
-    public SpecialController(LeaderboardService leaderboardService, LimiterFilter limiterFilter) {
-        this.leaderboardService = leaderboardService;
+    public AdminController(Scores scores, LimiterFilter limiterFilter) {
+        this.scores = scores;
         this.limiterFilter = limiterFilter;
     }
 
     @PostMapping(value = "/clear", headers = "secret=42")
     public void clear() {
-        leaderboardService.clear();
-    }
-
-    @PostMapping(value = "/break", headers = "secret=42")
-    public void breakService() {
-        leaderboardService.breakService();
-    }
-
-    @PostMapping(value = "/unbreak", headers = "secret=42")
-    public void unbreak() {
-        leaderboardService.unbreak();
+        scores.getScores().clear();
     }
 
     @PostMapping(value = "/rateLimit/{n}", headers = "secret=42")

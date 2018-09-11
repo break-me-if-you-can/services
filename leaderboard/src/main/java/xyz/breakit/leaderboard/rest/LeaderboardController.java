@@ -1,29 +1,33 @@
 package xyz.breakit.leaderboard.rest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import xyz.breakit.leaderboard.service.LeaderboardEntry;
-import xyz.breakit.leaderboard.service.LeaderboardService;
 
 import java.util.List;
 
 @RestController
 public class LeaderboardController {
 
-    private final LeaderboardService leaderboardService;
+    private final LeaderboardFactory leaderboardFactory;
 
-    public LeaderboardController(LeaderboardService leaderboardService) {
-        this.leaderboardService = leaderboardService;
+    @Autowired
+    public LeaderboardController(LeaderboardFactory leaderboardFactory) {
+        this.leaderboardFactory = leaderboardFactory;
     }
 
-
     @GetMapping("/top/{k}")
-    public List<LeaderboardEntry> top10(@PathVariable int k) throws InterruptedException {
-        return leaderboardService.getTopScores(k);
+    public List<LeaderboardEntry> top10(
+            @PathVariable int k,
+            @RequestHeader(value = "error_type", required = false) ErrorType errorType) {
+        return leaderboardFactory.create(errorType).getTopScores(k);
     }
 
     @PostMapping(value = "/scores/*", consumes = "application/json")
-    public void submit(@RequestBody LeaderboardEntry score) {
-        leaderboardService.recordScore(score.name(), score.score());
+    public void submit(
+            @RequestBody LeaderboardEntry score,
+            @RequestHeader(value = "error_type", required = false) ErrorType errorType) {
+        leaderboardFactory.create(errorType).recordScore(score.name(), score.score());
     }
 
 }
