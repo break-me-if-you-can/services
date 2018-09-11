@@ -28,8 +28,7 @@ public class LeaderboardClient {
 
     public static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
 
-    // one per core
-    private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(4);
+    private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
 
     private static final CircuitBreaker CIRCUIT_BREAKER = new CircuitBreaker()
             .withFailureThreshold(3, 5);

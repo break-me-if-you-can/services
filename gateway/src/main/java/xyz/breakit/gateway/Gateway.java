@@ -91,7 +91,7 @@ public class Gateway {
     }
 
     @Bean
-    public GrpcTracing grpcTracing() {
+    public GrpcTracing grpcTracing(Sampler sampler) {
 
         String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
         int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
@@ -101,7 +101,7 @@ public class Gateway {
                 .build();
 
         return GrpcTracing.create(Tracing.newBuilder()
-                .sampler(ALWAYS_SAMPLE)
+                .sampler(sampler)
                 .spanReporter(AsyncReporter.create(sender))
                 .build());
     }

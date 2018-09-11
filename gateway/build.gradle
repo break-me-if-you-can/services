@@ -50,7 +50,6 @@ dependencies {
     compileOnly "org.immutables:value:2.7.1:annotations"
     annotationProcessor "org.immutables:value:2.7.1"
 
-    //compile('org.springframework.boot:spring-boot-web-reactive')
     compile 'org.springframework.boot:spring-boot-starter-webflux'
     compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
 
@@ -95,16 +94,6 @@ bootJar {
     version = ''
 }
 
-//jar {
-//    manifest {
-//        attributes "Main-Class": "${mainClassName}"
-//    }
-//
-//    from {
-//        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-//    }
-//}
-
 task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'xyz.breakit.gateway.GatewayClient'
@@ -121,4 +110,3 @@ if (sysprops['idea.platform.prefix'] != null) {
     }
 }
 apply from: '../common/common.gradle'
-
