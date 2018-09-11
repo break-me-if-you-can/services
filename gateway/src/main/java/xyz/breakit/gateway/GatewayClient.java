@@ -12,7 +12,11 @@ public class GatewayClient {
 
     public static void main(String[] args) {
         String host = "35.230.13.179";
-        Channel channel = ManagedChannelBuilder.forAddress(host, 8080).usePlaintext().build();
+        Channel channel = ManagedChannelBuilder
+                .forAddress(host, 8080)
+                .usePlaintext()
+                .build();
+
         callFixtureService(channel);
         callLeaderboardService(channel);
     }
@@ -36,5 +40,6 @@ public class GatewayClient {
         TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
     }
+
 
 }

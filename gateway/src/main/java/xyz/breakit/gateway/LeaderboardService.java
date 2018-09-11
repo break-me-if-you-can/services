@@ -1,6 +1,8 @@
 package xyz.breakit.gateway;
 
 import io.grpc.stub.StreamObserver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
 import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
@@ -16,10 +18,12 @@ import java.util.stream.Collectors;
  * Currently returns predefined responses, but should make
  * remote calls to leaderboard service instead.
  */
+@Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
 
     private final LeaderboardClient leaderboardClient;
 
+    @Autowired
     public LeaderboardService(LeaderboardClient leaderboardClient) {
         this.leaderboardClient = leaderboardClient;
     }

@@ -18,17 +18,17 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: geese_host
+            - name: grpc_geese_host
               value: "geese"
-            - name: geese_port
+            - name: grpc_geese_port
               value: "8090"
-            - name: clouds_host
+            - name: grpc_clouds_host
               value: "clouds"
-            - name: clouds_port
+            - name: grpc_clouds_port
               value: "8100"
-            - name: leaderboard_host
+            - name: rest_leaderboard_host
               value: "leaderboard"
-            - name: leaderboard_port
+            - name: rest_leaderboard_port
               value: "8080"
             - name: foobar
               value: "$(date +%s)"
