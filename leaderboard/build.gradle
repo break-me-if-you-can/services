@@ -39,8 +39,9 @@ dependencies {
     annotationProcessor "org.immutables:value:2.7.1"
 
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.8'
 
-    compile('org.springframework.boot:spring-boot-starter-web')
+    compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'com.google.guava:guava:23.0'
     compile 'javax.validation:validation-api:2.0.1.Final'
     compile 'com.netflix.concurrency-limits:concurrency-limits-servlet:0.0.49'

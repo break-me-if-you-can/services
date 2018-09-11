@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import xyz.breakit.leaderboard.service.ImmutableLeaderboardEntry;
-import xyz.breakit.leaderboard.service.LeaderboardService;
+import xyz.breakit.leaderboard.service.AbstractLeaderboardService;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -30,13 +30,15 @@ public class LeaderboardControllerTest {
     public MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
     @Mock
-    private LeaderboardService leaderboardService;
+    private LeaderboardFactory leaderboardFactory;
+    @Mock
+    private AbstractLeaderboardService leaderboardService;
 
     private MockMvc mockMvc;
 
     @Before
     public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new LeaderboardController(leaderboardService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new LeaderboardController(leaderboardFactory)).build();
     }
 
     @Test
@@ -52,6 +54,8 @@ public class LeaderboardControllerTest {
     }
 
     private void twoEntriesInLeaderboard() {
+        when(leaderboardFactory.create(null)).thenReturn(leaderboardService);
+
         when(leaderboardService.getTopScores(2)).thenReturn(
                 Arrays.asList(
                         ImmutableLeaderboardEntry.builder().name("a").score(100).build(),
@@ -62,6 +66,8 @@ public class LeaderboardControllerTest {
 
     @Test
     public void testSubmit() throws Exception {
+        when(leaderboardFactory.create(null)).thenReturn(leaderboardService);
+
         mockMvc.perform(
                 post("/scores/submit")
                         .contentType(MediaType.APPLICATION_JSON)
