@@ -8,12 +8,12 @@ import com.netflix.concurrency.limits.strategy.SimpleStrategy;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class LimiterFilter implements Filter {
 
-    private boolean enabled = false;
     private Filter limitingFilter = new ConcurrencyLimitServletFilter(
             DefaultLimiter.newBuilder()
                     .limit(FixedLimit.of(10))
@@ -23,12 +23,26 @@ public class LimiterFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (enabled && !((HttpServletRequest) request).getRequestURI().startsWith("/magic")) {
+        if (!(request instanceof HttpServletRequest && response instanceof HttpServletResponse)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        if (enabledByHeader(httpRequest) && notAdminController(httpRequest)) {
             limitingFilter.doFilter(request, response, chain);
         } else {
             chain.doFilter(request, response);
         }
 
+    }
+
+    private boolean enabledByHeader(HttpServletRequest httpRequest) {
+        return httpRequest.getHeader("enable_rate_limiting") != null;
+    }
+
+    private boolean notAdminController(HttpServletRequest request) {
+        return !request.getRequestURI().startsWith("/magic");
     }
 
     @Override
@@ -40,18 +54,4 @@ public class LimiterFilter implements Filter {
 
     }
 
-    public void enable(int limit) {
-        enabled = true;
-        limitingFilter = new ConcurrencyLimitServletFilter(
-                DefaultLimiter.newBuilder()
-                        .limit(FixedLimit.of(limit))
-                        .minWindowTime(1000, TimeUnit.MILLISECONDS)
-                        .maxWindowTime(1000, TimeUnit.MILLISECONDS)
-                        .build(new SimpleStrategy<>()));
-
-    }
-
-    public void disable() {
-        enabled = false;
-    }
 }
