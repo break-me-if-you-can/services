@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,7 +35,7 @@ public class LeaderboardService {
 
         return currentScores.entrySet()
                 .stream()
-                .sorted(this::topScoresFirst)
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(k)
                 .map(this::toLeaderboardEntry)
                 .collect(Collectors.toList());
@@ -44,10 +43,6 @@ public class LeaderboardService {
 
     private ImmutableLeaderboardEntry toLeaderboardEntry(Map.Entry<String, Integer> e) {
         return ImmutableLeaderboardEntry.builder().name(e.getKey()).score(e.getValue()).build();
-    }
-
-    private int topScoresFirst(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
-        return b.getValue() - a.getValue();
     }
 
     public void breakService() {
