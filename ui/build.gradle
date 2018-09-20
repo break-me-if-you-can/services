@@ -1,0 +1,51 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.+'
+        classpath 'com.github.jengelman.gradle.plugins:gradle-processes:0.3.0'
+    }
+}
+plugins {
+    id 'idea'
+}
+
+private void checkGcpProject() {
+    if (!System.getenv().containsKey("GCP_PROJECT")) {
+        throw new GradleException("Please set GCP_PROJECT env var before continuing.")
+    }
+}
+
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+repositories {
+    jcenter()
+}
+
+task buildDocker(type: DockerBuildImage) {
+    inputDir = project.projectDir
+    tag = 'ui:latest'
+}
+
+task tagDocker(type: Exec) {
+    doFirst { checkGcpProject() }
+    dependsOn buildDocker
+    commandLine 'docker', 'tag', "${project.name}:latest", "gcr.io/${System.getenv().get("GCP_PROJECT")}/${project.name}:latest"
+}
+
+task pushDocker(type: Exec) {
+    doFirst { checkGcpProject() }
+    dependsOn tagDocker
+    commandLine 'gcloud', 'docker', '--', 'push', "gcr.io/${System.getenv().get("GCP_PROJECT")}/${project.name}:latest"
+}
+
+task deploy(type: Exec) {
+    commandLine 'k8s/deploy.sh'
+}
+
+task undeploy(type: Exec) {
+    commandLine 'k8s/undeploy.sh'
+}

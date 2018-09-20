@@ -1,0 +1,3 @@
+rootProject.name = 'ui'
+
+includeBuild '../grpc-api'
