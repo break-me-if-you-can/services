@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.function.client.WebClient;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
-import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import zipkin2.reporter.AsyncReporter;
@@ -24,13 +23,13 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 
-import static brave.sampler.Sampler.ALWAYS_SAMPLE;
-
 /**
  * Gateway service entry point.
  */
 @SpringBootApplication
 public class Gateway {
+
+    private static final int MAX_RETRIES = 5;
 
     @Autowired
     private Server server;
@@ -56,10 +55,10 @@ public class Gateway {
             GrpcTracing grpcTracing,
             GeeseServiceFutureStub geeseClient,
             CloudsServiceFutureStub cloudsClient,
-            LeaderboardService lbService) {
+            LeaderboardService leaderboardService) {
         return ServerBuilder.forPort(8080)
                 .addService(new FixtureService(geeseClient, cloudsClient))
-                .addService(lbService)
+                .addService(leaderboardService)
                 .intercept(grpcTracing.newServerInterceptor())
                 .build();
     }
@@ -72,6 +71,8 @@ public class Gateway {
         Channel cloudsChannel = ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .enableRetry()
+                .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
         return CloudsServiceGrpc.newFutureStub(cloudsChannel);
@@ -85,9 +86,12 @@ public class Gateway {
         Channel geeseChannel = ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .enableRetry()
+                .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
-        return GeeseServiceGrpc.newFutureStub(geeseChannel);
+        GeeseServiceFutureStub geeseStub = GeeseServiceGrpc.newFutureStub(geeseChannel);
+        return geeseStub;
     }
 
     @Bean
