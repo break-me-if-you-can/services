@@ -1,5 +1,6 @@
 package xyz.breakit.gateway;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.grpc.GrpcTracing;
 import brave.sampler.Sampler;
@@ -95,8 +96,12 @@ public class Gateway {
     }
 
     @Bean
-    public GrpcTracing grpcTracing(Sampler sampler) {
+    public GrpcTracing grpcTracing(Sampler sampler, Tracing tracing) {
+        return GrpcTracing.create(tracing);
+    }
 
+    @Bean
+    public Tracing tracing(Sampler sampler) {
         String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
         int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
 
@@ -104,10 +109,10 @@ public class Gateway {
                 .endpoint(String.format("http://%s:%s/api/v2/spans", zipkinHost, zipkinPort))
                 .build();
 
-        return GrpcTracing.create(Tracing.newBuilder()
+        return Tracing.newBuilder()
                 .sampler(sampler)
                 .spanReporter(AsyncReporter.create(sender))
-                .build());
+                .build();
     }
 
     @Bean

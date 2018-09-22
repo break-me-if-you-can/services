@@ -1,5 +1,6 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
+import brave.Tracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,6 @@ public class LeaderboardClientTest {
 
     @Test
     public void testTop5() throws Exception {
-        client.top5().get(1000, TimeUnit.MILLISECONDS);
+        client.top5(Tracing.currentTracer().newTrace()).get(2000, TimeUnit.MILLISECONDS);
     }
 }

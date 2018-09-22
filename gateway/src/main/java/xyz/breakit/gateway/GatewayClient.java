@@ -1,9 +1,14 @@
 package xyz.breakit.gateway;
 
+import brave.Tracing;
+import brave.grpc.GrpcTracing;
+import brave.sampler.Sampler;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
  * Client to call gateway service.
@@ -15,6 +20,7 @@ public class GatewayClient {
         Channel channel = ManagedChannelBuilder
                 .forAddress(host, 8080)
                 .usePlaintext()
+                .intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
 
         callFixtureService(channel);
@@ -40,6 +46,22 @@ public class GatewayClient {
         TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
     }
+
+    private static GrpcTracing grpcTracing(Sampler sampler) {
+
+        String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
+        int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
+
+        URLConnectionSender sender = URLConnectionSender.newBuilder()
+                .endpoint(String.format("http://%s:%s/api/v2/spans", zipkinHost, zipkinPort))
+                .build();
+
+        return GrpcTracing.create(Tracing.newBuilder()
+                .sampler(sampler)
+                .spanReporter(AsyncReporter.create(sender))
+                .build());
+    }
+
 
 
 }

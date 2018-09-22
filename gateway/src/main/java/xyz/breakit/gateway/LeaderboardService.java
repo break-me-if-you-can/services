@@ -1,6 +1,10 @@
 package xyz.breakit.gateway;
 
+import brave.Span;
+import brave.Tracing;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
@@ -20,21 +24,29 @@ import java.util.stream.Collectors;
  */
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
+    private static final Logger LOG = LoggerFactory.getLogger(LeaderboardService.class);
 
     private final LeaderboardClient leaderboardClient;
+    private final Tracing tracing;
 
     @Autowired
-    public LeaderboardService(LeaderboardClient leaderboardClient) {
+    public LeaderboardService(LeaderboardClient leaderboardClient, Tracing tracing) {
         this.leaderboardClient = leaderboardClient;
+        this.tracing = tracing;
     }
 
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
 
+
+        Span span = tracing.tracer().nextSpan();
         try {
-            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+            LOG.info("Outer TraceId = {}", span.context().traceIdString());
+
+            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5(span);
             top5.whenComplete((l, e) -> {
+                span.finish();
                 if (e != null) {
                     responseObserver.onError(e);
                 } else {
@@ -66,8 +78,11 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                 .score(request.getPlayerScore().getScore())
                 .build();
 
+        Span span = tracing.tracer().nextSpan();
+        LOG.info("Outer TraceId = {}", span.context().traceId());
+
         try {
-            leaderboardClient.updateScore(entry);
+            leaderboardClient.updateScore(entry, span);
             responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
             responseObserver.onCompleted();
         } catch (IOException e) {
