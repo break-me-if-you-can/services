@@ -1,6 +1,8 @@
 package xyz.breakit.gateway;
 
+import brave.ScopedSpan;
 import brave.Span;
+import brave.Tracer;
 import brave.Tracing;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -40,17 +42,18 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                              StreamObserver<TopScoresResponse> responseObserver) {
 
 
-        Span span = tracing.tracer().nextSpan();
-        try {
-            LOG.info("Outer TraceId = {}", span.context().traceIdString());
-
-            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5(span);
-            top5.whenComplete((l, e) -> {
-                span.finish();
+        Span span = tracing.tracer().nextSpan()
+                .name("leaderboardtop5")
+                .start();
+        LOG.info("Outer TraceId = {}", span.context().traceIdString());
+        CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+        top5.whenCompleteAsync((l, e) -> {
+            try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+                ws.close();
                 if (e != null) {
+                    span.error(e);
                     responseObserver.onError(e);
                 } else {
-
                     List<PlayerScore> playerScores = l.stream()
                             .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
                             .collect(Collectors.toList());
@@ -62,11 +65,12 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                     responseObserver.onNext(response);
                     responseObserver.onCompleted();
                 }
-            });
-        } catch (IOException e) {
-            responseObserver.onError(e);
+            } finally {
+                span.finish();
         }
-    }
+    });
+
+}
 
     @Override
     public void updateScore(UpdateScoreRequest request,
@@ -81,12 +85,8 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
         Span span = tracing.tracer().nextSpan();
         LOG.info("Outer TraceId = {}", span.context().traceId());
 
-        try {
-            leaderboardClient.updateScore(entry, span);
-            responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
-            responseObserver.onCompleted();
-        } catch (IOException e) {
-            responseObserver.onError(e);
-        }
+        leaderboardClient.updateScore(entry);
+        responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
+        responseObserver.onCompleted();
     }
 }

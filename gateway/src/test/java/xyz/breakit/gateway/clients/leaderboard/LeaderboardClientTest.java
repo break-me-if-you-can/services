@@ -20,6 +20,6 @@ public class LeaderboardClientTest {
 
     @Test
     public void testTop5() throws Exception {
-        client.top5(Tracing.currentTracer().newTrace()).get(2000, TimeUnit.MILLISECONDS);
+        client.top5().get(5000, TimeUnit.MILLISECONDS);
     }
 }

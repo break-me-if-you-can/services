@@ -1,7 +1,7 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
 import brave.Span;
-import brave.Tracing;
+import brave.http.HttpTracing;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -13,9 +13,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -54,15 +52,15 @@ public class LeaderboardClient {
         httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl).build();
     }
 
-    public CompletableFuture<List<LeaderboardEntry>> top5(Span span) throws IOException {
+    public CompletableFuture<List<LeaderboardEntry>> top5() {
         return Failsafe
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
                 .with(EXECUTOR)
-                .future(()-> top5Request(span));
+                .future(()-> top5Request());
     }
 
-    public void updateScore(LeaderboardEntry newScore, Span span) throws IOException {
+    public void updateScore(LeaderboardEntry newScore) {
         httpClient
                 .post()
                 .uri("/scores/")
@@ -70,26 +68,19 @@ public class LeaderboardClient {
                 .syncBody(newScore)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span)).then();
+                //.subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
+                .then();
     }
 
-    private CompletableFuture<List<LeaderboardEntry>> top5Request(Span span) throws IOException {
-        LOG.info("Issuing top 5 request; TRACE ID: {}", span.context().traceIdString());
-
+    private CompletableFuture<List<LeaderboardEntry>> top5Request()  {
         return httpClient
                 .get()
                 .uri("/top/5")
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {}))
-                .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
+//                .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
                 .toFuture();
     }
 
-    private Span currentOrNewSpan() {
-
-        Span span = Tracing.currentTracer().nextSpan();
-        LOG.info("trace ID = {}", span.context().traceId());
-        return span;
-    }
 }
