@@ -29,7 +29,6 @@ public class LeaderboardClientTest {
         Span span;
         span = tracer.newTrace();
         try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
-
             client.top5().get(15000, TimeUnit.MILLISECONDS);
         } finally {
             span.finish();

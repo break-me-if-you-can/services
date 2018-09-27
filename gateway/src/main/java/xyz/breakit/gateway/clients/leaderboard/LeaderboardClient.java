@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.tuple.Tuple;
 import reactor.util.context.Context;
 import reactor.util.function.Tuple2;
@@ -80,7 +81,7 @@ public class LeaderboardClient {
             HttpTracing httpTracing,
             Tracing tracing,
             Tracer tracer
-            ) {
+    ) {
         this.httpTracing = httpTracing;
         this.tracing = tracing;
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
@@ -92,44 +93,53 @@ public class LeaderboardClient {
 
         httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl)
                 .filter((request, next) -> {
-                            Span span = (Span) request.attribute(CLIENT_SPAN_KEY).get();
-                            LOG.info("subscribing traceID: {}", span.context().traceIdString());
-                            ClientRequest.Builder newRequestBuilder = ClientRequest.from(request);
-                            newRequestBuilder.attribute("zipkin.span", span);
-                            return next.exchange(newRequestBuilder.build())
-                                    .doOnSuccessOrError((r, e) -> {
-                                        LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
-                                    });
-                        }
-                )
+                    Mono<ClientResponse> clientResponseMono = Mono.subscriberContext()
+                            .map(c -> c.get(Span.class))
+                            .switchIfEmpty(Mono.just(tracer.nextSpan()))
+                            .flatMap(span -> {
+                                Tracer.SpanInScope spanInScope = tracer.withSpanInScope(span);
+                                ClientRequest.Builder newRequestBuilder = ClientRequest.from(request);
+
+                                Span newSpan = handler.handleSend(injector, newRequestBuilder, span);
+
+                                LOG.info("subscribing traceID: {}", span.context().traceIdString());
+                                LOG.info("Headers {}", request.headers().toSingleValueMap());
+                                newRequestBuilder.attribute("zipkin.span", span);
+
+                                return next.exchange(newRequestBuilder.build())
+                                        .doOnSuccessOrError((r, e) -> {
+                                            handler.handleReceive(r, e, newSpan);
+                                            span.finish();
+                                            LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
+                                        });
+
+                            });
+                    return clientResponseMono;
+                })
                 .build();
-    }
-
-    private Span extractFromContext(Context c) {
-        try {
-            return (Span) c.get(CLIENT_SPAN_KEY);
-        } catch (Exception e) {
-            return tracing.tracer().nextSpan();
-        }
-    }
-
-    private Span extractSpan(Tracing tracing, Tuple2<Span, Boolean> t) {
-        Span span = t.getT1();
-        if (span == null) {
-            span = tracing.tracer().nextSpan();
-
-        }
-        return span;
     }
 
 
     public CompletableFuture<List<LeaderboardEntry>> top5() {
-        Span span = tracer.currentSpan();
+        Span span = extractSpan();
+        CompletableFuture<List<LeaderboardEntry>> future = top5Request()
+                .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
+                .subscribeOn(Schedulers.elastic())
+                .toFuture();
+
         return Failsafe
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
                 .with(EXECUTOR)
-                .future(() -> top5Request(span));
+                .future(() -> future);
+    }
+
+    private Span extractSpan() {
+        Span span = tracer.currentSpan();
+        if (span == null) {
+            span = tracer.nextSpan();
+        }
+        return span;
     }
 
     public void updateScore(LeaderboardEntry newScore) {
@@ -144,17 +154,15 @@ public class LeaderboardClient {
                 .then();
     }
 
-    private CompletableFuture<List<LeaderboardEntry>> top5Request(Span span) {
+    private Mono<List<LeaderboardEntry>> top5Request() {
         return httpClient
                 .get()
                 .uri("/top/5")
-                .attribute(CLIENT_SPAN_KEY, span)
+                //.attribute(CLIENT_SPAN_KEY, span)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {}))
-                //.subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
-
-                .toFuture();
+                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {}));
+        //.subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span));
     }
 
 }
