@@ -3,6 +3,14 @@ package xyz.breakit.gateway;
 import brave.Tracing;
 import brave.grpc.GrpcTracing;
 import brave.sampler.Sampler;
+import com.netflix.concurrency.limits.Limiter;
+import com.netflix.concurrency.limits.grpc.client.ConcurrencyLimitClientInterceptor;
+import com.netflix.concurrency.limits.grpc.client.GrpcClientLimiterBuilder;
+import com.netflix.concurrency.limits.grpc.client.GrpcClientRequestContext;
+import com.netflix.concurrency.limits.grpc.server.ConcurrencyLimitServerInterceptor;
+import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
+import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
+import com.netflix.concurrency.limits.limit.Gradient2Limit;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
@@ -30,6 +38,7 @@ import java.io.IOException;
 public class Gateway {
 
     private static final int MAX_RETRIES = 5;
+    public static final int SERVER_PORT = 8080;
 
     @Autowired
     private Server server;
@@ -46,7 +55,7 @@ public class Gateway {
     }
 
     @Bean
-    public WebClient webClient(){
+    public WebClient webClient() {
         return WebClient.builder().build();
     }
 
@@ -55,11 +64,14 @@ public class Gateway {
             GrpcTracing grpcTracing,
             GeeseServiceFutureStub geeseClient,
             CloudsServiceFutureStub cloudsClient,
-            LeaderboardService leaderboardService) {
-        return ServerBuilder.forPort(8080)
+            LeaderboardService leaderboardService,
+            Limiter<GrpcServerRequestContext> limiter) {
+
+        return ServerBuilder.forPort(SERVER_PORT)
                 .addService(new FixtureService(geeseClient, cloudsClient))
                 .addService(leaderboardService)
                 .intercept(grpcTracing.newServerInterceptor())
+                .intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
     }
 
@@ -67,10 +79,13 @@ public class Gateway {
     public CloudsServiceFutureStub cloudsService(
             @Value("${grpc.clouds.host:clouds}") String cloudsHost,
             @Value("${grpc.clouds.port:8080}") int cloudsPort,
-            GrpcTracing grpcTracing) {
+            GrpcTracing grpcTracing,
+            Limiter<GrpcClientRequestContext> limiter) {
+
         Channel cloudsChannel = ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .intercept(new ConcurrencyLimitClientInterceptor(limiter))
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
@@ -82,16 +97,33 @@ public class Gateway {
     public GeeseServiceFutureStub geeseService(
             @Value("${grpc.geese.host:geese}") String geeseHost,
             @Value("${grpc.geese.port:8080}") int geesePort,
-            GrpcTracing grpcTracing) {
+            GrpcTracing grpcTracing,
+            Limiter<GrpcClientRequestContext> limiter) {
         Channel geeseChannel = ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .intercept(new ConcurrencyLimitClientInterceptor(limiter))
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
         GeeseServiceFutureStub geeseStub = GeeseServiceGrpc.newFutureStub(geeseChannel);
         return geeseStub;
+    }
+
+    @Bean
+    public Limiter<GrpcClientRequestContext> grpcClientLimiter() {
+        return new GrpcClientLimiterBuilder()
+                .limit(Gradient2Limit.newBuilder().initialLimit(1000).build())
+                .blockOnLimit(false) // fail-fast
+                .build();
+    }
+
+    @Bean
+    public Limiter<GrpcServerRequestContext> grpcServerLimiter() {
+        return new GrpcServerLimiterBuilder()
+                .limit(Gradient2Limit.newBuilder().initialLimit(1000).build())
+                .build();
     }
 
     @Bean
