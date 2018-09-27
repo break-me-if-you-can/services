@@ -42,35 +42,38 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                              StreamObserver<TopScoresResponse> responseObserver) {
 
 
-        Span span = tracing.tracer().nextSpan()
+        Span span = tracing.tracer().currentSpan()
                 .name("leaderboardtop5")
                 .start();
-        LOG.info("Outer TraceId = {}", span.context().traceIdString());
-        CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
-        top5.whenCompleteAsync((l, e) -> {
-            try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
-                ws.close();
-                if (e != null) {
-                    span.error(e);
-                    responseObserver.onError(e);
-                } else {
-                    List<PlayerScore> playerScores = l.stream()
-                            .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
-                            .collect(Collectors.toList());
 
-                    TopScoresResponse response = TopScoresResponse.newBuilder()
-                            .addAllTopScores(playerScores)
-                            .build();
+        try (Tracer.SpanInScope originalScope = tracing.tracer().withSpanInScope(span)) {
+            LOG.info("Outer TraceId = {}", span.context().traceIdString());
+            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+            top5.whenCompleteAsync((l, e) -> {
+                try (Tracer.SpanInScope innerScope = tracing.tracer().withSpanInScope(span)) {
+                    innerScope.close();
+                    if (e != null) {
+                        span.error(e);
+                        responseObserver.onError(e);
+                    } else {
+                        List<PlayerScore> playerScores = l.stream()
+                                .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
+                                .collect(Collectors.toList());
 
-                    responseObserver.onNext(response);
-                    responseObserver.onCompleted();
+                        TopScoresResponse response = TopScoresResponse.newBuilder()
+                                .addAllTopScores(playerScores)
+                                .build();
+
+                        responseObserver.onNext(response);
+                        responseObserver.onCompleted();
+                    }
+                } finally {
+                    span.finish();
                 }
-            } finally {
-                span.finish();
+            });
         }
-    });
 
-}
+    }
 
     @Override
     public void updateScore(UpdateScoreRequest request,

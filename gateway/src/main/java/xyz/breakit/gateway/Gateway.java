@@ -3,6 +3,7 @@ package xyz.breakit.gateway;
 import brave.Tracer;
 import brave.Tracing;
 import brave.grpc.GrpcTracing;
+import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
@@ -96,8 +97,13 @@ public class Gateway {
     }
 
     @Bean
-    public GrpcTracing grpcTracing(Sampler sampler, Tracing tracing) {
+    public GrpcTracing grpcTracing(Tracing tracing) {
         return GrpcTracing.create(tracing);
+    }
+
+    @Bean
+    public HttpTracing httpTracing(Tracing tracing) {
+        return HttpTracing.create(tracing);
     }
 
     @Bean
