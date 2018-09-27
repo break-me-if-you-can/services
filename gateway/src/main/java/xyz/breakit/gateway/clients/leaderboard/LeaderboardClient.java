@@ -124,7 +124,6 @@ public class LeaderboardClient {
         Span span = extractSpan();
         CompletableFuture<List<LeaderboardEntry>> future = top5Request()
                 .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
-                .subscribeOn(Schedulers.elastic())
                 .toFuture();
 
         return Failsafe
@@ -135,10 +134,8 @@ public class LeaderboardClient {
     }
 
     private Span extractSpan() {
-        Span span = tracer.currentSpan();
-        if (span == null) {
-            span = tracer.nextSpan();
-        }
+        Span span = tracer.nextSpan().name("leaderboard/top5");
+        tracer.withSpanInScope(span);
         return span;
     }
 
