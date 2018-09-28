@@ -93,28 +93,21 @@ public class LeaderboardClient {
 
         httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl)
                 .filter((request, next) -> {
-                    Mono<ClientResponse> clientResponseMono = Mono.subscriberContext()
-                            .map(c -> c.get(Span.class))
-                            .switchIfEmpty(Mono.just(tracer.nextSpan()))
-                            .flatMap(span -> {
-                                Tracer.SpanInScope spanInScope = tracer.withSpanInScope(span);
-                                ClientRequest.Builder newRequestBuilder = ClientRequest.from(request);
+                    Span span = extractSpan();
+                    ClientRequest.Builder newRequestBuilder = ClientRequest.from(request);
 
-                                Span newSpan = handler.handleSend(injector, newRequestBuilder, span);
+                    Span newSpan = handler.handleSend(injector, newRequestBuilder, span);
 
-                                LOG.info("subscribing traceID: {}", span.context().traceIdString());
-                                LOG.info("Headers {}", request.headers().toSingleValueMap());
-                                newRequestBuilder.attribute("zipkin.span", span);
+                    LOG.info("subscribing traceID: {}", span.context().traceIdString());
+                    LOG.info("Headers {}", request.headers().toSingleValueMap());
+                    newRequestBuilder.attribute("zipkin.span", span);
 
-                                return next.exchange(newRequestBuilder.build())
-                                        .doOnSuccessOrError((r, e) -> {
-                                            handler.handleReceive(r, e, newSpan);
-                                            span.finish();
-                                            LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
-                                        });
-
+                    return next.exchange(newRequestBuilder.build())
+                            .doOnSuccessOrError((r, e) -> {
+                                handler.handleReceive(r, e, newSpan);
+                                span.finish();
+                                LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
                             });
-                    return clientResponseMono;
                 })
                 .build();
     }
@@ -147,7 +140,6 @@ public class LeaderboardClient {
                 .syncBody(newScore)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                //.subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
                 .then();
     }
 
@@ -155,11 +147,10 @@ public class LeaderboardClient {
         return httpClient
                 .get()
                 .uri("/top/5")
-                //.attribute(CLIENT_SPAN_KEY, span)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {}));
-        //.subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span));
+                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {
+                }));
     }
 
 }
