@@ -112,6 +112,7 @@ public class Gateway {
         return geeseStub;
     }
 
+    @Bean
     public GrpcTracing grpcTracing(Tracing tracing) {
         return GrpcTracing.create(tracing);
     }
@@ -121,6 +122,7 @@ public class Gateway {
         return HttpTracing.create(tracing);
     }
 
+    @Bean
     public Limiter<GrpcClientRequestContext> grpcClientLimiter() {
         return new GrpcClientLimiterBuilder()
                 .limit(Gradient2Limit.newBuilder().initialLimit(1000).build())
