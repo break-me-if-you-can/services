@@ -1,4 +1,4 @@
-package xyz.breakit.gateway.clients.leaderboard;
+package xyz.breakit.gateway.webclient;
 
 import brave.http.HttpClientAdapter;
 import org.springframework.web.reactive.function.client.ClientRequest;

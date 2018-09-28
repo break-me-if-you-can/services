@@ -1,35 +1,21 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
-import brave.http.HttpClientHandler;
-import brave.http.HttpTracing;
-import brave.propagation.Propagation;
-import brave.propagation.TraceContext;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientRequest;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.tuple.Tuple;
-import reactor.util.context.Context;
-import reactor.util.function.Tuple2;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,20 +24,6 @@ import java.util.concurrent.TimeUnit;
 public class LeaderboardClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
-    private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
-
-    static final Propagation.Setter<ClientRequest.Builder, String> SETTER =
-            new Propagation.Setter<ClientRequest.Builder, String>() {
-                @Override
-                public void put(ClientRequest.Builder carrier, String key, String value) {
-                    carrier.header(key, value);
-                }
-
-                @Override
-                public String toString() {
-                    return "ClientRequest::setHeader";
-                }
-            };
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
 
@@ -66,57 +38,23 @@ public class LeaderboardClient {
 
     private final String leaderboardUrl;
     private final WebClient httpClient;
-    private final HttpTracing httpTracing;
-    private final Tracing tracing;
 
-    final Tracer tracer;
-    final HttpClientHandler<ClientRequest.Builder, ClientResponse> handler;
-    final TraceContext.Injector<ClientRequest.Builder> injector;
 
     @Autowired
     public LeaderboardClient(
             @Value("${rest.leaderboard.host}") String leaderboardHost,
             @Value("${rest.leaderboard.port}") int leaderboardPort,
-            WebClient webClientTemplate,
-            HttpTracing httpTracing,
-            Tracing tracing,
-            Tracer tracer
+            @Qualifier("tracingWebClient") WebClient webClientTemplate
     ) {
-        this.httpTracing = httpTracing;
-        this.tracing = tracing;
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
-        this.tracer = tracer; //httpTracing.tracing().tracer();
-        handler = HttpClientHandler.create(httpTracing, new WebClientAdapter());
-        injector = httpTracing.tracing().propagation().injector(SETTER);
-
-        httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl)
-                .filter((request, next) -> {
-                    Span span = extractSpan();
-                    ClientRequest.Builder newRequestBuilder = ClientRequest.from(request);
-
-                    Span newSpan = handler.handleSend(injector, newRequestBuilder, span);
-
-                    LOG.info("subscribing traceID: {}", span.context().traceIdString());
-                    LOG.info("Headers {}", request.headers().toSingleValueMap());
-                    newRequestBuilder.attribute("zipkin.span", span);
-
-                    return next.exchange(newRequestBuilder.build())
-                            .doOnSuccessOrError((r, e) -> {
-                                handler.handleReceive(r, e, newSpan);
-                                span.finish();
-                                LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
-                            });
-                })
-                .build();
+        httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl).build();
     }
 
 
     public CompletableFuture<List<LeaderboardEntry>> top5() {
-        Span span = extractSpan();
         CompletableFuture<List<LeaderboardEntry>> future = top5Request()
-                .subscriberContext(context -> context.put(CLIENT_SPAN_KEY, span))
                 .toFuture();
 
         return Failsafe
@@ -126,11 +64,6 @@ public class LeaderboardClient {
                 .future(() -> future);
     }
 
-    private Span extractSpan() {
-        Span span = tracer.nextSpan().name("leaderboard/top5");
-        tracer.withSpanInScope(span);
-        return span;
-    }
 
     public void updateScore(LeaderboardEntry newScore) {
         httpClient
