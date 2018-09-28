@@ -2,6 +2,7 @@ package xyz.breakit.gateway;
 
 import brave.Tracing;
 import brave.grpc.GrpcTracing;
+import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import com.netflix.concurrency.limits.Limiter;
 import com.netflix.concurrency.limits.grpc.client.ConcurrencyLimitClientInterceptor;
@@ -112,6 +113,16 @@ public class Gateway {
     }
 
     @Bean
+    public GrpcTracing grpcTracing(Tracing tracing) {
+        return GrpcTracing.create(tracing);
+    }
+
+    @Bean
+    public HttpTracing httpTracing(Tracing tracing) {
+        return HttpTracing.create(tracing);
+    }
+
+    @Bean
     public Limiter<GrpcClientRequestContext> grpcClientLimiter() {
         return new GrpcClientLimiterBuilder()
                 .limit(Gradient2Limit.newBuilder().initialLimit(1000).build())
@@ -127,8 +138,7 @@ public class Gateway {
     }
 
     @Bean
-    public GrpcTracing grpcTracing(Sampler sampler) {
-
+    public Tracing tracing(Sampler sampler) {
         String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
         int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
 
@@ -136,10 +146,10 @@ public class Gateway {
                 .endpoint(String.format("http://%s:%s/api/v2/spans", zipkinHost, zipkinPort))
                 .build();
 
-        return GrpcTracing.create(Tracing.newBuilder()
+        return Tracing.newBuilder()
                 .sampler(sampler)
                 .spanReporter(AsyncReporter.create(sender))
-                .build());
+                .build();
     }
 
     @Bean
