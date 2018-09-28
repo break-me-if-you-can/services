@@ -1,10 +1,6 @@
 package xyz.breakit.gateway;
 
-import brave.Span;
-import brave.Tracing;
 import io.grpc.stub.StreamObserver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
@@ -23,15 +19,12 @@ import java.util.stream.Collectors;
  */
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
-    private static final Logger LOG = LoggerFactory.getLogger(LeaderboardService.class);
 
     private final LeaderboardClient leaderboardClient;
-    private final Tracing tracing;
 
     @Autowired
-    public LeaderboardService(LeaderboardClient leaderboardClient, Tracing tracing) {
+    public LeaderboardService(LeaderboardClient leaderboardClient) {
         this.leaderboardClient = leaderboardClient;
-        this.tracing = tracing;
     }
 
     @Override
@@ -66,8 +59,6 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                 .score(request.getPlayerScore().getScore())
                 .build();
 
-        Span span = tracing.tracer().nextSpan();
-        LOG.info("Outer TraceId = {}", span.context().traceId());
 
         leaderboardClient.updateScore(entry);
         responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());

@@ -52,14 +52,13 @@ public class TracingWebClientConfiguration {
 
                     Span newSpan = handler.handleSend(injector, newRequestBuilder, span);
 
-                    LOG.info("subscribing traceID: {}", span.context().traceIdString());
-                    LOG.info("Headers {}", request.headers().toSingleValueMap());
+                    LOG.trace("subscribing traceID: {}", span.context().traceIdString());
 
                     return next.exchange(newRequestBuilder.build())
                             .doOnSuccessOrError((r, e) -> {
                                 handler.handleReceive(r, e, newSpan);
                                 span.finish();
-                                LOG.info("finishing subscription TraceID: {}", span.context().traceIdString());
+                                LOG.trace("finishing subscription TraceID: {}", span.context().traceIdString());
                             });
                 })
                 .build();

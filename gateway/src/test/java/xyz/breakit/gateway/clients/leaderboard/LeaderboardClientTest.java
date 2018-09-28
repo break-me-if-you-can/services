@@ -1,9 +1,7 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +24,7 @@ public class LeaderboardClientTest {
 
     @Test
     public void testTop5() throws Exception {
-        Span span;
-        span = tracer.newTrace();
+        Span span = tracer.newTrace();
         try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
             client.top5().get(15000, TimeUnit.MILLISECONDS);
         } finally {
