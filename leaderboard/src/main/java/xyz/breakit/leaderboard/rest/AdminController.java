@@ -8,39 +8,39 @@ import org.springframework.web.bind.annotation.RestController;
 import xyz.breakit.leaderboard.service.LeaderboardService;
 
 @RestController
-@RequestMapping("/magic")
-public class SpecialController {
+@RequestMapping("/admin")
+public class AdminController {
 
     private final LeaderboardService leaderboardService;
     private final LimiterFilter limiterFilter;
 
     @Autowired
-    public SpecialController(LeaderboardService leaderboardService, LimiterFilter limiterFilter) {
+    public AdminController(LeaderboardService leaderboardService, LimiterFilter limiterFilter) {
         this.leaderboardService = leaderboardService;
         this.limiterFilter = limiterFilter;
     }
 
-    @PostMapping(value = "/clear", headers = "secret=42")
+    @PostMapping(value = "/clear")
     public void clear() {
         leaderboardService.clear();
     }
 
-    @PostMapping(value = "/break", headers = "secret=42")
+    @PostMapping(value = "/break")
     public void breakService() {
         leaderboardService.breakService();
     }
 
-    @PostMapping(value = "/unbreak", headers = "secret=42")
+    @PostMapping(value = "/unbreak")
     public void unbreak() {
         leaderboardService.unbreak();
     }
 
-    @PostMapping(value = "/rateLimit/{n}", headers = "secret=42")
+    @PostMapping(value = "/rateLimit/{n}")
     public void rateLimit(@PathVariable("n") int n) {
         limiterFilter.enable(n);
     }
 
-    @PostMapping(value = "/clearRateLimit", headers = "secret=42")
+    @PostMapping(value = "/clearRateLimit")
     public void rateLimit() {
         limiterFilter.disable();
     }
