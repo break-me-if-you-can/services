@@ -30,7 +30,7 @@ kind: Service
 metadata:
   name: leaderboard
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: leaderboard
   ports:
