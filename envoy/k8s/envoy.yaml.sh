@@ -3,39 +3,39 @@ cat <<YAML
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: leaderboard
+  name: envoy
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: leaderboard
+        app: envoy
     spec:
       containers:
-        - name: leaderboard
-          image: gcr.io/$GCP_PROJECT/leaderboard:latest
+        - name: envoy
+          image: gcr.io/$GCP_PROJECT/envoy:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: foobar
               value: "$(date +%s)"
-            - name: ZIPKIN_SERVICE_HOST
-              value: "zipkin"
-            - name: ZIPKIN_SERVICE_PORT
-              value: "9411"
+            - name: GATEWAY_SERVICE_HOST
+              value: "gateway"
+            - name: GATEWAY_SERVICE_PORT
+              value: "8080"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: leaderboard
+  name: envoy
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
-    app: leaderboard
+    app: envoy
   ports:
-   - port: 8080
+   - port: 80
      targetPort: 8080
      protocol: TCP
-     name: rest
+     name: http
 YAML

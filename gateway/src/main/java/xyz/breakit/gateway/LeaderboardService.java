@@ -8,7 +8,6 @@ import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -31,29 +30,23 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
+        CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+        top5.whenCompleteAsync((l, e) -> {
+            if (e != null) {
+                responseObserver.onError(e);
+            } else {
+                List<PlayerScore> playerScores = l.stream()
+                        .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
+                        .collect(Collectors.toList());
 
-        try {
-            CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
-            top5.whenComplete((l, e) -> {
-                if (e != null) {
-                    responseObserver.onError(e);
-                } else {
+                TopScoresResponse response = TopScoresResponse.newBuilder()
+                        .addAllTopScores(playerScores)
+                        .build();
 
-                    List<PlayerScore> playerScores = l.stream()
-                            .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
-                            .collect(Collectors.toList());
-
-                    TopScoresResponse response = TopScoresResponse.newBuilder()
-                            .addAllTopScores(playerScores)
-                            .build();
-
-                    responseObserver.onNext(response);
-                    responseObserver.onCompleted();
-                }
-            });
-        } catch (IOException e) {
-            responseObserver.onError(e);
-        }
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+        });
     }
 
     @Override
@@ -66,12 +59,9 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                 .score(request.getPlayerScore().getScore())
                 .build();
 
-        try {
-            leaderboardClient.updateScore(entry);
-            responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
-            responseObserver.onCompleted();
-        } catch (IOException e) {
-            responseObserver.onError(e);
-        }
+
+        leaderboardClient.updateScore(entry);
+        responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
+        responseObserver.onCompleted();
     }
 }

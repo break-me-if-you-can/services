@@ -1,5 +1,7 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
+import brave.Span;
+import brave.Tracer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +19,23 @@ public class LeaderboardClientTest {
     @Autowired
     private LeaderboardClient client;
 
+    @Autowired
+    private Tracer tracer;
+
     @Test
     public void testTop5() throws Exception {
-        client.top5().get(1000, TimeUnit.MILLISECONDS);
+        Span span = tracer.newTrace();
+        try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+            client.top5().get(15000, TimeUnit.MILLISECONDS);
+        } finally {
+            span.finish();
+        }
+
+        span = tracer.newTrace();
+        try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+            client.top5().get(15000, TimeUnit.MILLISECONDS);
+        } finally {
+            span.finish();
+        }
     }
 }
