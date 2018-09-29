@@ -16,9 +16,9 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 public class GatewayClient {
 
     public static void main(String[] args) {
-        String host = "35.230.13.179";
+        String host = "35.233.196.238";
         Channel channel = ManagedChannelBuilder
-                .forAddress(host, 8080)
+                .forAddress(host, 80)
                 .usePlaintext()
                 .intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
