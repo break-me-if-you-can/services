@@ -40,8 +40,8 @@ public class AdminController {
         limiterFilter.enable(n);
     }
 
-    @PostMapping(value = "/clearRateLimit")
-    public void rateLimit() {
+    @PostMapping(value = "/disableRateLimit")
+    public void disableRateLimit() {
         limiterFilter.disable();
     }
 
