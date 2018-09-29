@@ -11,21 +11,29 @@ package geese;
 import "google/protobuf/duration.proto";
 
 /*
- * Service to inject failures.
+ * Admin service. Allows failure injections, enabling partial degradation.
  */
-service FailureInjectionService {
+service AdminService {
     /*
-     * Introduces additional latency to server requests.
+     * Injects failures to server requests.
      */
-    rpc InjectLatency (InjectLatencyRequest) returns (InjectLatencyResponse);
+    rpc InjectFailure (InjectFailureRequest) returns (InjectFailureResponse);
+
+    /*
+     * Enables/disabled partial degradation of a service.
+     * Details of a degradation are service-specific.
+     */
+    rpc ManagePartialDegradation (PartialDegradationRequest)
+        returns (PartialDegradationResponse);
+
 }
 
 /*
  * Request to inject failures to server requests.
  */
-message InjectLatencyRequest {
+message InjectFailureRequest {
     /*
-     * Service name to add latency for.
+     * Service name to inject failure for.
      */
     string service_name = 1;
     /*
@@ -61,5 +69,30 @@ message AddedLatencySpec {
 /*
  * Response message, currently empty.
  */
-message InjectLatencyResponse {
+message InjectFailureResponse {
+}
+
+/*
+ * Request to enable or disable partial degradation of a service
+ */
+message PartialDegradationRequest {
+    /*
+     * Service name to add latency for.
+     */
+    string service_name = 1;
+    /*
+     * true if partial degradation should be enabled,
+     * false if disabled.
+     */
+    bool enable = 2;
+}
+
+/*
+ * Response to manage partial degradation response.
+ */
+message PartialDegradationResponse {
+    /*
+     * true if partial degradation is enabled, false otherwise.
+     */
+    bool enabled = 1;
 }
