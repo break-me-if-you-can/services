@@ -5,6 +5,7 @@ var config = require('./webpack.config.dev');
 
 var HOST = process.env.HOST || '0.0.0.0';
 var PORT = process.env.PORT || 3001;
+console.log('Dev serv:', process);
 
 var app = express();
 var compiler = webpack(config);
