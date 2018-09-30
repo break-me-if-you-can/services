@@ -3,6 +3,7 @@ WORKDIR /
 ADD ./assets assets
 ADD ./node_modules node_modules
 ADD ./public public
+ADD ./generated generated
 ADD ./src src
 ADD .babelrc .
 ADD ./devServer.js .
