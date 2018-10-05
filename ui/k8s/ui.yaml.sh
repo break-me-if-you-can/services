@@ -21,7 +21,11 @@ spec:
             - name: foobar
               value: "$(date +%s)"
             - name: GATEWAY_SERVICE_HOST
+<<<<<<< HEAD
               value: "gateway"
+=======
+              value: "envoy"
+>>>>>>> master
             - name: GATEWAY_SERVICE_PORT
               value: "8080"
 ---

@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.0.4.RELEASE'
+        springBootVersion = '2.0.3.RELEASE'
     }
     repositories {
         jcenter()
@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def grpcVersion = '1.14.0'
+def grpcVersion = '1.15.0'
 def protobufVersion = '3.5.1'
 
 repositories {
@@ -42,7 +42,7 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.2.BUILD-SNAPSHOT'
+        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.1.RELEASE'
     }
 }
 
@@ -59,6 +59,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
 
     compile group: 'net.jodah', name: 'failsafe', version: '1.1.0'
+    compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.1.4'
 
     compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
     compile "io.grpc:grpc-alts:${grpcVersion}"
@@ -67,7 +68,7 @@ dependencies {
     compile "io.grpc:grpc-stub:${grpcVersion}"
     compile "javax.annotation:javax.annotation-api:1.2"
 
-    compile 'io.zipkin.brave:brave-instrumentation-grpc:5.2.0'
+    compile 'io.zipkin.brave:brave-instrumentation-grpc:5.3.3'
     compile 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.7.7'
 
 

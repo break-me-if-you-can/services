@@ -1,0 +1,98 @@
+// API definition for Admin service.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "xyz.breakit.admin";
+option java_outer_classname = "AdminProto";
+
+package geese;
+
+import "google/protobuf/duration.proto";
+
+/*
+ * Admin service. Allows failure injections, enabling partial degradation.
+ */
+service AdminService {
+    /*
+     * Injects failures to server requests.
+     */
+    rpc InjectFailure (InjectFailureRequest) returns (InjectFailureResponse);
+
+    /*
+     * Enables/disabled partial degradation of a service.
+     * Details of a degradation are service-specific.
+     */
+    rpc ManagePartialDegradation (PartialDegradationRequest)
+        returns (PartialDegradationResponse);
+
+}
+
+/*
+ * Request to inject failures to server requests.
+ */
+message InjectFailureRequest {
+    /*
+     * Service name to inject failure for.
+     */
+    string service_name = 1;
+    /*
+     * Failure to be added.
+     */
+    oneof failure {
+        /*
+         * If set, adds latency to service requests.
+         */
+        AddedLatencySpec added_latency = 2;
+    }
+}
+
+/*
+ * Describes added latency.
+ * Contains probability and duration of added latency.
+ */
+message AddedLatencySpec {
+    /*
+     * Probability of adding latency, a double between
+     * {@code 0.0} and {@code 1.0}.
+     * For adding latency to all the calls should be set to {@code 1.0}.
+     * For adding latency to half of the calls (50%) should be set to
+     * {@code 0.5}. {@code 0.0} means no added latency.
+     */
+    double probability = 1;
+    /*
+     * Duration to be added to server calls.
+     */
+    google.protobuf.Duration duration = 2;
+}
+
+/*
+ * Response message, currently empty.
+ */
+message InjectFailureResponse {
+}
+
+/*
+ * Request to enable or disable partial degradation of a service
+ */
+message PartialDegradationRequest {
+    /*
+     * Service name to add latency for.
+     */
+    string service_name = 1;
+    /*
+     * true if partial degradation should be enabled,
+     * false if disabled.
+     */
+    bool enable = 2;
+}
+
+/*
+ * Response to manage partial degradation response.
+ */
+message PartialDegradationResponse {
+    /*
+     * true if partial degradation is enabled, false otherwise.
+     */
+    bool enabled = 1;
+}

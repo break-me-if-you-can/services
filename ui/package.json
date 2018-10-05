@@ -8,12 +8,18 @@
   },
   "scripts": {
     "clean": "rimraf dist",
+<<<<<<< HEAD
     "build:prod:webpack": "NODE_ENV=production webpack --config webpack.config.prod.js",
     "build:dev:webpack": "NODE_ENV=development webpack --config webpack.config.dev.js --display-error-details",
     "build:dev": "npm run clean && npm run build:dev:webpack",
     "build:prod": "npm run clean && npm run build:dev:webpack",
     "start": "node devServer.js",
     "start:prod": "node dist/bundle.js"
+=======
+    "build:webpack": "NODE_ENV=production webpack --config webpack.config.prod.js",
+    "build": "npm run clean && npm run build:webpack",
+    "start": "node devServer.js"
+>>>>>>> master
   },
   "main": "index.js",
   "repository": "git@github.com-HalloGene:break-me-if-you-can/ui.git",
@@ -41,8 +47,12 @@
     "webpack-hot-middleware": "^2.0.0"
   },
   "dependencies": {
+<<<<<<< HEAD
     "google-protobuf": "^3.6.1",
     "grpc-web": "^0.4.0",
+=======
+    "debug": "^4.0.1",
+>>>>>>> master
     "pixi.js": "^4.8.2",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",

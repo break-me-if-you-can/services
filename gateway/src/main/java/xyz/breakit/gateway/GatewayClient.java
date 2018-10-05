@@ -1,9 +1,14 @@
 package xyz.breakit.gateway;
 
+import brave.Tracing;
+import brave.grpc.GrpcTracing;
+import brave.sampler.Sampler;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
  * Client to call gateway service.
@@ -11,14 +16,25 @@ import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub
 public class GatewayClient {
 
     public static void main(String[] args) {
-        String host = "35.230.13.179";
+        String host = "35.233.196.238";
         Channel channel = ManagedChannelBuilder
-                .forAddress(host, 8080)
+                .forAddress(host, 80)
                 .usePlaintext()
+                .intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
 
+        callUserIdService(channel);
         callFixtureService(channel);
         callLeaderboardService(channel);
+    }
+
+    private static void callUserIdService(Channel channel) {
+        UserIdServiceGrpc.UserIdServiceBlockingStub userIdService =
+                UserIdServiceGrpc.newBlockingStub(channel);
+
+        GenerateUserResponse generateUserResponse =
+                userIdService.generateUserId(GenerateUserRequest.getDefaultInstance());
+        System.out.println("GenerateUserResponse: " + generateUserResponse);
     }
 
     private static void callFixtureService(Channel channel) {
@@ -40,6 +56,22 @@ public class GatewayClient {
         TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
     }
+
+    private static GrpcTracing grpcTracing(Sampler sampler) {
+
+        String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
+        int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
+
+        URLConnectionSender sender = URLConnectionSender.newBuilder()
+                .endpoint(String.format("http://%s:%s/api/v2/spans", zipkinHost, zipkinPort))
+                .build();
+
+        return GrpcTracing.create(Tracing.newBuilder()
+                .sampler(sampler)
+                .spanReporter(AsyncReporter.create(sender))
+                .build());
+    }
+
 
 
 }

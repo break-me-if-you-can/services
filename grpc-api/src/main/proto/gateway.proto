@@ -33,6 +33,17 @@ service LeaderboardService {
 }
 
 /*
+ * Service to generate user id.
+ * Client should call this method to recieve uniqie user id.
+ */
+service UserIdService {
+    /*
+     * Generates next user id.
+     */
+    rpc GenerateUserId(GenerateUserRequest) returns (GenerateUserResponse);
+}
+
+/*
  * Request to recieve next lines.
  */
 message GetFixtureRequest {
@@ -44,6 +55,16 @@ message GetFixtureRequest {
      * Line width: max number of elements in one sceen horizontal line.
      */
     int32 line_width = 2;
+    /*
+     * Single goose width in pixels.
+     * This arguments is used to make sure geese in one line don't overlap.
+     */
+    int32 goose_width = 3;
+    /*
+     * Single cloud width in pixels.
+     * This arguments is used to make sure clouds in one line don't overlap.
+     */
+    int32 cloud_width = 4;
 }
 
 /*
@@ -123,4 +144,17 @@ message UpdateScoreRequest {
  * Response message, currently empty.
  */
 message UpdateScoreResponse {
+}
+
+/*
+ * Request for user id generation. Empty message.
+ */
+message GenerateUserRequest {
+}
+
+/*
+ * Response with a generated user id.
+ */
+message GenerateUserResponse {
+    string user_id = 1;
 }
