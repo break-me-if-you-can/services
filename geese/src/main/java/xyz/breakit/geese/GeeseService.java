@@ -1,5 +1,6 @@
 package xyz.breakit.geese;
 
+import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceImplBase;
 
@@ -7,7 +8,7 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.stream.IntStream;
 
-import static java.util.stream.Collectors.toSet;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Implementation of geese service.
@@ -15,6 +16,7 @@ import static java.util.stream.Collectors.toSet;
  */
 final class GeeseService extends GeeseServiceImplBase {
 
+    private static final int MAX_GEESE_COUNT = 2;
     private final Random random;
 
     GeeseService(Random random) {
@@ -27,24 +29,38 @@ final class GeeseService extends GeeseServiceImplBase {
 
         GeeseResponse.Builder response = GeeseResponse.newBuilder();
         IntStream.range(0, request.getLinesCount())
-                .mapToObj(i -> generateGeeseLine(request.getLineWidth()))
+                .mapToObj(i -> generateGeeseLine(request.getLineWidth(), request.getGooseWidth()))
                 .forEach(response::addLines);
 
         responseObserver.onNext(response.build());
         responseObserver.onCompleted();
     }
 
-    private GeeseLine generateGeeseLine(int lineWidth) {
+    private GeeseLine generateGeeseLine(int lineWidth, int gooseWidth) {
+
+        checkArgument(lineWidth >= gooseWidth,
+                "Goose width cannot exceed line width.");
+
         return GeeseLine.newBuilder()
-                .addAllGeesePositions(generateGeese(lineWidth))
+                .addAllGeesePositions(generateGeese(lineWidth, gooseWidth))
                 .build();
     }
 
-    private Collection<Integer> generateGeese(int lineWidth) {
-        int objectsCount = random.nextInt(3);
-        return random.ints(objectsCount, 0, lineWidth)
-                .boxed()
-                .collect(toSet());
+    private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {
+        ImmutableList.Builder<Integer> resultBuilder = ImmutableList.builder();
+
+        int lastPosition = 0;
+        for (int i = 0; i < MAX_GEESE_COUNT; i++) {
+            int spaceLeft = lineWidth - gooseWidth - lastPosition;
+            if (spaceLeft > 0) {
+                int nextPosition = lastPosition + random.nextInt(spaceLeft);
+                resultBuilder.add(nextPosition);
+                lastPosition = nextPosition + gooseWidth;
+            } else {
+                break;
+            }
+        }
+        return resultBuilder.build();
     }
 
 }
