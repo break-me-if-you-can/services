@@ -29,11 +29,11 @@ public class GatewayClient {
     }
 
     private static void callUserIdService(Channel channel) {
-        UserIdServiceGrpc.UserIdServiceBlockingStub userIdService =
-                UserIdServiceGrpc.newBlockingStub(channel);
+        PlayerIdServiceGrpc.PlayerIdServiceBlockingStub userIdService =
+                PlayerIdServiceGrpc.newBlockingStub(channel);
 
-        GenerateUserResponse generateUserResponse =
-                userIdService.generateUserId(GenerateUserRequest.getDefaultInstance());
+        GeneratePlayerIdResponse generateUserResponse =
+                userIdService.generatePlayerId(GeneratePlayerIdRequest.getDefaultInstance());
         System.out.println("GenerateUserResponse: " + generateUserResponse);
     }
 
@@ -41,8 +41,10 @@ public class GatewayClient {
         FixtureServiceBlockingStub client = FixtureServiceGrpc.newBlockingStub(channel);
 
         GetFixtureRequest fixtureRequest = GetFixtureRequest.newBuilder()
-                .setLinesCount(10)
-                .setLineWidth(10)
+                .setLinesCount(100)
+                .setLineWidth(100)
+                .setCloudWidth(6)
+                .setGooseWidth(4)
                 .build();
 
         FixtureResponse fixture = client.getFixture(fixtureRequest);
