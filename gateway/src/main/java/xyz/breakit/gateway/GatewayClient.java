@@ -29,11 +29,11 @@ public class GatewayClient {
     }
 
     private static void callUserIdService(Channel channel) {
-        UserIdServiceGrpc.UserIdServiceBlockingStub userIdService =
-                UserIdServiceGrpc.newBlockingStub(channel);
+        PlayerIdServiceGrpc.PlayerIdServiceBlockingStub userIdService =
+                PlayerIdServiceGrpc.newBlockingStub(channel);
 
-        GenerateUserResponse generateUserResponse =
-                userIdService.generateUserId(GenerateUserRequest.getDefaultInstance());
+        GeneratePlayerIdResponse generateUserResponse =
+                userIdService.generatePlayerId(GeneratePlayerIdRequest.getDefaultInstance());
         System.out.println("GenerateUserResponse: " + generateUserResponse);
     }
 

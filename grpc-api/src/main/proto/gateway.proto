@@ -33,14 +33,14 @@ service LeaderboardService {
 }
 
 /*
- * Service to generate user id.
- * Client should call this method to recieve uniqie user id.
+ * Service to generate player id.
+ * Client should call this method to recieve a uniqie player id.
  */
-service UserIdService {
+service PlayerIdService {
     /*
-     * Generates next user id.
+     * Generates next Player id.
      */
-    rpc GenerateUserId(GenerateUserRequest) returns (GenerateUserResponse);
+    rpc GeneratePlayerId(GeneratePlayerIdRequest) returns (GeneratePlayerIdResponse);
 }
 
 /*
@@ -147,14 +147,14 @@ message UpdateScoreResponse {
 }
 
 /*
- * Request for user id generation. Empty message.
+ * Request for player id generation. Empty message.
  */
-message GenerateUserRequest {
+message GeneratePlayerIdRequest {
 }
 
 /*
- * Response with a generated user id.
+ * Response with a generated player id.
  */
-message GenerateUserResponse {
-    string user_id = 1;
+message GeneratePlayerIdResponse {
+    string player_id = 1;
 }
