@@ -70,6 +70,7 @@ final class FixtureService extends FixtureServiceImplBase {
         return GetCloudsRequest.newBuilder()
                     .setLinesCount(request.getLinesCount())
                     .setLineWidth(request.getLineWidth())
+                    .setCloudWidth(request.getCloudWidth())
                     .build();
     }
 
@@ -77,6 +78,7 @@ final class FixtureService extends FixtureServiceImplBase {
         return GetGeeseRequest.newBuilder()
                     .setLinesCount(request.getLinesCount())
                     .setLineWidth(request.getLineWidth())
+                    .setGooseWidth(request.getGooseWidth())
                     .build();
     }
 

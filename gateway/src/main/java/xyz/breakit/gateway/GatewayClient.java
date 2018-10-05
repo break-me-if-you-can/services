@@ -41,8 +41,10 @@ public class GatewayClient {
         FixtureServiceBlockingStub client = FixtureServiceGrpc.newBlockingStub(channel);
 
         GetFixtureRequest fixtureRequest = GetFixtureRequest.newBuilder()
-                .setLinesCount(10)
-                .setLineWidth(10)
+                .setLinesCount(100)
+                .setLineWidth(100)
+                .setCloudWidth(6)
+                .setGooseWidth(4)
                 .build();
 
         FixtureResponse fixture = client.getFixture(fixtureRequest);
