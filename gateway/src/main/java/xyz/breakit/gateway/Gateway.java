@@ -63,17 +63,29 @@ public class Gateway {
     @Bean
     public Server grpcServer(
             GrpcTracing grpcTracing,
-            GeeseServiceFutureStub geeseClient,
-            CloudsServiceFutureStub cloudsClient,
+            FixtureService fixtureService,
+            UserIdService userIdService,
             LeaderboardService leaderboardService,
             Limiter<GrpcServerRequestContext> limiter) {
 
         return ServerBuilder.forPort(SERVER_PORT)
-                .addService(new FixtureService(geeseClient, cloudsClient))
+                .addService(fixtureService)
+                .addService(userIdService)
                 .addService(leaderboardService)
                 .intercept(grpcTracing.newServerInterceptor())
                 .intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
+    }
+
+    @Bean
+    public FixtureService fixtureService(GeeseServiceFutureStub geeseClient,
+                                         CloudsServiceFutureStub cloudsClient) {
+        return new FixtureService(geeseClient, cloudsClient);
+    }
+
+    @Bean
+    public UserIdService userIdService() {
+        return new UserIdService();
     }
 
     @Bean

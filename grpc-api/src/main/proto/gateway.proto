@@ -33,6 +33,17 @@ service LeaderboardService {
 }
 
 /*
+ * Service to generate user id.
+ * Client should call this method to recieve uniqie user id.
+ */
+service UserIdService {
+    /*
+     * Generates next user id.
+     */
+    rpc GenerateUserId(GenerateUserRequest) returns (GenerateUserResponse);
+}
+
+/*
  * Request to recieve next lines.
  */
 message GetFixtureRequest {
@@ -123,4 +134,17 @@ message UpdateScoreRequest {
  * Response message, currently empty.
  */
 message UpdateScoreResponse {
+}
+
+/*
+ * Request for user id generation. Empty message.
+ */
+message GenerateUserRequest {
+}
+
+/*
+ * Response with a generated user id.
+ */
+message GenerateUserResponse {
+    string user_id = 1;
 }

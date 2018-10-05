@@ -23,8 +23,18 @@ public class GatewayClient {
                 .intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
 
+        callUserIdService(channel);
         callFixtureService(channel);
         callLeaderboardService(channel);
+    }
+
+    private static void callUserIdService(Channel channel) {
+        UserIdServiceGrpc.UserIdServiceBlockingStub userIdService =
+                UserIdServiceGrpc.newBlockingStub(channel);
+
+        GenerateUserResponse generateUserResponse =
+                userIdService.generateUserId(GenerateUserRequest.getDefaultInstance());
+        System.out.println("GenerateUserResponse: " + generateUserResponse);
     }
 
     private static void callFixtureService(Channel channel) {
