@@ -27,9 +27,13 @@ message GetGeeseRequest {
      */
     int32 lines_count = 1;
     /*
-     * Line width: max number of geese in one sceen horizontal line.
+     * Line width: max number of positions (pixels) in one sceen horizontal line.
      */
     int32 line_width = 2;
+    /*
+     * Goose width in pixels. This arguments is used to make sure geese in one line don't overlap.
+     */
+    int32 goose_width = 3;
 }
 
 /*
@@ -48,8 +52,8 @@ message GeeseResponse {
 message GeeseLine {
     /*
      * Array of geese. Numbers in the array represent vertical positions
-     * of geese. For example, [1, 3] array means there are geese in the first
-     * and third column of the line.
+     * of geese. For example, [1, 10] array means there are geese in the first
+     * and tenth positions of the line.
      */
     repeated int32 geese_positions = 1;
 }
