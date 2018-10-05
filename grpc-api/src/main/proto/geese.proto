@@ -31,7 +31,8 @@ message GetGeeseRequest {
      */
     int32 line_width = 2;
     /*
-     * Goose width in pixels. This arguments is used to make sure geese in one line don't overlap.
+     * Single goose width in pixels.
+     * This arguments is used to make sure geese in one line don't overlap.
      */
     int32 goose_width = 3;
 }

@@ -30,6 +30,11 @@ message GetCloudsRequest {
      * Line width: max number of clouds in one sceen horizontal line.
      */
     int32 line_width = 2;
+    /*
+     * Single cloud width in pixels.
+     * This arguments is used to make sure clouds in one line don't overlap.
+     */
+    int32 cloud_width = 3;
 }
 
 /*
@@ -48,8 +53,8 @@ message CloudsResponse {
 message CloudsLine {
     /*
      * Array of clouds. Numbers in the array represent vertical positions
-     * of clouds. For example, [2, 4] array means there are clouds in the second
-     * and fourth column of the line.
+     * of clouds. For example, [2, 14] array means there are clouds in the second
+     * and fourteens column of the line.
      */
     repeated int32 cloud_positions = 1;
 }

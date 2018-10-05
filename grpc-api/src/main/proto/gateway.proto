@@ -55,6 +55,16 @@ message GetFixtureRequest {
      * Line width: max number of elements in one sceen horizontal line.
      */
     int32 line_width = 2;
+    /*
+     * Single goose width in pixels.
+     * This arguments is used to make sure geese in one line don't overlap.
+     */
+    int32 goose_width = 3;
+    /*
+     * Single cloud width in pixels.
+     * This arguments is used to make sure clouds in one line don't overlap.
+     */
+    int32 cloud_width = 4;
 }
 
 /*
