@@ -9,6 +9,7 @@ import xyz.breakit.clouds.CloudsResponse;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
 import xyz.breakit.clouds.GetCloudsRequest;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceImplBase;
+import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.geese.GeeseResponse;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import xyz.breakit.geese.GetGeeseRequest;
@@ -29,11 +30,14 @@ final class FixtureService extends FixtureServiceImplBase {
 
     private final GeeseServiceFutureStub geeseClient;
     private final CloudsServiceFutureStub cloudsClient;
+    private final Flags flags;
 
     FixtureService(GeeseServiceFutureStub geeseClient,
-                   CloudsServiceFutureStub cloudsClient) {
+                   CloudsServiceFutureStub cloudsClient,
+                   Flags flags) {
         this.geeseClient = geeseClient;
         this.cloudsClient = cloudsClient;
+        this.flags = flags;
     }
 
     @Override
@@ -45,9 +49,9 @@ final class FixtureService extends FixtureServiceImplBase {
         ListenableFuture<CloudsResponse> cloudsFuture =
                 cloudsClient.withDeadlineAfter(500, MILLISECONDS).getClouds(toCloudsRequest(request));
 
-        ListenableFuture<List<GeneratedMessageV3>> combined = Futures.successfulAsList(geeseFuture, cloudsFuture);
+        ListenableFuture<List<GeneratedMessageV3>> geeseAndClouds = combine(geeseFuture, cloudsFuture);
 
-        Futures.addCallback(combined, new FutureCallback<List<GeneratedMessageV3>>() {
+        Futures.addCallback(geeseAndClouds, new FutureCallback<List<GeneratedMessageV3>>() {
                     @Override
                     public void onSuccess(@Nullable List<GeneratedMessageV3> responses) {
 
@@ -64,6 +68,16 @@ final class FixtureService extends FixtureServiceImplBase {
                     }
                 },
                 directExecutor());
+    }
+
+    private ListenableFuture<List<GeneratedMessageV3>> combine(ListenableFuture<GeeseResponse> geeseFuture, ListenableFuture<CloudsResponse> cloudsFuture) {
+        ListenableFuture<List<GeneratedMessageV3>> result;
+        if (flags.isPartialDegradationEnabled()) {
+            result = Futures.successfulAsList(geeseFuture, cloudsFuture);
+        } else {
+            result = Futures.allAsList(geeseFuture, cloudsFuture);
+        }
+        return result;
     }
 
     private GetCloudsRequest toCloudsRequest(GetFixtureRequest request) {
