@@ -73,7 +73,7 @@ public class LeaderboardClient {
                 .syncBody(newScore)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .then();
+                .subscribe();
     }
 
     private Mono<List<LeaderboardEntry>> top5Request() {
