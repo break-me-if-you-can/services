@@ -24,6 +24,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.function.client.WebClient;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.gateway.admin.GatewayAdminService;
+import xyz.breakit.gateway.flags.Flags;
+import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import zipkin2.reporter.AsyncReporter;
@@ -66,12 +69,14 @@ public class Gateway {
             FixtureService fixtureService,
             PlayerIdService playerIdService,
             LeaderboardService leaderboardService,
+            GatewayAdminService adminService,
             Limiter<GrpcServerRequestContext> limiter) {
 
         return ServerBuilder.forPort(SERVER_PORT)
                 .addService(fixtureService)
                 .addService(playerIdService)
                 .addService(leaderboardService)
+                .addService(adminService)
                 .intercept(grpcTracing.newServerInterceptor())
                 .intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
@@ -79,8 +84,9 @@ public class Gateway {
 
     @Bean
     public FixtureService fixtureService(GeeseServiceFutureStub geeseClient,
-                                         CloudsServiceFutureStub cloudsClient) {
-        return new FixtureService(geeseClient, cloudsClient);
+                                         CloudsServiceFutureStub cloudsClient,
+                                         Flags flags) {
+        return new FixtureService(geeseClient, cloudsClient, flags);
     }
 
     @Bean
@@ -89,7 +95,12 @@ public class Gateway {
     }
 
     @Bean
-    public CloudsServiceFutureStub cloudsService(
+    public GatewayAdminService adminService(SettableFlags flags) {
+        return new GatewayAdminService(flags);
+    }
+
+    @Bean
+    public CloudsServiceFutureStub cloudsServiceClient(
             @Value("${grpc.clouds.host:clouds}") String cloudsHost,
             @Value("${grpc.clouds.port:8080}") int cloudsPort,
             GrpcTracing grpcTracing,
@@ -107,7 +118,7 @@ public class Gateway {
     }
 
     @Bean
-    public GeeseServiceFutureStub geeseService(
+    public GeeseServiceFutureStub geeseServiceClient(
             @Value("${grpc.geese.host:geese}") String geeseHost,
             @Value("${grpc.geese.port:8080}") int geesePort,
             GrpcTracing grpcTracing,
@@ -167,6 +178,11 @@ public class Gateway {
     @Bean
     public Sampler defaultSampler() {
         return Sampler.ALWAYS_SAMPLE;
+    }
+
+    @Bean
+    public Flags flags() {
+        return new SettableFlags();
     }
 
 }

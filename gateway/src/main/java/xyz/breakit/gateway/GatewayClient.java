@@ -54,6 +54,9 @@ public class GatewayClient {
     private static void callLeaderboardService(Channel channel) {
         LeaderboardServiceBlockingStub client = LeaderboardServiceGrpc.newBlockingStub(channel);
 
+        client.updateScore(UpdateScoreRequest.newBuilder()
+                .setPlayerScore(PlayerScore.newBuilder().setPlayerId("User_100500").setScore(100500).build()).build());
+
         TopScoresRequest topScoresRequest = TopScoresRequest.newBuilder().setSize(3).build();
         TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
