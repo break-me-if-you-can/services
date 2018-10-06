@@ -59,9 +59,9 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                 .score(request.getPlayerScore().getScore())
                 .build();
 
-
-        leaderboardClient.updateScore(entry);
-        responseObserver.onNext(UpdateScoreResponse.getDefaultInstance());
-        responseObserver.onCompleted();
+        leaderboardClient.updateScore(entry,
+                () -> responseObserver.onNext(UpdateScoreResponse.getDefaultInstance()),
+                responseObserver::onError,
+                responseObserver::onCompleted);
     }
 }
