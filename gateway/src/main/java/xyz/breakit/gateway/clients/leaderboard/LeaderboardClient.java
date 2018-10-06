@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Service
 public class LeaderboardClient {
@@ -65,7 +66,10 @@ public class LeaderboardClient {
     }
 
 
-    public void updateScore(LeaderboardEntry newScore) {
+    public void updateScore(LeaderboardEntry newScore,
+                            Runnable onMessage,
+                            Consumer<? super Throwable> onError,
+                            Runnable onComplete) {
         httpClient
                 .post()
                 .uri("/scores/")
@@ -73,7 +77,7 @@ public class LeaderboardClient {
                 .syncBody(newScore)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .subscribe();
+                .subscribe(resp -> onMessage.run(), onError, onComplete);
     }
 
     private Mono<List<LeaderboardEntry>> top5Request() {
