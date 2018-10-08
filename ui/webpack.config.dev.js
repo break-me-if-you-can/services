@@ -16,7 +16,7 @@ module.exports = {
     publicPath: '/static/'
   },
   resolve: {
-    extensions: ["", ".js", ".jsx", ".json", ".png"]
+    extensions: ["", ".js", ".jsx", ".css", ".json", ".otf", ".ttf", ".png"]
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
@@ -30,9 +30,23 @@ module.exports = {
         include: [path.join(__dirname, 'src'), path.join(__dirname, 'generated')]
       },
       {
-        test: /\.(jpe?g|png|gif|woff|woff2|eot|ttf|svg)(\?[a-z0-9=.]+)?$/,
+        test: /\.(png|svg)(\?[a-z0-9=.]+)?$/,
         loader: 'url-loader?limit=100000',
         include: path.join(__dirname, 'assets')
+      },
+      {
+        test: /\.(otf|ttf)$/,
+        loader: 'url-loader',
+        options: {
+          limit: 100000,
+          name: "fonts/[name].[ext]"
+        },
+        include: path.join(__dirname, 'assets')
+      },
+      {
+          test: /\.css$/,
+          loaders: ['style-loader', 'css-loader'],
+          include: [path.join(__dirname, 'src')]
       },
       {
         test: /\.js$/,
