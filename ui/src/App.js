@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Game } from './Game';
+import './App.css';
 
 export class App extends Component {
   
@@ -9,7 +10,7 @@ export class App extends Component {
 
 render() {
     return (
-        <div>
+        <div className="app">
             <Game />
         </div>
     )
