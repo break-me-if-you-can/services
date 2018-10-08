@@ -1,68 +1,90 @@
 import React, {Component} from 'react';
 import * as PIXI from 'pixi.js';
-import * as Service from './service.js';
+import { Service } from './Service';
 
-// import gooseSpritesheetImg from '../assets/spritesheets/goose.png';
-// import aircraftSpritesheetImg from '../assets/spritesheets/aircraft.png';
-// import cloudSpritesheetImg from '../assets/spritesheets/cloud.png';
-import gooseImg from '../assets/spritesheets/goose.png';
-import aircraftImg from '../assets/spritesheets/aircraft.png';
-import cloudImg from '../assets/spritesheets/cloud.png';
+import { Goose } from './gameobjects/Goose';
+import { Cloud } from './gameobjects/Cloud';
+
+import aircraftStraightImg from '../assets/textures/aircraft_straight.png';
+import aircraftLeftTurnSpriteSheetImg from '../assets/spritesheets/aircraft_turn_left.png';
+import aircraftRightTurnSpriteSheetImg from '../assets/spritesheets/aircraft_turn_right.png';
+import explosionSpriteSheetImg from '../assets/spritesheets/explosion.png';
+import gooseSpriteSheetImg from '../assets/spritesheets/goose.png';
+import cloudImg from '../assets/textures/cloud.png';
 import waterImg from '../assets/textures/water.png';
 import banksImg from '../assets/textures/banks.png';
+
 
 export class Game extends Component {
   
   constructor(props) {
-    super(props); 
+    super(props);
+    this.service = new Service();
+    this.loader = new PIXI.loaders.Loader();
     this.app = new PIXI.Application(
       {
         width: 767,
         height: 1152,
-        transparent:false
+        transparent:false,
       }
     );
+
+    this.score = 100000;
+    this.state = {
+      playerId: '',
+      score: this.score,
+      topScores: [],
+    }
+    
+    this.frames = {
+      'goose': [],
+      'explosion': [],
+    };
   }
   
+  getStage() {
+    return this.app.stage;
+  }
+
   gameRefCallback = (element) => {
     element.append(this.app.view);
-    this.runGame();
-  }
 
-  runGame = () => {
+    this.service.getPlayerId((result) => {
+      this.setState({
+        playerId: result.getPlayerId()
+      });
 
-    echo();
 
-    let loader = new PIXI.loaders.Loader();
-    loader
-      .add('gooseTexture', gooseImg)
-      .add('aircraftTexture', aircraftImg)
-      .add('cloudTexture', cloudImg)
-      .add('waterTexture', waterImg)
-      .add('banksTexture', banksImg)
-      //.add('gooseSpriteSheet', gooseSpritesheetImg)
-      //.add('aircraftSpriteSheet', aircraftSpritesheetImg)
-      //.add('cloudSpriteSheet', cloudSpritesheetImg)
-      .load(this.onAssetsLoaded);
-
-    loader.onProgress.add((e) => { 
-      //console.log('Progress', e); 
-    }); // called once per loaded/errored file
-    loader.onError.add((e) => { 
-      //console.log('Error', e); 
-    }); // called once per errored file
-    loader.onLoad.add((e) => { 
-      //console.log('On Load', e); 
-    }); // called once per loaded file
-    
-    loader.onComplete.add((e) => { 
-      //console.log('Complete', e); 
+      this.loadAssets((loader, resources) => { this.runGame(resources); });
     });
-
   }
 
-  onAssetsLoaded = (loader, resources) => {
-    //console.log('Assets loading complete: ', loader, resources);
+  loadAssets = (onAssetsLoaded) => {
+    this.loader
+      .add('gooseSpriteSheet', gooseSpriteSheetImg)
+        .add('explosionSpriteSheet', explosionSpriteSheetImg)
+        .add('aircraftTurnLeftSpriteSheetImg', aircraftLeftTurnSpriteSheetImg)
+        .add('aircraftTurnRightSpriteSheetImg', aircraftRightTurnSpriteSheetImg)
+        .add('aircraftStraightTexture', aircraftStraightImg)
+        .add('cloudTexture', cloudImg)
+        .add('waterTexture', waterImg)
+        .add('banksTexture', banksImg)
+      .load(onAssetsLoaded);
+    this.loader.onProgress.add((e) => { 
+      //console.log('Assets Loading Progress', e); 
+    });
+    this.loader.onError.add((e) => { 
+      //console.log('Assets Loading Error: ', e); 
+    });
+    this.loader.onLoad.add((e) => { 
+      //console.log('Asset Loaded: ', e); 
+    });
+    this.loader.onComplete.add((e) => { 
+      //console.log('Assets Loading Completed', e); 
+    });
+  }
+
+  runGame = (resources) => {
 
     let water = new PIXI.extras.TilingSprite(resources.waterTexture.texture, 634, 1152);
     water.anchor.set(0, 0);
@@ -80,32 +102,134 @@ export class Game extends Component {
     banks.tilePosition.y = 0;
     this.app.stage.addChild(banks);
 
-    let goose = new PIXI.Sprite(resources.gooseTexture.texture);
-    goose.anchor.set(0.5);
-    goose.x = 0;
-    goose.y = 0;
-    //this.app.stage.addChild(goose);
+    this.geese = [];
+    this.clouds = [];
 
-    let cloud = new PIXI.Sprite(resources.cloudTexture.texture);
-    cloud.anchor.set(0.5);
-    cloud.x = 100;
-    cloud.y = 50;
-    //this.app.stage.addChild(cloud);
+    this.gooseFrames = [];
+    for (let i = 0; i < 7; i++) {
+      this.gooseFrames.push(new PIXI.Texture(resources.gooseSpriteSheet.texture, new PIXI.Rectangle(0 + i*63, 0, 62, 32)));
+    }
+    this.cloudTexture = resources.cloudTexture;
 
-    this.aircraft = new PIXI.Sprite(resources.aircraftTexture.texture);
+    this.height = window.innerHeight < 1152? window.innerHeight: 1152;
+
+    this.aircraft = new PIXI.Sprite(resources.aircraftStraightTexture.texture);
     this.aircraft.anchor.set(0.5);
     this.aircraft.x = 767 / 2 ;
-    this.aircraft.y = 378 - 30;
+    this.aircraft.y = this.height - 70;
     this.app.stage.addChild(this.aircraft);
+    
+    let fixtureCallback = (result) => {
+      let resultList = result.getLinesList();
 
+      if (resultList && resultList.length) {
+          resultList.forEach(line => {
+            let geesePos = line.getGoosePositionsList();
+              geesePos.forEach(position => {
+                let goose = new Goose( {
+                  'frames': this.gooseFrames,
+                  'x': 191 + 384 * position / 25,
+                  'y': -50
+                });
+                goose.addToStage(this.getStage());
+                this.geese.push(goose);
+              });
+
+              let cloudsPos = line.getCloudPositionsList();
+                cloudsPos.forEach(position => {
+                  let cloud = new Cloud( {
+                    'texture': this.cloudTexture.texture,
+                    'x': 191 + 384 * position / 25,
+                    'y': -50
+                  });
+                  cloud.addToStage(this.getStage());
+                  this.clouds.push(cloud);
+              });
+          });
+
+          setTimeout(() => {
+            this.service.getFixture(fixtureCallback);
+          }, 300);
+      } else {
+        setTimeout(() => {
+          this.service.getFixture(fixtureCallback);
+        }, 400);
+      }
+    }
+
+    setInterval(() => {
+      this.setState({
+        score: this.score
+      });
+    }, 1000);
+
+    setInterval(() => {
+      let data = {
+        playerId: this.state.playerId,
+        score: this.score
+      }
+
+      this.service.updatePlayerScore(data, (result) => {
+        //console.log("Update Player Score: ", result);
+      });
+
+      this.service.getTopPlayerScore((result) => {
+        let topScores = result.getTopScoresList()
+        .map(playerScore => {
+          return {
+            id: playerScore.getPlayerId(), 
+            score: playerScore.getScore(),
+          }
+        });
+
+        this.setState({
+          topScores: topScores
+        });
+
+        console.log("Top Player Result: ", result.getTopScoresList());
+      });
+  
+    }, 5000);
+
+    this.service.getFixture(fixtureCallback);
     this.app.ticker.add((delta) => {
       water.tilePosition.y += 1.25;
       banks.tilePosition.y += 0.85;
+
+      this.score += 25;
+
+      let tempGeese = this.geese.reduce((newGeese, goose ) => {
+         goose.y += 2.5;
+
+        if (goose.y > this.height + 50) {
+          goose.removeFromStage(this.getStage());
+          this.app.stage.removeChild(goose);
+        } else {
+          newGeese.push(goose);
+        }
+        return newGeese;
+      }, []);
+      
+      this.geese = tempGeese;
+      
+      let tempClouds = this.clouds.reduce((newClouds, cloud ) => {
+        cloud.y += 2.7;
+
+        if (cloud.y > this.height + 50) {
+          cloud.removeFromStage(this.getStage());
+        } else {
+          newClouds.push(cloud);
+        }
+        return newClouds;
+      }, []);
+    
+      this.clouds = tempClouds;
     });
   }
 
   onDeviceOrientationHandler = (event) => {
-    this.aircraft.x -= event.beta / 180 * 25;
+    //alert(event.alpha, event.beta, event.gamma);
+    this.aircraft.x -= Math.sign(event.gamma) * event.beta / 180 * 25;
   }
 
   onDeviceMotionHandler = (event) => {
@@ -158,14 +282,30 @@ export class Game extends Component {
   }
 
   render() {
+    let topScoresList = this.state.topScores.map(player => <p><span className="black" key={ player.id }>{ player.id }...</span>{player.score} </p> );
+
     return (
-      <div>
-        <div>
-          <div></div>
-          <div></div>
-          <div></div>
+      <div className="container">
+        <div className="left stats">
+          <div className="leaderboard">
+            <div className="black">TOP 5</div>
+            <div>{ topScoresList }</div>
+          </div>
+          <div className="status">
+            <h3>ENGINES</h3>
+            <div>
+              <div className="engine dead"></div>
+              <div className="engine dead"></div>
+              <div className="engine alive"></div>
+              <div className="engine alive"></div>
+            </div>
+          </div>
+          <div className="profile">
+            <p className="black">{ this.state.playerId } <br/> score</p>
+            <p>{ this.state.score }</p>
+          </div>
         </div>
-        <div ref={this.gameRefCallback}
+        <div className="right field" ref={this.gameRefCallback}
             onKeyDown={(e) => this.onKeyDownHandler(e) }
             tabIndex="0">
         </div>
