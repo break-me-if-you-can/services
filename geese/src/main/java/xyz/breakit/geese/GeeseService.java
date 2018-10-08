@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 final class GeeseService extends GeeseServiceImplBase {
 
     private static final int MAX_GEESE_COUNT = 2;
+    private static final int DEFAULT_GOOSE_WIDTH = 1;
     private final Random random;
 
     GeeseService(Random random) {
@@ -28,8 +29,9 @@ final class GeeseService extends GeeseServiceImplBase {
                          StreamObserver<GeeseResponse> responseObserver) {
 
         GeeseResponse.Builder response = GeeseResponse.newBuilder();
+        int gooseWidth = Integer.max(request.getGooseWidth(), DEFAULT_GOOSE_WIDTH);
         IntStream.range(0, request.getLinesCount())
-                .mapToObj(i -> generateGeeseLine(request.getLineWidth(), request.getGooseWidth()))
+                .mapToObj(i -> generateGeeseLine(request.getLineWidth(), gooseWidth))
                 .forEach(response::addLines);
 
         responseObserver.onNext(response.build());

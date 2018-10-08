@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 final class CloudsService extends CloudsServiceImplBase {
 
     private static final int MAX_CLOUDS_COUNT = 2;
+    private static final int DEFAULT_CLOUD_WIDTH = 1;
     private final Random random;
 
     CloudsService(Random random) {
@@ -27,8 +28,10 @@ final class CloudsService extends CloudsServiceImplBase {
     public void getClouds(GetCloudsRequest request,
                           StreamObserver<CloudsResponse> responseObserver) {
         CloudsResponse.Builder response = CloudsResponse.newBuilder();
+        int cloudWidth = Integer.max(request.getCloudWidth(), DEFAULT_CLOUD_WIDTH);
+
         IntStream.range(0, request.getLinesCount())
-                .mapToObj(i -> generateCloudsLine(request.getLineWidth(), request.getCloudWidth()))
+                .mapToObj(i -> generateCloudsLine(request.getLineWidth(), cloudWidth))
                 .forEach(response::addLines);
 
         responseObserver.onNext(response.build());
@@ -37,8 +40,8 @@ final class CloudsService extends CloudsServiceImplBase {
 
     private CloudsLine generateCloudsLine(int lineWidth, int cloudWidth) {
 
-        checkArgument(lineWidth >= gooseWidth,
-                "Goose width cannot exceed line width.");
+        checkArgument(lineWidth >= cloudWidth,
+                "Cloud width cannot exceed line width.");
 
         return CloudsLine.newBuilder()
                 .addAllCloudPositions(generateClouds(lineWidth, cloudWidth))
