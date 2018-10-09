@@ -13,6 +13,7 @@ import gooseSpriteSheetImg from '../assets/spritesheets/goose.png';
 import cloudImg from '../assets/textures/cloud.png';
 import waterImg from '../assets/textures/water.png';
 import banksImg from '../assets/textures/banks.png';
+import { Explosion } from './gameobjects/Explosion';
 
 
 export class Game extends Component {
@@ -34,8 +35,14 @@ export class Game extends Component {
       playerId: '',
       score: this.score,
       topScores: [],
+      enginesStatus: new Array(4).fill('alive'),
     }
     
+    this.collisionsCounter = 0;
+    this.statisticsInterval = null;
+    this.scoreInterval = null;
+    this.fixtureTimeout = null;
+
     this.frames = {
       'goose': [],
       'explosion': [],
@@ -46,12 +53,38 @@ export class Game extends Component {
     return this.app.stage;
   }
 
+  updateEnginesStatus = () => {
+    this.collisionsCounter++;
+    let enginesStatus = (new Array(4).fill('alive')).map((obj, i) => (i < this.collisionsCounter? 'dead': 'alive'));
+    this.setState(
+      {
+        enginesStatus: enginesStatus,
+      }
+    )
+    if (this.collisionsCounter == 4) {
+      if (this.scoreInterval) {
+        clearInterval(this.scoreInterval);
+      }
+
+      if (this.statisticsInterval) {
+        clearInterval(this.statisticsInterval);
+      }
+
+      if (this.fixtureTimeout) {
+        clearTimeout(this.fixtureTimeout);
+      }
+
+      this.scoreInterval.cance
+      this.app.ticker.stop();
+    }
+  }
+
   gameRefCallback = (element) => {
     element.append(this.app.view);
 
     this.service.getPlayerId((result) => {
       this.setState({
-        playerId: result.getPlayerId()
+        playerId: result.getPlayerId(),
       });
 
 
@@ -109,6 +142,12 @@ export class Game extends Component {
     for (let i = 0; i < 7; i++) {
       this.gooseFrames.push(new PIXI.Texture(resources.gooseSpriteSheet.texture, new PIXI.Rectangle(0 + i*63, 0, 62, 32)));
     }
+
+    this.explosionFrames = [];
+    for (let i = 0; i < 6; i++) {
+      this.explosionFrames.push(new PIXI.Texture(resources.explosionSpriteSheet.texture, new PIXI.Rectangle(0 + i*83, 0, 83, 78)));
+    }
+
     this.cloudTexture = resources.cloudTexture;
 
     this.height = window.innerHeight < 1152? window.innerHeight: 1152;
@@ -118,7 +157,7 @@ export class Game extends Component {
     this.aircraft.x = 767 / 2 ;
     this.aircraft.y = this.height - 70;
     this.app.stage.addChild(this.aircraft);
-    
+
     let fixtureCallback = (result) => {
       let resultList = result.getLinesList();
 
@@ -147,26 +186,26 @@ export class Game extends Component {
               });
           });
 
-          setTimeout(() => {
+          this.fixtureTimeout = setTimeout(() => {
             this.service.getFixture(fixtureCallback);
           }, 300);
       } else {
-        setTimeout(() => {
+        this.fixtureTimeout = setTimeout(() => {
           this.service.getFixture(fixtureCallback);
         }, 400);
       }
     }
 
-    setInterval(() => {
+    this.scoreInterval = setInterval(() => {
       this.setState({
-        score: this.score
+        score: this.score,
       });
     }, 1000);
 
-    setInterval(() => {
+    this.statisticsInterval = setInterval(() => {
       let data = {
         playerId: this.state.playerId,
-        score: this.score
+        score: this.score,
       }
 
       this.service.updatePlayerScore(data, (result) => {
@@ -186,7 +225,7 @@ export class Game extends Component {
           topScores: topScores
         });
 
-        console.log("Top Player Result: ", result.getTopScoresList());
+        //console.log("Top Player Result: ", result.getTopScoresList());
       });
   
     }, 5000);
@@ -203,8 +242,17 @@ export class Game extends Component {
 
         if (goose.y > this.height + 50) {
           goose.removeFromStage(this.getStage());
-          this.app.stage.removeChild(goose);
-        } else {
+        } if (Math.abs(goose.y - this.aircraft.y) < 30 && Math.abs(goose.x - this.aircraft.x) < 50) {
+          let explosion = new Explosion({
+            'frames': this.explosionFrames,
+            'x': goose.x,
+            'y': goose.y,
+          });
+          goose.removeFromStage(this.getStage());
+          explosion.playOnce(this.getStage());
+          this.updateEnginesStatus();
+        }
+         else {
           newGeese.push(goose);
         }
         return newGeese;
@@ -283,6 +331,7 @@ export class Game extends Component {
 
   render() {
     let topScoresList = this.state.topScores.map(player => <p><span className="black" key={ player.id }>{ player.id }...</span>{player.score} </p> );
+    let enginesStatusList = this.state.enginesStatus.map(engineStatus => <div className={ 'engine ' + engineStatus }></div>)
 
     return (
       <div className="container">
@@ -293,12 +342,7 @@ export class Game extends Component {
           </div>
           <div className="status">
             <h3>ENGINES</h3>
-            <div>
-              <div className="engine dead"></div>
-              <div className="engine dead"></div>
-              <div className="engine alive"></div>
-              <div className="engine alive"></div>
-            </div>
+              <div> { enginesStatusList } </div>
           </div>
           <div className="profile">
             <p className="black">{ this.state.playerId } <br/> score</p>
