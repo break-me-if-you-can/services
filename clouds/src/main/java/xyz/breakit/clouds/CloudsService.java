@@ -1,10 +1,11 @@
 package xyz.breakit.clouds;
 
-import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceImplBase;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -16,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 final class CloudsService extends CloudsServiceImplBase {
 
-    private static final int MAX_CLOUDS_COUNT = 2;
+    private static final int MAX_CLOUDS_COUNT = 3;
     private static final int DEFAULT_CLOUD_WIDTH = 1;
     private final Random random;
 
@@ -49,20 +50,24 @@ final class CloudsService extends CloudsServiceImplBase {
     }
 
     private Collection<Integer> generateClouds(int lineWidth, int cloudWidth) {
-        ImmutableList.Builder<Integer> resultBuilder = ImmutableList.builder();
+        int cloudsCount = random.nextInt(MAX_CLOUDS_COUNT + 1);
+        List<Integer> positions = new ArrayList<>(cloudsCount);
 
-        int lastPosition = 0;
-        for (int i = 0; i < MAX_CLOUDS_COUNT; i++) {
-            int spaceLeft = lineWidth - cloudWidth - lastPosition;
-            if (spaceLeft > 0) {
-                int nextPosition = lastPosition + random.nextInt(spaceLeft);
-                resultBuilder.add(nextPosition);
-                lastPosition = nextPosition + cloudWidth;
-            } else {
-                break;
+        while (positions.size() < cloudsCount) {
+            int nextPosition = random.nextInt(lineWidth - cloudsCount);
+            boolean overlap = false;
+            for (int existingStart : positions) {
+                int existingEnd = existingStart + cloudsCount - 1;
+                if (nextPosition >= existingStart && nextPosition <= existingEnd) {
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap) {
+                positions.add(nextPosition);
             }
         }
-        return resultBuilder.build();
+        return positions;
     }
 
 }
