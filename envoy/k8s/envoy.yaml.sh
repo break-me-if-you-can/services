@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: envoy
 spec:
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
