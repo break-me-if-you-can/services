@@ -1,10 +1,11 @@
 package xyz.breakit.geese;
 
-import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceImplBase;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -16,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 final class GeeseService extends GeeseServiceImplBase {
 
-    private static final int MAX_GEESE_COUNT = 2;
+    private static final int MAX_GEESE_COUNT = 4;
     private static final int DEFAULT_GOOSE_WIDTH = 1;
     private final Random random;
 
@@ -49,20 +50,25 @@ final class GeeseService extends GeeseServiceImplBase {
     }
 
     private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {
-        ImmutableList.Builder<Integer> resultBuilder = ImmutableList.builder();
 
-        int lastPosition = 0;
-        for (int i = 0; i < MAX_GEESE_COUNT; i++) {
-            int spaceLeft = lineWidth - gooseWidth - lastPosition;
-            if (spaceLeft > 0) {
-                int nextPosition = lastPosition + random.nextInt(spaceLeft);
-                resultBuilder.add(nextPosition);
-                lastPosition = nextPosition + gooseWidth;
-            } else {
-                break;
+        int geeseCount = random.nextInt(MAX_GEESE_COUNT) + 1;
+        List<Integer> positions = new ArrayList<>(geeseCount);
+
+        while (positions.size() < geeseCount) {
+            int nextPosition = random.nextInt(lineWidth - gooseWidth);
+            boolean overlap = false;
+            for (int existingStart : positions) {
+                int existingEnd = existingStart + gooseWidth - 1;
+                if (nextPosition >= existingStart && nextPosition <= existingEnd) {
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap) {
+                positions.add(nextPosition);
             }
         }
-        return resultBuilder.build();
+        return positions;
     }
 
 }
