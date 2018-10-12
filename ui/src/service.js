@@ -15,7 +15,7 @@ export class Service {
   
     getFixture = (callback) => {
         let getFixtureRequest = new GetFixtureRequest();
-            getFixtureRequest.setLineWidth(384);
+            getFixtureRequest.setLineWidth(767);
             getFixtureRequest.setLinesCount(1);
             getFixtureRequest.setGooseWidth(62);
             getFixtureRequest.setCloudWidth(62);
