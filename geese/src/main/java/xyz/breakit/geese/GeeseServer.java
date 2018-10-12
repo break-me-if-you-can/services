@@ -12,8 +12,10 @@ import java.util.Random;
 public class GeeseServer {
 
     public static void main(String... args) throws IOException, InterruptedException {
+        Random random = new Random();
         Server server = ServerBuilder.forPort(8090)
-                .addService(new GeeseService(new Random()))
+                .addService(new GeeseService((min, max) -> min + random.nextInt(max - min + 1),
+                        random::nextInt))
                 .build();
         server.start();
 

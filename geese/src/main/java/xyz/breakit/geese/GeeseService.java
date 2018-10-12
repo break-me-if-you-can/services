@@ -6,7 +6,8 @@ import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceImplBase;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
+import java.util.function.BinaryOperator;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -17,12 +18,17 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 final class GeeseService extends GeeseServiceImplBase {
 
-    private static final int MAX_GEESE_COUNT = 4;
-    private static final int DEFAULT_GOOSE_WIDTH = 1;
-    private final Random random;
+    private static final int MIN_GEESE_COUNT = 2;
+    private static final int MAX_GEESE_COUNT = 3;
 
-    GeeseService(Random random) {
-        this.random = random;
+    private static final int DEFAULT_GOOSE_WIDTH = 1;
+    private final BinaryOperator<Integer> numberOfLinesGenerator;
+    private final UnaryOperator<Integer> geeseGenerator;
+
+    GeeseService(BinaryOperator<Integer> numberOfLinesGenerator,
+                 UnaryOperator<Integer> geeseGenerator) {
+        this.numberOfLinesGenerator = numberOfLinesGenerator;
+        this.geeseGenerator = geeseGenerator;
     }
 
     @Override
@@ -51,15 +57,20 @@ final class GeeseService extends GeeseServiceImplBase {
 
     private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {
 
-        int geeseCount = random.nextInt(MAX_GEESE_COUNT) + 1;
+        int geeseCount = numberOfLinesGenerator.apply(MIN_GEESE_COUNT, MAX_GEESE_COUNT);
         List<Integer> positions = new ArrayList<>(geeseCount);
 
         while (positions.size() < geeseCount) {
-            int nextPosition = random.nextInt(lineWidth - gooseWidth);
+            int nextPosition = geeseGenerator.apply(lineWidth - gooseWidth);
             boolean overlap = false;
             for (int existingStart : positions) {
                 int existingEnd = existingStart + gooseWidth - 1;
-                if (nextPosition >= existingStart && nextPosition <= existingEnd) {
+                if (overlap(nextPosition, existingStart, existingEnd)) {
+                    overlap = true;
+                    break;
+                }
+
+                if (overlap(nextPosition, existingStart - gooseWidth + 1, existingStart)) {
                     overlap = true;
                     break;
                 }
@@ -69,6 +80,10 @@ final class GeeseService extends GeeseServiceImplBase {
             }
         }
         return positions;
+    }
+
+    private boolean overlap(int candidate, int existingStart, int existingEnd) {
+        return candidate >= existingStart && candidate <= existingEnd;
     }
 
 }
