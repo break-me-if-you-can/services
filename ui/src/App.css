@@ -8,6 +8,24 @@
   src: url('../assets/fonts/fzero_gp_legend_font.ttf') format('truetype');
 }
 
+@media screen and (orientation:portrait) {
+  .messageblock {
+  }
+
+  .gameblock {
+    display: none;
+  }
+}
+
+.messageblock {
+  position: absolute;
+
+}
+
+.gameblock {
+  display: table-row;;
+}
+
 /* @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -19,18 +37,63 @@
   height: 100%;
 }
 
+
 .app .container {
+  width: 100%;
+  height: 100%;
+  display: table;
+}
+
+@keyframes FONT-SIZE-ANIMATION {
+  0%   { font-size: 15pt; }
+  50%  { font-size: 18pt; }
+  100% { font-size: 15pt; }
+}
+
+/* Portrait or Game overmode message */
+.app .message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-family: 'Goblin';
+  font-size: 20pt;
+  text-transform: uppercase;
+  animation: FONT-SIZE-ANIMATION 1s infinite;
+  -webkit-animation: FONT-SIZE-ANIMATION 1s infinite;
+  -moz-animation:    FONT-SIZE-ANIMATION 1s infinite;
+  -o-animation:      FONT-SIZE-ANIMATION 1s infinite;
+  color: rgb(224, 224, 97);
+  background-color:  #1e2d44;
+}
+
+.app .message p {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.app .message.game_over {
+  opacity: 0.6;
+}
+
+/* Game Block Style*/
+.app .game {
   display: table-row;
   width: 100%;
   height: 100%;
 }
 
-.app .container > .right {
+.app .game > .right {
   display: table-cell;
   width: 75%;
 }
 
-.app .container > .left {
+.app .game > .left {
   font-family: 'Goblin';
   display: table-cell;
   width: 25%;
@@ -45,35 +108,35 @@
   padding-top: 30px;
 }
 
-.app .container > .left .black {
+.app .game > .left .black {
   color: #000000;
 }
 
-.app .container > .left .leaderboard {
+.app .game > .left .leaderboard {
   padding-bottom: 25px;
   font-size: 1em;
 }
 
-.app .container > .left .status {
+.app .game > .left .status {
   padding-bottom: 35px;
   font-size: 1em;
 }
 
-.app .container > .left .status .engine {
+.app .game > .left .status .engine {
   display: inline;
   min-width: 30px;
   height: 45px;
 }
 
-.app .container > .left .status .engine.alive {
+.app .game > .left .status .engine.alive {
   content: url("../assets/textures/engine_alive.png");
 }
 
-.app .container > .left .status .engine.dead {
+.app .game > .left .status .engine.dead {
   content: url("../assets/textures/engine_dead.png");
 }
 
-.app .container > .left .profile {
+.app .game > .left .profile {
   padding-bottom: 25px;
   font-size: 1em;
 }
