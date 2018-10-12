@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 final class CloudsService extends CloudsServiceImplBase {
 
-    private static final int MAX_CLOUDS_COUNT = 3;
+    private static final int MAX_CLOUDS_COUNT = 1;
     private static final int DEFAULT_CLOUD_WIDTH = 1;
     private final Random random;
 
