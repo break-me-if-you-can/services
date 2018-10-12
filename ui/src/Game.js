@@ -30,12 +30,25 @@ export class Game extends Component {
       }
     );
 
+    this.field = {
+      width: window.innerWidth * 0.75,
+      height: window.innerHeight,
+    }
+
+    let pattern = new RegExp('Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|', 'i');
+    this.isMobile = false || navigator.userAgent.match(pattern);
+
     this.score = 100000;
     this.state = {
       playerId: '',
       score: this.score,
-      topScores: [],
+      topScores: new Array(5).fill({
+        playerId: '',
+        score: 0,
+      }),
       enginesStatus: new Array(4).fill('alive'),
+      portrait: false,
+      gameOver: false,
     }
     
     this.collisionsCounter = 0;
@@ -62,6 +75,9 @@ export class Game extends Component {
       }
     )
     if (this.collisionsCounter == 4) {
+      this.setState({
+        gameOver: true,
+      });
       if (this.scoreInterval) {
         clearInterval(this.scoreInterval);
       }
@@ -167,7 +183,7 @@ export class Game extends Component {
               geesePos.forEach(position => {
                 let goose = new Goose( {
                   'frames': this.gooseFrames,
-                  'x': 191 + 384 * position / 25,
+                  'x': position,
                   'y': -50
                 });
                 goose.addToStage(this.getStage());
@@ -178,7 +194,7 @@ export class Game extends Component {
                 cloudsPos.forEach(position => {
                   let cloud = new Cloud( {
                     'texture': this.cloudTexture.texture,
-                    'x': 191 + 384 * position / 25,
+                    'x': position,
                     'y': -50
                   });
                   cloud.addToStage(this.getStage());
@@ -188,7 +204,7 @@ export class Game extends Component {
 
           this.fixtureTimeout = setTimeout(() => {
             this.service.getFixture(fixtureCallback);
-          }, 300);
+          }, 1000);
       } else {
         this.fixtureTimeout = setTimeout(() => {
           this.service.getFixture(fixtureCallback);
@@ -277,7 +293,28 @@ export class Game extends Component {
 
   onDeviceOrientationHandler = (event) => {
     //alert(event.alpha, event.beta, event.gamma);
-    this.aircraft.x -= Math.sign(event.gamma) * event.beta / 180 * 25;
+    if (window.innerHeight > window.innerWidth) {
+      if (this.app.ticker.started) {
+        this.app.ticker.stop();
+      }
+      if (!this.state.portrait) {
+        this.setState({
+          portrait: true,
+        })
+      }
+    } else {
+      if (!this.app.ticker.started) {
+        this.app.ticker.start();
+      }
+      if (this.state.portrait) {
+        this.setState({
+          portrait: false,
+        });
+      }
+      //if (this.field.width * 0.1 < this.aircraft.x && this.aircraft.x < this.field.width * 0.9) {
+        this.aircraft.x -= Math.sign(event.gamma) * event.beta / 180 * 30;
+      //}
+    }
   }
 
   onDeviceMotionHandler = (event) => {
@@ -295,13 +332,16 @@ export class Game extends Component {
   }
 
   onKeyDownHandler = (e) => {
-    switch(e.keyCode) {
-      case 37: 
-              this.aircraft.x -= 5;
-              break;
-      case 39:
-              this.aircraft.x += 5;
-              break;
+    if (e.keyCode == 37) {
+      this.aircraft.x -= 5;
+    } else if (e.keyCode == 39) {
+      this.aircraft.x += 5;
+    } else if (e.keyCode == 65 && e.ctrlKey && e.shiftKey) { 
+      console.log("Ctrl + Shift + a");
+    } else if (e.keyCode == 83 && e.ctrlKey && e.shiftKey) {
+      console.log("Ctrl + Shift + s");
+    } else if (e.keyCode == 68 && e.ctrlKey && e.shiftKey) {
+      console.log("Ctrl + Shift + d");
     }
   }
 
@@ -333,25 +373,40 @@ export class Game extends Component {
     let topScoresList = this.state.topScores.map(player => <p><span className="black" key={ player.id }>{ player.id }...</span>{player.score} </p> );
     let enginesStatusList = this.state.enginesStatus.map(engineStatus => <div className={ 'engine ' + engineStatus }></div>)
 
+    let message = '';
+    if (this.state.gameOver) {
+      message = (<div className="message game_over">
+                    <p>game over!</p>
+                  </div>);
+    }
+    if (this.state.portrait) {
+      message = (<div className="message portrait">
+                    <p>turn ur phone by 90&deg;!</p>
+                  </div>)
+    }
+
     return (
       <div className="container">
-        <div className="left stats">
-          <div className="leaderboard">
-            <div className="black">TOP 5</div>
-            <div>{ topScoresList }</div>
+        { message}
+        <div className="game">
+          <div className="left stats">
+            <div className="leaderboard">
+              <div className="black">TOP 5</div>
+              <div>{ topScoresList }</div>
+            </div>
+            <div className="status">
+              <h3>ENGINES</h3>
+                <div> { enginesStatusList } </div>
+            </div>
+            <div className="profile">
+              <p className="black">{ this.state.playerId } <br/> score</p>
+              <p>{ this.state.score }</p>
+            </div>
           </div>
-          <div className="status">
-            <h3>ENGINES</h3>
-              <div> { enginesStatusList } </div>
+          <div className="right field" ref={this.gameRefCallback}
+              onKeyDown={(e) => this.onKeyDownHandler(e) }
+              tabIndex="0">
           </div>
-          <div className="profile">
-            <p className="black">{ this.state.playerId } <br/> score</p>
-            <p>{ this.state.score }</p>
-          </div>
-        </div>
-        <div className="right field" ref={this.gameRefCallback}
-            onKeyDown={(e) => this.onKeyDownHandler(e) }
-            tabIndex="0">
         </div>
       </div>
     );
