@@ -3,6 +3,9 @@ var webpack = require('webpack');
 
 module.exports = {
   devtool: 'eval',
+  stats: {
+    errorDetails: true
+  },
   entry: [
     'webpack-hot-middleware/client',
     './src/index'
@@ -12,6 +15,9 @@ module.exports = {
     filename: 'bundle.js',
     publicPath: '/static/'
   },
+  resolve: {
+    extensions: ["", ".js", ".jsx", ".css", ".json", ".otf", ".ttf", ".png"]
+  },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin()
@@ -19,17 +25,29 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /\.js$/,
+        test: /\.jsx?$/,
         loaders: ['babel'],
-        include: path.join(__dirname, 'src')
+        include: [path.join(__dirname, 'src'), path.join(__dirname, 'generated')]
       },
       {
-        test: /\.(png|jpg)$/,
-        loaders: ['url?limit=100000'],
+        test: /\.(png|svg)(\?[a-z0-9=.]+)?$/,
+        loader: 'url-loader?limit=100000',
         include: path.join(__dirname, 'assets')
       },
-
-      // pixi uses fs.readFileSync and require()s json files
+      {
+        test: /\.(otf|ttf)$/,
+        loader: 'url-loader',
+        options: {
+          limit: 100000,
+          name: "fonts/[name].[ext]"
+        },
+        include: path.join(__dirname, 'assets')
+      },
+      {
+          test: /\.css$/,
+          loaders: ['style-loader', 'css-loader'],
+          include: [path.join(__dirname, 'src')]
+      },
       {
         test: /\.js$/,
         loaders: ['transform?brfs'],

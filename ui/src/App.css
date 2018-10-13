@@ -1,28 +1,142 @@
-.App {
-  text-align: center;
+@font-face {
+  font-family: 'Goblin';
+  src: url('../assets/fonts/AGoblinAppears.otf') format('opentype')
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+@font-face {
+  font-family: 'FZERO';
+  src: url('../assets/fonts/fzero_gp_legend_font.ttf') format('truetype');
 }
 
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
+@media screen and (orientation:portrait) {
+  .messageblock {
+  }
+
+  .gameblock {
+    display: none;
+  }
 }
 
-.App-title {
-  font-size: 1.5em;
+.messageblock {
+  position: absolute;
+
 }
 
-.App-intro {
-  font-size: large;
+.gameblock {
+  display: table-row;;
 }
 
-@keyframes App-logo-spin {
+/* @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+} */
+
+.app  {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+
+
+.app .container {
+  width: 100%;
+  height: 100%;
+  display: table;
+}
+
+@keyframes FONT-SIZE-ANIMATION {
+  0%   { font-size: 15pt; }
+  50%  { font-size: 18pt; }
+  100% { font-size: 15pt; }
+}
+
+/* Portrait or Game overmode message */
+.app .message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-family: 'Goblin';
+  font-size: 20pt;
+  text-transform: uppercase;
+  animation: FONT-SIZE-ANIMATION 1s infinite;
+  -webkit-animation: FONT-SIZE-ANIMATION 1s infinite;
+  -moz-animation:    FONT-SIZE-ANIMATION 1s infinite;
+  -o-animation:      FONT-SIZE-ANIMATION 1s infinite;
+  color: rgb(224, 224, 97);
+  background-color:  #1e2d44;
+}
+
+.app .message p {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.app .message.game_over {
+  opacity: 0.6;
+}
+
+/* Game Block Style*/
+.app .game {
+  display: table-row;
+  width: 100%;
+  height: 100%;
+}
+
+.app .game > .right {
+  display: table-cell;
+  width: 75%;
+}
+
+.app .game > .left {
+  font-family: 'Goblin';
+  display: table-cell;
+  width: 25%;
+  background: url("../assets/interface_bg.png") no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;;
+  color: rgb(224, 224, 97);
+  vertical-align: top;
+  text-align: center;
+  padding-top: 30px;
+}
+
+.app .game > .left .black {
+  color: #000000;
+}
+
+.app .game > .left .leaderboard {
+  padding-bottom: 25px;
+  font-size: 1em;
+}
+
+.app .game > .left .status {
+  padding-bottom: 35px;
+  font-size: 1em;
+}
+
+.app .game > .left .status .engine {
+  display: inline;
+  min-width: 30px;
+  height: 45px;
+}
+
+.app .game > .left .status .engine.alive {
+  content: url("../assets/textures/engine_alive.png");
+}
+
+.app .game > .left .status .engine.dead {
+  content: url("../assets/textures/engine_dead.png");
+}
+
+.app .game > .left .profile {
+  padding-bottom: 25px;
+  font-size: 1em;
 }

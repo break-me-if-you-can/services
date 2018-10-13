@@ -43,8 +43,8 @@ public class GatewayClient {
         GetFixtureRequest fixtureRequest = GetFixtureRequest.newBuilder()
                 .setLinesCount(100)
                 .setLineWidth(100)
-                .setCloudWidth(6)
-                .setGooseWidth(4)
+                .setCloudWidth(10)
+                .setGooseWidth(10)
                 .build();
 
         FixtureResponse fixture = client.getFixture(fixtureRequest);
