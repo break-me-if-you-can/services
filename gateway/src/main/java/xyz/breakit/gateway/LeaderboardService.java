@@ -31,7 +31,7 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
         CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
-        top5.whenCompleteAsync((l, e) -> {
+        top5.whenComplete((l, e) -> {
             if (e != null) {
                 responseObserver.onError(e);
             } else {

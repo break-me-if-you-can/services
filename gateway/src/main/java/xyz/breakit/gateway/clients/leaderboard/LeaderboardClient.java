@@ -62,6 +62,7 @@ public class LeaderboardClient {
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
                 .with(EXECUTOR)
+                .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
                 .future(() -> future);
     }
 
