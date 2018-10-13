@@ -78,7 +78,7 @@ public class Gateway {
                 .addService(leaderboardService)
                 .addService(adminService)
                 .intercept(grpcTracing.newServerInterceptor())
-                .intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
+                //.intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
     }
 
