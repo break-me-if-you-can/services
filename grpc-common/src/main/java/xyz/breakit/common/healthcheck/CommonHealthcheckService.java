@@ -39,6 +39,7 @@ public class CommonHealthcheckService extends HealthCheckServiceImplBase {
             latencySpec.setDuration(Durations.fromNanos(duration.toNanos()));
         }
         ServiceHealthCheckStatus healthStatus = ServiceHealthCheckStatus.newBuilder()
+                .setServiceName(serviceName)
                 .setAddedLatency(latencySpec)
                 .build();
         HealthCheckResponse response = HealthCheckResponse.newBuilder()

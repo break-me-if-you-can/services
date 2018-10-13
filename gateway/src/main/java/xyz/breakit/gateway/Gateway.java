@@ -146,7 +146,7 @@ public class Gateway {
     }
 
     @Bean("CloudsAdmin")
-    public AdminServiceStub cloudsServiceClient(
+    public AdminServiceStub cloudsAdmin(
             @Qualifier("CloudsChannel") Channel cloudsChannel) {
         return AdminServiceGrpc.newStub(cloudsChannel);
     }
@@ -159,8 +159,8 @@ public class Gateway {
 
     @Bean("GeeseChannel")
     public Channel geeseChannel(
-            @Value("${grpc.clouds.host:geese}") String geeseHost,
-            @Value("${grpc.clouds.port:8080}") int geesePort,
+            @Value("${grpc.geese.host:geese}") String geeseHost,
+            @Value("${grpc.geese.port:8080}") int geesePort,
             GrpcTracing grpcTracing) {
         return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
@@ -180,7 +180,7 @@ public class Gateway {
     }
 
     @Bean("GeeseAdmin")
-    public AdminServiceStub geeseServiceClient(
+    public AdminServiceStub geeseAdmin(
             @Qualifier("GeeseChannel") Channel geeseChannel) {
         return AdminServiceGrpc.newStub(geeseChannel);
     }
