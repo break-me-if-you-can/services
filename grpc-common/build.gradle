@@ -1,0 +1,36 @@
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+
+group "xyz.breakit"
+
+buildscript {
+    repositories {
+        maven {
+            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+        }
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+    }
+}
+
+repositories {
+    maven {
+        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+    }
+    jcenter()
+    mavenLocal()
+}
+
+def grpcVersion = '1.15.0'
+def protobufVersion = '3.5.1'
+
+dependencies {
+    compile "xyz.breakit:grpc-api"
+    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    testCompile "io.grpc:grpc-testing:${grpcVersion}"
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+apply plugin: 'idea'
