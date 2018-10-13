@@ -110,16 +110,17 @@ public class Gateway {
     }
 
     @Bean
-    public HealthcheckService healthcheckService(Flags flags) {
-        return new HealthcheckService(flags);
+    public HealthcheckService healthcheckService(
+            Flags flags,
+            @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
+            @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck) {
+        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck);
     }
 
     @Bean
     public HealthcheckGrpcService healthcheckGrpc(
-            HealthcheckService healthcheckService,
-            @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
-            @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck) {
-        return new HealthcheckGrpcService(healthcheckService, geeseHealthcheck, cloudsHealthcheck);
+            HealthcheckService healthcheckService) {
+        return new HealthcheckGrpcService(healthcheckService);
     }
 
     @Bean("CloudsChannel")
