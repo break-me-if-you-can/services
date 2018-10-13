@@ -17,6 +17,7 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+            - containerPort: 8082
           env:
             - name: grpc_geese_host
               value: "geese"
@@ -50,4 +51,8 @@ spec:
      targetPort: 8080
      protocol: TCP
      name: grpc
+   - port: 8082
+     targetPort: 8082
+     protocol: TCP
+     name: http
 YAML
