@@ -29,6 +29,17 @@ service AdminService {
 }
 
 /*
+ * Service to check server health status.
+ */
+service HealthCheckService {
+
+    /*
+     * Returns current status of failure injections.
+     */
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+/*
  * Request to inject failures to server requests.
  */
 message InjectFailureRequest {
@@ -95,4 +106,40 @@ message PartialDegradationResponse {
      * true if partial degradation is enabled, false otherwise.
      */
     bool enabled = 1;
+}
+
+/*
+ * Health check request. Currently empty.
+ */
+message HealthCheckRequest {
+}
+
+/*
+ * Response contains current state of injected failures.
+ */
+message HealthCheckResponse {
+    /*
+     * List of service statuses. Contains one element per servcie.
+     */
+    repeated ServiceHealthCheckStatus service_health_status = 1;
+}
+
+/*
+ * Contains current state of injected failures for a service.
+ */
+message ServiceHealthCheckStatus {
+    /*
+     * Service name.
+     */
+    string service_name = 1;
+    /*
+     * true if partial degradation is enabled,
+     * false if disabled.
+     */
+    bool partial_degradation_enabled = 2;
+    /*
+     * Currently injected added latency failure.
+     * Empty message if not injected.
+     */
+    AddedLatencySpec added_latency = 3;
 }

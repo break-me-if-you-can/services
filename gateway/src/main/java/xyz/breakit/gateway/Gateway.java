@@ -5,10 +5,8 @@ import brave.grpc.GrpcTracing;
 import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import com.netflix.concurrency.limits.Limiter;
-import com.netflix.concurrency.limits.grpc.client.ConcurrencyLimitClientInterceptor;
 import com.netflix.concurrency.limits.grpc.client.GrpcClientLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.client.GrpcClientRequestContext;
-import com.netflix.concurrency.limits.grpc.server.ConcurrencyLimitServerInterceptor;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
@@ -25,6 +23,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
+import xyz.breakit.gateway.admin.HealthcheckGrpcService;
+import xyz.breakit.gateway.admin.HealthcheckService;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.geese.GeeseServiceGrpc;
@@ -70,6 +70,7 @@ public class Gateway {
             PlayerIdService playerIdService,
             LeaderboardService leaderboardService,
             GatewayAdminService adminService,
+            HealthcheckGrpcService healthcheckService,
             Limiter<GrpcServerRequestContext> limiter) {
 
         return ServerBuilder.forPort(SERVER_PORT)
@@ -77,8 +78,9 @@ public class Gateway {
                 .addService(playerIdService)
                 .addService(leaderboardService)
                 .addService(adminService)
+                .addService(healthcheckService)
                 .intercept(grpcTracing.newServerInterceptor())
-                .intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
+                //.intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
     }
 
@@ -100,6 +102,16 @@ public class Gateway {
     }
 
     @Bean
+    public HealthcheckService healthcheckService(Flags flags) {
+        return new HealthcheckService(flags);
+    }
+
+    @Bean
+    public HealthcheckGrpcService healthcheckGrpc(HealthcheckService healthcheckService) {
+        return new HealthcheckGrpcService(healthcheckService);
+    }
+
+    @Bean
     public CloudsServiceFutureStub cloudsServiceClient(
             @Value("${grpc.clouds.host:clouds}") String cloudsHost,
             @Value("${grpc.clouds.port:8080}") int cloudsPort,
@@ -109,7 +121,7 @@ public class Gateway {
         Channel cloudsChannel = ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .intercept(new ConcurrencyLimitClientInterceptor(limiter))
+                //.intercept(new ConcurrencyLimitClientInterceptor(limiter))
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
@@ -126,7 +138,7 @@ public class Gateway {
         Channel geeseChannel = ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .intercept(new ConcurrencyLimitClientInterceptor(limiter))
+                //.intercept(new ConcurrencyLimitClientInterceptor(limiter))
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
