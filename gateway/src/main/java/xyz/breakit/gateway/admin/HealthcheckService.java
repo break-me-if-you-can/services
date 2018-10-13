@@ -1,7 +1,14 @@
 package xyz.breakit.gateway.admin;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import xyz.breakit.admin.HealthCheckRequest;
+import xyz.breakit.admin.HealthCheckResponse;
+import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.admin.ServiceHealthCheckStatus;
 import xyz.breakit.gateway.flags.Flags;
+
+import java.util.Objects;
 
 import static xyz.breakit.gateway.admin.ServiceNames.GATEWAY_SERVICE;
 
@@ -11,16 +18,40 @@ import static xyz.breakit.gateway.admin.ServiceNames.GATEWAY_SERVICE;
 public final class HealthcheckService {
 
     private final Flags flags;
+    private final HealthCheckServiceFutureStub geeseHealthcheck;
+    private final HealthCheckServiceFutureStub cloudsHealthcheck;
 
-    public HealthcheckService(Flags flags) {
+    public HealthcheckService(Flags flags,
+                              HealthCheckServiceFutureStub geeseHealthcheck,
+                              HealthCheckServiceFutureStub cloudsHealthcheck) {
         this.flags = flags;
+        this.geeseHealthcheck = geeseHealthcheck;
+        this.cloudsHealthcheck = cloudsHealthcheck;
     }
 
-    public ServiceHealthCheckStatus healthCheck() {
-        return ServiceHealthCheckStatus.newBuilder()
-                .setServiceName(GATEWAY_SERVICE)
-                .setPartialDegradationEnabled(flags.isPartialDegradationEnabled())
-                .build();
+    public ListenableFuture<HealthCheckResponse> healthCheck() {
+
+        HealthCheckRequest request = HealthCheckRequest.getDefaultInstance();
+
+        ListenableFuture<HealthCheckResponse> geeseHealth = geeseHealthcheck.healthCheck(request);
+        ListenableFuture<HealthCheckResponse> cloudsHealth = cloudsHealthcheck.healthCheck(request);
+
+        return Futures.transform(Futures.successfulAsList(geeseHealth, cloudsHealth),
+                remoteServicesHealth -> {
+                    HealthCheckResponse.Builder response =
+                            HealthCheckResponse.newBuilder()
+                                    .addServiceHealthStatus(ServiceHealthCheckStatus.newBuilder()
+                                            .setServiceName(GATEWAY_SERVICE)
+                                            .setPartialDegradationEnabled(flags.isPartialDegradationEnabled()));
+
+                    remoteServicesHealth.stream()
+                            .filter(Objects::nonNull)
+                            .map(HealthCheckResponse::getServiceHealthStatusList)
+                            .forEach(response::addAllServiceHealthStatus);
+
+                    return response.build();
+                }
+        );
     }
 
 }

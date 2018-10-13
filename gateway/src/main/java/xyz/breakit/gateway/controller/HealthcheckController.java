@@ -19,8 +19,8 @@ public class HealthcheckController {
     }
 
     @GetMapping(value = "/health", produces = "text/plain")
-    public String healthCheck() {
-        return healthcheckService.healthCheck().toString();
+    public String healthCheck() throws Exception {
+        return healthcheckService.healthCheck().get().toString();
     }
 
 }
