@@ -3,6 +3,8 @@ const grpc = {};
 
 const { PlayerScore, UpdateScoreRequest, TopScoresRequest, GeneratePlayerIdRequest, GetFixtureRequest } = require("../generated/gateway_pb");
 const { LeaderboardServiceClient, FixtureServiceClient, PlayerIdServiceClient } = require("../generated/gateway_grpc_web_pb");
+const { InjectFailureRequest, PartialDegradationRequest } = require("../generated/admin/admin_pb");
+const { AdminServiceClient } = require("../generated/admin/admin_grpc_web_pb");
 
 export class Service {
   
@@ -11,6 +13,7 @@ export class Service {
       this.fixtureServiceClient = new FixtureServiceClient('http://35.233.196.238');
       this.playerIdServiceClient = new PlayerIdServiceClient('http://35.233.196.238');
       this.leaderboardServiceClient = new LeaderboardServiceClient('http://35.233.196.238');
+      this.adminServiceClient = new AdminServiceClient('http://35.233.196.238');
     }
   
     getFixture = (callback) => {
@@ -74,4 +77,24 @@ export class Service {
         );
     }
 
+    injectFailure = (callback) => {
+        let injectFailureRequest = new InjectFailureRequest();
+
+        this.adminServiceClient.injectFailure(injectFailureRequest, { }, 
+            function(err, reposnse) {
+                callback(response);
+            }
+        );
+    }
+
+    managePartialDegradation = (enable, callback) => {
+        let partialDegradationRequest = new PartialDegradationRequest();
+        partialDegradationRequest.setEnable(enable);
+
+        this.adminServiceClient.managePartialDegradation(partialDegradationRequest, { }, 
+            function(err, response) {
+                callback(response);
+            }
+        );
+    }
 }

@@ -7,7 +7,7 @@
 /coverage
 
 # production
-/build
+/dist
 
 # misc
 .DS_Store
@@ -22,3 +22,9 @@ yarn-error.log*
 
 # visual studio code
 .vscode
+
+# generated proto files 
+/generated
+
+# grpc-web dependency
+/grpc-web

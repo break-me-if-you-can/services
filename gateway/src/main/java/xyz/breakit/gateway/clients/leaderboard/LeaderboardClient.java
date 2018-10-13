@@ -55,11 +55,14 @@ public class LeaderboardClient {
 
 
     public CompletableFuture<List<LeaderboardEntry>> top5() {
+        CompletableFuture<List<LeaderboardEntry>> future = top5Request()
+                .toFuture();
+
         return Failsafe
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
                 .with(EXECUTOR)
-                .future(() -> top5Request().toFuture());
+                .future(() -> future);
     }
 
 
@@ -74,7 +77,6 @@ public class LeaderboardClient {
                 .syncBody(newScore)
                 .exchange()
                 .timeout(Duration.ofMillis(500))
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .subscribe(resp -> onMessage.run(), onError, onComplete);
     }
 
