@@ -61,8 +61,8 @@ public class LeaderboardClient {
         return Failsafe
                 .with(RETRY_POLICY)
                 //.with(CIRCUIT_BREAKER)
-                .with(EXECUTOR)
-                .future(() -> future);
+                //.with(EXECUTOR)
+                .get(() -> future);
     }
 
 
