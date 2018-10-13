@@ -10,7 +10,7 @@ import java.util.Random;
 /**
  * {@link ServerInterceptor} to add configurable latency to server calls.
  */
-public class AddLatencyServerInterceptor implements ServerInterceptor {
+public final class AddLatencyServerInterceptor implements ServerInterceptor {
 
     private final AddedLatencyProvider addedLatencyProvider;
 

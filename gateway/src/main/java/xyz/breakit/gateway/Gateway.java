@@ -98,7 +98,7 @@ public class Gateway {
 
     @Bean
     public GatewayAdminService adminService(SettableFlags flags) {
-        return new GatewayAdminService(flags);
+        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin);
     }
 
     @Bean
