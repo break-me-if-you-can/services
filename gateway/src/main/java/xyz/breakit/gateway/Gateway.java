@@ -39,6 +39,7 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 /**
  * Gateway service entry point.
@@ -90,8 +91,8 @@ public class Gateway {
     }
 
     @Bean
-    public FixtureService fixtureService(GeeseServiceFutureStub geeseClient,
-                                         CloudsServiceFutureStub cloudsClient,
+    public FixtureService fixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
+                                         Supplier<CloudsServiceFutureStub> cloudsClient,
                                          Flags flags) {
         return new FixtureService(geeseClient, cloudsClient, flags);
     }
@@ -131,6 +132,18 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .usePlaintext()
+                .build();
+    }
+
+    @Bean("CloudsChannelWithRetries")
+    public Channel cloudsChannelWithRetries(
+            @Value("${grpc.clouds.host:clouds}") String cloudsHost,
+            @Value("${grpc.clouds.port:8080}") int cloudsPort,
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
+                .forAddress(cloudsHost, cloudsPort)
+                .intercept(grpcTracing.newClientInterceptor())
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
@@ -138,12 +151,18 @@ public class Gateway {
     }
 
     @Bean
-    public CloudsServiceFutureStub cloudsServiceClient(
+    public Supplier<CloudsServiceFutureStub> cloudsServiceClient(
             @Qualifier("CloudsChannel") Channel cloudsChannel,
+            @Qualifier("CloudsChannelWithRetries") Channel cloudsChannelWithRetries,
+            Flags flags,
             Limiter<GrpcClientRequestContext> limiter) {
 
         //Channel channel = ClientInterceptors.intercept(cloudsChannel, new ConcurrencyLimitClientInterceptor(limiter));
-        return CloudsServiceGrpc.newFutureStub(cloudsChannel);
+
+        CloudsServiceFutureStub client = CloudsServiceGrpc.newFutureStub(cloudsChannel);
+        CloudsServiceFutureStub clientWithRetries = CloudsServiceGrpc.newFutureStub(cloudsChannelWithRetries);
+
+        return () -> flags.isRetryEnabled() ? clientWithRetries : client;
     }
 
     @Bean("CloudsAdmin")
@@ -166,6 +185,18 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
+                .usePlaintext()
+                .build();
+    }
+
+    @Bean("GeeseChannelWithRetries")
+    public Channel geeseChannelWithRetries(
+            @Value("${grpc.geese.host:geese}") String geeseHost,
+            @Value("${grpc.geese.port:8080}") int geesePort,
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
+                .forAddress(geeseHost, geesePort)
+                .intercept(grpcTracing.newClientInterceptor())
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
@@ -173,11 +204,18 @@ public class Gateway {
     }
 
     @Bean
-    public GeeseServiceFutureStub geeseServiceClient(
+    public Supplier<GeeseServiceFutureStub> geeseServiceClient(
             @Qualifier("GeeseChannel") Channel geeseChannel,
+            @Qualifier("GeeseChannelWithRetries") Channel geeseChannelWithRetries,
+            Flags flags,
             Limiter<GrpcClientRequestContext> limiter) {
+
         //Channel channel = ClientInterceptors.intercept(geeseChannel, new ConcurrencyLimitClientInterceptor(limiter));
-        return GeeseServiceGrpc.newFutureStub(geeseChannel);
+
+        GeeseServiceFutureStub client = GeeseServiceGrpc.newFutureStub(geeseChannel);
+        GeeseServiceFutureStub clientWithRetries = GeeseServiceGrpc.newFutureStub(geeseChannelWithRetries);
+
+        return () -> flags.isRetryEnabled() ? clientWithRetries : client;
     }
 
     @Bean("GeeseAdmin")

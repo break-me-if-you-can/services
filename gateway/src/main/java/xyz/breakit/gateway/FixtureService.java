@@ -16,6 +16,7 @@ import xyz.breakit.geese.GetGeeseRequest;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
@@ -28,12 +29,12 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 final class FixtureService extends FixtureServiceImplBase {
 
-    private final GeeseServiceFutureStub geeseClient;
-    private final CloudsServiceFutureStub cloudsClient;
+    private final Supplier<GeeseServiceFutureStub> geeseClient;
+    private final Supplier<CloudsServiceFutureStub> cloudsClient;
     private final Flags flags;
 
-    FixtureService(GeeseServiceFutureStub geeseClient,
-                   CloudsServiceFutureStub cloudsClient,
+    FixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
+                   Supplier<CloudsServiceFutureStub> cloudsClient,
                    Flags flags) {
         this.geeseClient = geeseClient;
         this.cloudsClient = cloudsClient;
@@ -45,9 +46,9 @@ final class FixtureService extends FixtureServiceImplBase {
                            StreamObserver<FixtureResponse> responseObserver) {
 
         ListenableFuture<GeeseResponse> geeseFuture =
-                geeseClient.withDeadlineAfter(500, MILLISECONDS).getGeese(toGeeseRequest(request));
+                geeseClient.get().withDeadlineAfter(500, MILLISECONDS).getGeese(toGeeseRequest(request));
         ListenableFuture<CloudsResponse> cloudsFuture =
-                cloudsClient.withDeadlineAfter(500, MILLISECONDS).getClouds(toCloudsRequest(request));
+                cloudsClient.get().withDeadlineAfter(500, MILLISECONDS).getClouds(toCloudsRequest(request));
 
         ListenableFuture<List<GeneratedMessageV3>> geeseAndClouds = combine(geeseFuture, cloudsFuture);
 
@@ -82,18 +83,18 @@ final class FixtureService extends FixtureServiceImplBase {
 
     private GetCloudsRequest toCloudsRequest(GetFixtureRequest request) {
         return GetCloudsRequest.newBuilder()
-                    .setLinesCount(request.getLinesCount())
-                    .setLineWidth(request.getLineWidth())
-                    .setCloudWidth(request.getCloudWidth())
-                    .build();
+                .setLinesCount(request.getLinesCount())
+                .setLineWidth(request.getLineWidth())
+                .setCloudWidth(request.getCloudWidth())
+                .build();
     }
 
     private GetGeeseRequest toGeeseRequest(GetFixtureRequest request) {
         return GetGeeseRequest.newBuilder()
-                    .setLinesCount(request.getLinesCount())
-                    .setLineWidth(request.getLineWidth())
-                    .setGooseWidth(request.getGooseWidth())
-                    .build();
+                .setLinesCount(request.getLinesCount())
+                .setLineWidth(request.getLineWidth())
+                .setGooseWidth(request.getGooseWidth())
+                .build();
     }
 
     private FixtureResponse merge(GeeseResponse geese, CloudsResponse clouds, int requestedLinesCount) {
