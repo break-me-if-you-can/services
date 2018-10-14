@@ -38,8 +38,8 @@ public class AdminController {
     public void preDemoMode() {
 
         CompletableFuture<Object> degradationResult = partialDegradation(false);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 1.0, 100000);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1.0, 100000);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 700);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 700);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);

@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.random;
+
 @Service
 public class LeaderboardService {
 
@@ -54,7 +56,7 @@ public class LeaderboardService {
     }
 
     private void delayIfBroken() {
-        if (broken.get()) {
+        if (broken.get() && random() < 0.5) {
             try {
                 Thread.sleep(700);
             } catch (InterruptedException e) {
