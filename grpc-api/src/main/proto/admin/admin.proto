@@ -138,8 +138,13 @@ message ServiceHealthCheckStatus {
      */
     bool partial_degradation_enabled = 2;
     /*
+     * true if retries are enabled,
+     * false if disabled.
+     */
+    bool retry_enabled = 3;
+    /*
      * Currently injected added latency failure.
      * Empty message if not injected.
      */
-    AddedLatencySpec added_latency = 3;
+    AddedLatencySpec added_latency = 4;
 }

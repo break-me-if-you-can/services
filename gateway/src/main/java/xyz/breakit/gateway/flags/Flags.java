@@ -13,4 +13,10 @@ public interface Flags {
      */
     boolean isPartialDegradationEnabled();
 
+    /**
+     * @return {@code true} if reties to upstream services are
+     * enabled.
+     */
+    boolean isRetryEnabled();
+
 }
