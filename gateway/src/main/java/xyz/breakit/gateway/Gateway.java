@@ -114,7 +114,7 @@ public class Gateway {
             Flags flags,
             @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
             @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck) {
-        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck);
+        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, lbAdminClient);
     }
 
     @Bean

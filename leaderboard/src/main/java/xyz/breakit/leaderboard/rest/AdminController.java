@@ -1,10 +1,7 @@
 package xyz.breakit.leaderboard.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import xyz.breakit.leaderboard.service.LeaderboardService;
 
 @RestController
@@ -18,6 +15,13 @@ public class AdminController {
     public AdminController(LeaderboardService leaderboardService, LimiterFilter limiterFilter) {
         this.leaderboardService = leaderboardService;
         this.limiterFilter = limiterFilter;
+    }
+
+    @GetMapping(value = "/health")
+    public Health health() {
+        Health health = new Health();
+        health.setBroken(leaderboardService.isBroken());
+        return health;
     }
 
     @PostMapping(value = "/clear")
