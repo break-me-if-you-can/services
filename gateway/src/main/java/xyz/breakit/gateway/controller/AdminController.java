@@ -7,10 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.breakit.admin.*;
+import xyz.breakit.admin.AddedLatencySpec;
+import xyz.breakit.admin.InjectFailureRequest;
+import xyz.breakit.admin.InjectFailureResponse;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
+import xyz.breakit.gateway.flags.SettableFlags;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -26,28 +29,34 @@ public class AdminController {
     private final LeaderboardAdminClient lbAdminClient;
     private final GatewayAdminService gwAdminService;
     private final LeaderboardClient lbClient;
+    private final SettableFlags flags;
 
     @Autowired
-    public AdminController(LeaderboardAdminClient lbAdminClient, GatewayAdminService gwAdminService, LeaderboardClient lbClient) {
+    public AdminController(
+            LeaderboardAdminClient lbAdminClient,
+            GatewayAdminService gwAdminService,
+            LeaderboardClient lbClient,
+            SettableFlags flags) {
         this.lbAdminClient = lbAdminClient;
         this.gwAdminService = gwAdminService;
         this.lbClient = lbClient;
+        this.flags = flags;
     }
 
     @PostMapping("/admin/set_mode/1_pre_demo")
     public void preDemoMode() {
 
-        CompletableFuture<Object> degradationResult = partialDegradation(false);
+        flags.setPartialDegradationEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 700);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 700);
 
         try {
-            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
+            flags.setPartialDegradationEnabled(true);
 
-            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
-                    .get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting predemo mode", e);
             throw new RuntimeException(e);
@@ -57,15 +66,15 @@ public class AdminController {
     @PostMapping("/admin/set_mode/2_demo_with_failures")
     public void demoWithFailures() {
 
-        CompletableFuture<Object> degradationResult = partialDegradation(false);
+        flags.setPartialDegradationEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.7, 700);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
+            CompletableFuture.allOf(geeseResult, cloudsResult)
                     .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting demo_with_failures mode", e);
@@ -73,68 +82,60 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/3_demo_with_retries")
+    @PostMapping("/admin/set_mode/3_demo_with_partial_degradation")
+    public void demoWithPartialDegradation() {
+
+        flags.setPartialDegradationEnabled(true);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
+
+        try {
+            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbClient.disableRetries();
+
+            CompletableFuture.allOf(geeseResult, cloudsResult)
+                    .get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting 3_demo_with_partial_degradation mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/admin/set_mode/4_demo_with_retries")
     public void demoWithRetries() {
 
-        CompletableFuture<Object> degradationResult = partialDegradation(true);
+        flags.setPartialDegradationEnabled(true);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.7, 700);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.enableRetriesWithNoBackoff();
 
-            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
-                    .get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOG.error("Error while setting demo_with_retries mode", e);
+            LOG.error("Error while setting 4_demo_with_retries mode", e);
             throw new RuntimeException(e);
         }
     }
 
-    @PostMapping("/admin/set_mode/4_demo_with_backoff")
-    public void demoWithBackoff() {
-        CompletableFuture<Object> degradationResult = partialDegradation(true);
+    @PostMapping("/admin/set_mode/5_general_demo")
+    public void generalDemo() {
+        flags.setPartialDegradationEnabled(true);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
-            lbClient.enableRetriesWithBackoff();
+            lbClient.disableRetries();
 
 
-            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
-                    .get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOG.error("Error while setting demo_with_backoff mode", e);
+            LOG.error("Error while setting 5_general_demo mode", e);
             throw new RuntimeException(e);
         }
     }
-
-    private CompletableFuture<Object> partialDegradation(boolean enable) {
-        CompletableFuture<Object> degradationResult = new CompletableFuture<>();
-        gwAdminService.managePartialDegradation(PartialDegradationRequest.newBuilder().setEnable(enable).build(),
-                new StreamObserver<PartialDegradationResponse>() {
-                    @Override
-                    public void onNext(PartialDegradationResponse value) {
-                        degradationResult.complete(null);
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        degradationResult.completeExceptionally(t);
-
-                    }
-
-                    @Override
-                    public void onCompleted() {
-
-                    }
-                }
-        );
-        return degradationResult;
-    }
-
 
     private CompletableFuture<Object> injectLatencyInto(String service,
                                                         double failureProbability,
