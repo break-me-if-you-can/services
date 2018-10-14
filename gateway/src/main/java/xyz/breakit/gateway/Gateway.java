@@ -10,10 +10,8 @@ import com.netflix.concurrency.limits.grpc.client.GrpcClientRequestContext;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
-import io.grpc.Channel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
+import io.opencensus.contrib.zpages.ZPageHandlers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +31,7 @@ import xyz.breakit.gateway.admin.HealthcheckService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
+import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import zipkin2.reporter.AsyncReporter;
@@ -65,6 +64,11 @@ public class Gateway {
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
     }
 
+    @PostConstruct
+    public void startZPages() throws IOException {
+        ZPageHandlers.startHttpServerAndRegisterAll(9080);
+    }
+
     @Bean
     public WebClient webClient() {
         return WebClient.builder().build();
@@ -95,7 +99,9 @@ public class Gateway {
     public FixtureService fixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
                                          Supplier<CloudsServiceFutureStub> cloudsClient,
                                          Flags flags) {
-        return new FixtureService(geeseClient, cloudsClient, flags);
+        FixtureService fixtureService = new FixtureService(geeseClient, cloudsClient, flags);
+        ServerInterceptors.intercept(fixtureService, new FixtureMetricsReportingInterceptor());
+        return fixtureService;
     }
 
     @Bean
