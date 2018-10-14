@@ -24,7 +24,7 @@ public class GeeseServer {
         AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
         GeeseService geeseService =
                 new GeeseService((min, max) -> min + random.nextInt(max - min + 1),
-                        random::nextInt);
+                        random::nextInt, failureProvider);
 
         Server server = ServerBuilder.forPort(8090)
                 .addService(
