@@ -12,6 +12,7 @@ import xyz.breakit.admin.InjectFailureRequest;
 import xyz.breakit.admin.InjectFailureResponse;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +27,13 @@ public class AdminController {
 
     private final LeaderboardAdminClient lbAdminClient;
     private final GatewayAdminService gwAdminService;
+    private final LeaderboardClient lbClient;
 
     @Autowired
-    public AdminController(LeaderboardAdminClient lbAdminClient, GatewayAdminService gwAdminService) {
+    public AdminController(LeaderboardAdminClient lbAdminClient, GatewayAdminService gwAdminService, LeaderboardClient lbClient) {
         this.lbAdminClient = lbAdminClient;
         this.gwAdminService = gwAdminService;
+        this.lbClient = lbClient;
     }
 
     @PostMapping("/admin/set_mode/pre_demo")
@@ -42,6 +45,8 @@ public class AdminController {
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
+            lbClient.disableRetries();
+
             geeseResult.get(1, TimeUnit.SECONDS);
             cloudsResult.get(1, TimeUnit.SECONDS);
         } catch (Exception e) {

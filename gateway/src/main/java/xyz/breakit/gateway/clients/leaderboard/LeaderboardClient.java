@@ -37,8 +37,14 @@ public class LeaderboardClient {
             .retryOn(Throwable.class)
             .withMaxRetries(5);
 
+    private final static RetryPolicy NO_RETRY_POLICY = new RetryPolicy()
+            .retryOn(Throwable.class)
+            .withMaxRetries(0);
+
+
     private final String leaderboardUrl;
     private final WebClient httpClient;
+    private RetryPolicy currentRetryPolicy;
 
 
     @Autowired
@@ -51,19 +57,25 @@ public class LeaderboardClient {
         LOG.info("LB URL: {}", leaderboardUrl);
 
         httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl).build();
+        currentRetryPolicy = NO_RETRY_POLICY;
+    }
+
+
+    public void disableRetries() {
+        currentRetryPolicy = NO_RETRY_POLICY;
+    }
+
+    public void enableRetriesWithBackoff() {
+        currentRetryPolicy = RETRY_POLICY;
     }
 
 
     public CompletableFuture<List<LeaderboardEntry>> top5() {
-        CompletableFuture<List<LeaderboardEntry>> future = top5Request()
-                .toFuture();
-
         return Failsafe
-                .with(RETRY_POLICY)
-                //.with(CIRCUIT_BREAKER)
+                .with(currentRetryPolicy)
                 .with(EXECUTOR)
                 .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
-                .future(() -> future);
+                .future(() -> top5Request().toFuture());
     }
 
 
