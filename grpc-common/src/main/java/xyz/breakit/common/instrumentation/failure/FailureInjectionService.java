@@ -14,9 +14,12 @@ import java.time.Duration;
 public final class FailureInjectionService {
 
     private final AddedLatencyMutator addedLatencyMutator;
+    private final FixtureFailureMutator fixtureFailureMutator;
 
-    public FailureInjectionService(AddedLatencyMutator addedLatencyMutator) {
+    public FailureInjectionService(AddedLatencyMutator addedLatencyMutator,
+                                   FixtureFailureMutator fixtureFailureMutator) {
         this.addedLatencyMutator = addedLatencyMutator;
+        this.fixtureFailureMutator = fixtureFailureMutator;
     }
 
     public void injectFailure(InjectFailureRequest request) {
@@ -40,6 +43,9 @@ public final class FailureInjectionService {
                                 .asRuntimeException();
                 throw invalidArgumentException;
         }
+
+        boolean fullFixtureEnabled = request.getFixtureFailure().getFullFixtureEnabled();
+        fixtureFailureMutator.setFullFixtureEnabled(fullFixtureEnabled);
     }
 
 }

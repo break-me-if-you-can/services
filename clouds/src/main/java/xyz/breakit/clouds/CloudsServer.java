@@ -7,7 +7,7 @@ import xyz.breakit.common.healthcheck.CommonHealthcheckService;
 import xyz.breakit.common.instrumentation.failure.AddLatencyServerInterceptor;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
-import xyz.breakit.common.instrumentation.failure.InMemoryAddedLatencyProvider;
+import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 
 import java.io.IOException;
 import java.util.Random;
@@ -19,15 +19,15 @@ public class CloudsServer {
 
     public static void main(String... args) throws IOException, InterruptedException {
 
-        InMemoryAddedLatencyProvider latencyProvider = new InMemoryAddedLatencyProvider();
-        AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(latencyProvider);
+        InjectedFailureProvider failureProvider = new InjectedFailureProvider();
+        AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
         CloudsService cloudsService = new CloudsService(new Random());
 
         Server server = ServerBuilder.forPort(8100)
                 .addService(
                         ServerInterceptors.intercept(cloudsService, latencyInterceptor))
-                .addService(new FailureInjectionAdminService(new FailureInjectionService(latencyProvider)))
-                .addService(new CommonHealthcheckService("clouds", latencyProvider))
+                .addService(new FailureInjectionAdminService(new FailureInjectionService(failureProvider, failureProvider)))
+                .addService(new CommonHealthcheckService("clouds", failureProvider, failureProvider))
                 .build();
         server.start();
 
