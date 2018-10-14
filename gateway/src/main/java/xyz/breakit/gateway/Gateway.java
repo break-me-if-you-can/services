@@ -30,6 +30,7 @@ import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.geese.GeeseServiceGrpc;
@@ -114,7 +115,8 @@ public class Gateway {
     public HealthcheckService healthcheckService(
             Flags flags,
             @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
-            @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck) {
+            @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck,
+            LeaderboardAdminClient lbAdminClient) {
         return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, lbAdminClient);
     }
 
