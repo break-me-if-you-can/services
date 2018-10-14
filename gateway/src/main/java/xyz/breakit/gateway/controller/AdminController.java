@@ -87,7 +87,7 @@ public class AdminController {
             CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
                     .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOG.error("Error while setting demo_with_failures mode", e);
+            LOG.error("Error while setting demo_with_retries mode", e);
             throw new RuntimeException(e);
         }
     }
@@ -106,7 +106,7 @@ public class AdminController {
             CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
                     .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOG.error("Error while setting demo_with_failures mode", e);
+            LOG.error("Error while setting demo_with_backoff mode", e);
             throw new RuntimeException(e);
         }
     }
