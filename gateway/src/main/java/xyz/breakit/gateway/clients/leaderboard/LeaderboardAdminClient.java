@@ -44,6 +44,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -56,6 +57,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -69,6 +71,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -81,8 +84,22 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
     }
+
+    public CompletableFuture<Void> clear() {
+        return httpClient
+                .post()
+                .uri("/admin/clear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
+                .then().toFuture();
+    }
+
 
     private void checkStatusCode(ClientResponse cr) {
         if (cr.statusCode().value() != 200) {
