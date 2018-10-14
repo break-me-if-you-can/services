@@ -7,7 +7,7 @@ import xyz.breakit.common.healthcheck.CommonHealthcheckService;
 import xyz.breakit.common.instrumentation.failure.AddLatencyServerInterceptor;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
-import xyz.breakit.common.instrumentation.failure.InMemoryAddedLatencyProvider;
+import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 
 import java.io.IOException;
 import java.util.Random;
@@ -20,8 +20,8 @@ public class GeeseServer {
     public static void main(String... args) throws IOException, InterruptedException {
 
         Random random = new Random();
-        InMemoryAddedLatencyProvider latencyProvider = new InMemoryAddedLatencyProvider();
-        AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(latencyProvider);
+        InjectedFailureProvider failureProvider = new InjectedFailureProvider();
+        AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
         GeeseService geeseService =
                 new GeeseService((min, max) -> min + random.nextInt(max - min + 1),
                         random::nextInt);
@@ -29,8 +29,8 @@ public class GeeseServer {
         Server server = ServerBuilder.forPort(8090)
                 .addService(
                         ServerInterceptors.intercept(geeseService, latencyInterceptor))
-                .addService(new FailureInjectionAdminService(new FailureInjectionService(latencyProvider)))
-                .addService(new CommonHealthcheckService("geese", latencyProvider))
+                .addService(new FailureInjectionAdminService(new FailureInjectionService(failureProvider, failureProvider)))
+                .addService(new CommonHealthcheckService("geese", failureProvider, failureProvider))
                 .build();
         server.start();
 
