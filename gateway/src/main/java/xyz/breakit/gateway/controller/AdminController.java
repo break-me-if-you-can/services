@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.breakit.admin.AddedLatencySpec;
+import xyz.breakit.admin.FixtureFailureSpec;
 import xyz.breakit.admin.InjectFailureRequest;
 import xyz.breakit.admin.InjectFailureResponse;
 import xyz.breakit.gateway.admin.GatewayAdminService;
@@ -47,8 +48,8 @@ public class AdminController {
     public void preDemoMode() {
 
         flags.setPartialDegradationEnabled(false);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
@@ -66,8 +67,8 @@ public class AdminController {
     public void demoWithFailures() {
 
         flags.setPartialDegradationEnabled(false);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -85,8 +86,8 @@ public class AdminController {
     public void demoWithPartialDegradation() {
 
         flags.setPartialDegradationEnabled(true);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -104,8 +105,8 @@ public class AdminController {
     public void demoWithRetries() {
 
         flags.setPartialDegradationEnabled(true);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -121,8 +122,8 @@ public class AdminController {
     @PostMapping("/admin/set_mode/5_general_demo")
     public void generalDemo() {
         flags.setPartialDegradationEnabled(true);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
@@ -136,14 +137,35 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/admin/set_mode/6_total_geese_demo")
+    public void totalGeeseDemo() {
+        flags.setPartialDegradationEnabled(true);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, true);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
+
+        try {
+            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbClient.disableRetries();
+
+
+            CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting 5_general_demo mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
     private CompletableFuture<Object> injectLatencyInto(String service,
                                                         double failureProbability,
-                                                        long failureDurationMs) {
+                                                        long failureDurationMs,
+                                                        boolean fixtureFailureEnabled) {
         CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
 
         gwAdminService.injectFailure(
                 InjectFailureRequest.newBuilder()
                         .setServiceName(service)
+                        .setFixtureFailure(FixtureFailureSpec.newBuilder().setFullFixtureEnabled(fixtureFailureEnabled).build())
                         .setAddedLatency(AddedLatencySpec.newBuilder()
                                 .setProbability(failureProbability)
                                 .setDuration(Durations.fromMillis(failureDurationMs))
