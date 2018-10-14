@@ -48,6 +48,7 @@ public class AdminController {
     public void preDemoMode() {
 
         flags.setPartialDegradationEnabled(false);
+        flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
@@ -67,6 +68,7 @@ public class AdminController {
     public void demoWithFailures() {
 
         flags.setPartialDegradationEnabled(false);
+        flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
@@ -86,6 +88,7 @@ public class AdminController {
     public void demoWithPartialDegradation() {
 
         flags.setPartialDegradationEnabled(true);
+        flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
@@ -105,6 +108,7 @@ public class AdminController {
     public void demoWithRetries() {
 
         flags.setPartialDegradationEnabled(true);
+        flags.setRetryEnabled(true);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
@@ -122,6 +126,7 @@ public class AdminController {
     @PostMapping("/admin/set_mode/5_general_demo")
     public void generalDemo() {
         flags.setPartialDegradationEnabled(true);
+        flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
@@ -140,6 +145,7 @@ public class AdminController {
     @PostMapping("/admin/set_mode/6_total_geese_demo")
     public void totalGeeseDemo() {
         flags.setPartialDegradationEnabled(true);
+        flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, true);
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
