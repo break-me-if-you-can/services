@@ -5,7 +5,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.breakit.admin.AddedLatencySpec;
 import xyz.breakit.admin.FixtureFailureSpec;
@@ -44,9 +44,8 @@ public class AdminController {
         this.flags = flags;
     }
 
-    @PostMapping("/admin/set_mode/1_pre_demo")
+    @GetMapping("/admin/set_mode/1_pre_demo")
     public void preDemoMode() {
-
         flags.setPartialDegradationEnabled(false);
         flags.setRetryEnabled(false);
         CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0, false);
@@ -64,7 +63,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/2_demo_with_failures")
+    @GetMapping("/admin/set_mode/2_demo_with_failures")
     public void demoWithFailures() {
 
         flags.setPartialDegradationEnabled(false);
@@ -84,7 +83,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/3_demo_with_partial_degradation")
+    @GetMapping("/admin/set_mode/3_demo_with_partial_degradation")
     public void demoWithPartialDegradation() {
 
         flags.setPartialDegradationEnabled(true);
@@ -104,7 +103,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/4_demo_with_retries")
+    @GetMapping("/admin/set_mode/4_demo_with_retries")
     public void demoWithRetries() {
 
         flags.setPartialDegradationEnabled(true);
@@ -123,7 +122,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/5_general_demo")
+    @GetMapping("/admin/set_mode/5_general_demo")
     public void generalDemo() {
         flags.setPartialDegradationEnabled(true);
         flags.setRetryEnabled(false);
@@ -142,7 +141,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/admin/set_mode/6_total_geese_demo")
+    @GetMapping("/admin/set_mode/6_total_geese_demo")
     public void totalGeeseDemo() {
         flags.setPartialDegradationEnabled(true);
         flags.setRetryEnabled(false);
