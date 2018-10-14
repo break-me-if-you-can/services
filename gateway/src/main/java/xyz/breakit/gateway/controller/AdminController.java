@@ -36,14 +36,14 @@ public class AdminController {
         this.lbClient = lbClient;
     }
 
-    @PostMapping("/admin/set_mode/pre_demo")
+    @PostMapping("/admin/set_mode/1_pre_demo")
     public void preDemoMode() {
 
-        CompletableFuture<Object> geeseResult = injectFailureInto("geese");
-        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds");
+        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 1.0, 100000);
+        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 1.0, 100000);
 
         try {
-            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
@@ -55,15 +55,70 @@ public class AdminController {
         }
     }
 
-    private CompletableFuture<Object> injectFailureInto(String service) {
+    @PostMapping("/admin/set_mode/2_demo_with_failures")
+    public void demoWithFailures() {
+
+        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.7, 700);
+
+        try {
+            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbClient.disableRetries();
+
+            geeseResult.get(1, TimeUnit.SECONDS);
+            cloudsResult.get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting demo_with_failures mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/admin/set_mode/3_demo_with_retries")
+    public void demoWithRetries() {
+
+        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.7, 700);
+
+        try {
+            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbClient.enableRetriesWithNoBackoff();
+
+            geeseResult.get(1, TimeUnit.SECONDS);
+            cloudsResult.get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting demo_with_failures mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/admin/set_mode/4_demo_with_backoff")
+    public void demoWithBackoff() {
+
+        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.0, 0);
+
+        try {
+            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbClient.enableRetriesWithBackoff();
+
+            geeseResult.get(1, TimeUnit.SECONDS);
+            cloudsResult.get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting demo_with_failures mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private CompletableFuture<Object> injectFailureInto(String service, double failureProbability, int failureDurationMs) {
         CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
 
         gwAdminService.injectFailure(
                 InjectFailureRequest.newBuilder()
                         .setServiceName(service)
                         .setAddedLatency(AddedLatencySpec.newBuilder()
-                                .setProbability(0.0)
-                                .setDuration(Duration.newBuilder().setSeconds(0).build())
+                                .setProbability(failureProbability)
+                                .setDuration(Duration.newBuilder().setNanos(failureDurationMs*1000).build())
                                 .build())
                         .build(),
                 new StreamObserver<InjectFailureResponse>() {
