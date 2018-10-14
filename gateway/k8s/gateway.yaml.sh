@@ -18,6 +18,7 @@ spec:
           ports:
             - containerPort: 8080
             - containerPort: 8082
+            - containerPort: 9080
           env:
             - name: grpc_geese_host
               value: "geese"
@@ -55,4 +56,8 @@ spec:
      targetPort: 8082
      protocol: TCP
      name: http
+   - port: 9080
+     targetPort: 9080
+     protocol: TCP
+     name: zpages
 YAML

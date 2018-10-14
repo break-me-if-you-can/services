@@ -56,7 +56,7 @@ public class LeaderboardAdminClient {
                     } else {
                         return ServiceHealthCheckStatus.newBuilder()
                                 .setServiceName("leaderboard")
-                                .setAddedLatency(AddedLatencySpec.newBuilder().setDuration(Durations.fromMillis(0)).setProbability(0.0).build())
+                                .setAddedLatency(AddedLatencySpec.getDefaultInstance())
                                 .build();
 
                     }
