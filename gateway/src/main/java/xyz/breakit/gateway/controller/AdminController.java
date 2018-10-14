@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.breakit.admin.AddedLatencySpec;
-import xyz.breakit.admin.InjectFailureRequest;
-import xyz.breakit.admin.InjectFailureResponse;
+import xyz.breakit.admin.*;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
@@ -39,16 +37,17 @@ public class AdminController {
     @PostMapping("/admin/set_mode/1_pre_demo")
     public void preDemoMode() {
 
-        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 1.0, 100000);
-        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 1.0, 100000);
+        CompletableFuture<Object> degradationResult = partialDegradation(false);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 1.0, 100000);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1.0, 100000);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            geeseResult.get(1, TimeUnit.SECONDS);
-            cloudsResult.get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
+                    .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting predemo mode", e);
             throw new RuntimeException(e);
@@ -58,15 +57,16 @@ public class AdminController {
     @PostMapping("/admin/set_mode/2_demo_with_failures")
     public void demoWithFailures() {
 
-        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.7, 700);
+        CompletableFuture<Object> degradationResult = partialDegradation(false);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.7, 700);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            geeseResult.get(1, TimeUnit.SECONDS);
-            cloudsResult.get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
+                    .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting demo_with_failures mode", e);
             throw new RuntimeException(e);
@@ -76,15 +76,16 @@ public class AdminController {
     @PostMapping("/admin/set_mode/3_demo_with_retries")
     public void demoWithRetries() {
 
-        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.7, 700);
+        CompletableFuture<Object> degradationResult = partialDegradation(true);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.7, 700);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.enableRetriesWithNoBackoff();
 
-            geeseResult.get(1, TimeUnit.SECONDS);
-            cloudsResult.get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
+                    .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting demo_with_failures mode", e);
             throw new RuntimeException(e);
@@ -93,24 +94,49 @@ public class AdminController {
 
     @PostMapping("/admin/set_mode/4_demo_with_backoff")
     public void demoWithBackoff() {
-
-        CompletableFuture<Object> geeseResult = injectFailureInto("geese", 0.0, 0);
-        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds", 0.0, 0);
+        CompletableFuture<Object> degradationResult = partialDegradation(true);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbClient.enableRetriesWithBackoff();
 
-            geeseResult.get(1, TimeUnit.SECONDS);
-            cloudsResult.get(1, TimeUnit.SECONDS);
+
+            CompletableFuture.allOf(degradationResult,geeseResult, cloudsResult)
+                    .get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting demo_with_failures mode", e);
             throw new RuntimeException(e);
         }
     }
 
+    private CompletableFuture<Object> partialDegradation(boolean enable) {
+        CompletableFuture<Object> degradationResult = new CompletableFuture<>();
+        gwAdminService.managePartialDegradation(PartialDegradationRequest.newBuilder().setEnable(enable).build(),
+                new StreamObserver<PartialDegradationResponse>() {
+                    @Override
+                    public void onNext(PartialDegradationResponse value) {
+                        degradationResult.complete(null);
+                    }
 
-    private CompletableFuture<Object> injectFailureInto(String service,
+                    @Override
+                    public void onError(Throwable t) {
+                        degradationResult.completeExceptionally(t);
+
+                    }
+
+                    @Override
+                    public void onCompleted() {
+
+                    }
+                }
+        );
+        return degradationResult;
+    }
+
+
+    private CompletableFuture<Object> injectLatencyInto(String service,
                                                         double failureProbability,
                                                         long failureDurationMs) {
         CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
