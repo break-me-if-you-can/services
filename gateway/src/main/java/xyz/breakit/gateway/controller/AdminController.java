@@ -47,14 +47,13 @@ public class AdminController {
     public void preDemoMode() {
 
         flags.setPartialDegradationEnabled(false);
-        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 700);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 700);
+        CompletableFuture<Object> geeseResult = injectLatencyInto("geese", 0.0, 0);
+        CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
-            flags.setPartialDegradationEnabled(true);
 
             CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {

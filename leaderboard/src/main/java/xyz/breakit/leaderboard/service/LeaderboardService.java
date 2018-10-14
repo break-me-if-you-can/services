@@ -30,6 +30,10 @@ public class LeaderboardService {
         scores.put(name, newScore);
     }
 
+    public boolean isBroken() {
+        return broken.get();
+    }
+
     public List<LeaderboardEntry> getTopScores(int k) {
         delayIfBroken();
 
