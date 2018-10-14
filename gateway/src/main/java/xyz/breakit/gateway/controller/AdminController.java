@@ -36,11 +36,26 @@ public class AdminController {
     @PostMapping("/admin/set_mode/pre_demo")
     public void preDemoMode() {
 
-        CompletableFuture<Object> result = new CompletableFuture<>();
+        CompletableFuture<Object> geeseResult = injectFailureInto("geese");
+        CompletableFuture<Object> cloudsResult = injectFailureInto("clouds");
+
+        try {
+            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.clear().get(1, TimeUnit.SECONDS);
+            geeseResult.get(1, TimeUnit.SECONDS);
+            cloudsResult.get(1, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOG.error("Error while setting predemo mode", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private CompletableFuture<Object> injectFailureInto(String service) {
+        CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
 
         gwAdminService.injectFailure(
                 InjectFailureRequest.newBuilder()
-                        .setServiceName("geese")
+                        .setServiceName(service)
                         .setAddedLatency(AddedLatencySpec.newBuilder()
                                 .setProbability(0.0)
                                 .setDuration(Duration.newBuilder().setSeconds(0).build())
@@ -49,12 +64,12 @@ public class AdminController {
                 new StreamObserver<InjectFailureResponse>() {
                     @Override
                     public void onNext(InjectFailureResponse value) {
-                        result.complete(null);
+                        cloudsResult.complete(null);
                     }
 
                     @Override
                     public void onError(Throwable t) {
-                        result.completeExceptionally(t);
+                        cloudsResult.completeExceptionally(t);
 
                     }
 
@@ -63,13 +78,6 @@ public class AdminController {
 
                     }
                 });
-        try {
-            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
-            lbAdminClient.clear().get(1, TimeUnit.SECONDS);
-            result.get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            LOG.error("Error while setting predemo mode", e);
-            throw new RuntimeException(e);
-        }
+        return cloudsResult;
     }
 }
