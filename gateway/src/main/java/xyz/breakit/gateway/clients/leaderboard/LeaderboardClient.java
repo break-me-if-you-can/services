@@ -37,6 +37,10 @@ public class LeaderboardClient {
             .retryOn(Throwable.class)
             .withMaxRetries(5);
 
+    private final static RetryPolicy RETRY_WITH_NO_BACKOFF = new RetryPolicy()
+            .retryOn(Throwable.class)
+            .withMaxRetries(5);
+
     private final static RetryPolicy NO_RETRY_POLICY = new RetryPolicy()
             .retryOn(Throwable.class)
             .withMaxRetries(0);
@@ -66,6 +70,10 @@ public class LeaderboardClient {
     }
 
     public void enableRetriesWithBackoff() {
+        currentRetryPolicy = RETRY_POLICY;
+    }
+
+    public void enableRetriesWithNoBackoff() {
         currentRetryPolicy = RETRY_POLICY;
     }
 
