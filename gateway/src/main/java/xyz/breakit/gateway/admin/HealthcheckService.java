@@ -38,11 +38,14 @@ public final class HealthcheckService {
 
         return Futures.transform(Futures.successfulAsList(geeseHealth, cloudsHealth),
                 remoteServicesHealth -> {
+                    ServiceHealthCheckStatus.Builder gatewayHealth = ServiceHealthCheckStatus.newBuilder()
+                            .setServiceName(GATEWAY_SERVICE)
+                            .setPartialDegradationEnabled(flags.isPartialDegradationEnabled())
+                            .setRetryEnabled(flags.isRetryEnabled());
+
                     HealthCheckResponse.Builder response =
                             HealthCheckResponse.newBuilder()
-                                    .addServiceHealthStatus(ServiceHealthCheckStatus.newBuilder()
-                                            .setServiceName(GATEWAY_SERVICE)
-                                            .setPartialDegradationEnabled(flags.isPartialDegradationEnabled()));
+                                    .addServiceHealthStatus(gatewayHealth);
 
                     remoteServicesHealth.stream()
                             .filter(Objects::nonNull)
