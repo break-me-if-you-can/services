@@ -1,6 +1,6 @@
 package xyz.breakit.gateway.controller;
 
-import com.google.protobuf.Duration;
+import com.google.protobuf.util.Durations;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +110,9 @@ public class AdminController {
     }
 
 
-    private CompletableFuture<Object> injectFailureInto(String service, double failureProbability, int failureDurationMs) {
+    private CompletableFuture<Object> injectFailureInto(String service,
+                                                        double failureProbability,
+                                                        long failureDurationMs) {
         CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
 
         gwAdminService.injectFailure(
@@ -118,7 +120,7 @@ public class AdminController {
                         .setServiceName(service)
                         .setAddedLatency(AddedLatencySpec.newBuilder()
                                 .setProbability(failureProbability)
-                                .setDuration(Duration.newBuilder().setNanos(failureDurationMs*1000).build())
+                                .setDuration(Durations.fromMillis(failureDurationMs))
                                 .build())
                         .build(),
                 new StreamObserver<InjectFailureResponse>() {
