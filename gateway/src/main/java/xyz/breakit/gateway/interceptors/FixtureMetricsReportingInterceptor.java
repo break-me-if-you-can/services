@@ -10,6 +10,7 @@ import io.opencensus.stats.Measure.MeasureLong;
 import io.opencensus.stats.MeasureMap;
 import io.opencensus.stats.Stats;
 import io.opencensus.stats.StatsRecorder;
+import io.opencensus.tags.TagContext;
 import io.opencensus.tags.Tagger;
 import io.opencensus.tags.Tags;
 import xyz.breakit.gateway.FixtureLine;
@@ -46,10 +47,13 @@ public class FixtureMetricsReportingInterceptor implements ServerInterceptor {
                 if (message instanceof FixtureResponse) {
                     FixtureResponse response = (FixtureResponse) message;
 
-                    try (Scope scope = tagger.withTagContext(tagger.emptyBuilder().build())) {
-                        statsRecorder.newMeasureMap().put(LINE_COUNT, response.getLinesCount()).record();
+                    TagContext tag = tagger.emptyBuilder().build();
+                    try (Scope scope = tagger.withTagContext(tag)) {
+                        MeasureMap measureMap = statsRecorder.newMeasureMap();
+                        measureMap.put(LINE_COUNT, response.getLinesCount());
                         response.getLinesList().stream()
-                                .forEach(FixtureMetricsReportingInterceptor::reportLineCounters);
+                                .forEach(line -> reportLineCounters(measureMap, line));
+                        measureMap.record(tag);
                     }
                 }
 
@@ -58,11 +62,9 @@ public class FixtureMetricsReportingInterceptor implements ServerInterceptor {
         }, headers);
     }
 
-    private static void reportLineCounters(FixtureLine line) {
-        MeasureMap measureMap = statsRecorder.newMeasureMap();
+    private static void reportLineCounters(MeasureMap measureMap, FixtureLine line) {
         measureMap.put(GEESE_COUNT, line.getGoosePositionsCount());
         measureMap.put(CLOUDS_COUNT, line.getCloudPositionsCount());
-        measureMap.record();
     }
 
 }
