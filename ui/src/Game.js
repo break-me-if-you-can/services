@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import * as PIXI from 'pixi.js';
 
 import { Service } from './Service';
@@ -34,6 +35,8 @@ export class Game extends Component {
     let pattern = new RegExp('Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|', 'i');
     this.isMobile = false || navigator.userAgent.match(pattern);
 
+    this.mainDiv = null;
+
     this.score = 0;
     this.state = {
       playerId: '',
@@ -50,8 +53,8 @@ export class Game extends Component {
     this.collisionsCounter = 0;
     this.statisticsInterval = null;
     this.scoreInterval = null;
-    this.fixtureTimeout = null;
     this.fixtureInterval = null;
+    this.playerIdInterval = null;
 
     this.frames = {
       'goose': [],
@@ -59,18 +62,44 @@ export class Game extends Component {
     };
   }
 
+  init = () => {
+    this.collisionsCounter = 0;
+    this.aircraft.setPosition({
+      x: CONSTANTS.FIELD_WIDTH / 2,
+      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+    });
+
+    this.score = 0;
+    this.setState({
+      score: this.score,
+      enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
+      portrait: false,
+      gameOver: false,
+    });
+    this.focusDiv();
+  }
+
   getStage = () => this.app.stage;
 
+  focusDiv = ()=> { this.mainDiv.focus() }
+
   gameRefCallback = (element) => {
-    element.append(this.app.view);
+    this.mainDiv = element;
 
-    this.service.getPlayerId((result) => {
-      this.setState({
-        playerId: result.getPlayerId(),
+    this.mainDiv.append(this.app.view);
+
+    this.playerIdInterval = setInterval(() => {
+      this.service.getPlayerId((result) => {
+        clearInterval(this.playerIdInterval);
+        this.setState({
+          playerId: result.getPlayerId(),
+        });
+
+        this.loadAssets((loader, resources) => { this.runGame(resources); });
       });
+    }, CONSTANTS.PLAYER_ID_INTERVAL);
 
-    });
-    this.loadAssets((loader, resources) => { this.runGame(resources); });
+    this.focusDiv();
   }
 
   loadAssets = (onAssetsLoaded) => {
@@ -110,8 +139,8 @@ export class Game extends Component {
     
     let banks = new ParallaxTexture({
       image: resources.banksTexture,
-      width: 767,
-      height: 1152,
+      width: CONSTANTS.FIELD_WIDTH,
+      height: CONSTANTS.FIELD_HEIGHT,
     });
 
     water.addToStage(this.getStage());
@@ -142,82 +171,18 @@ export class Game extends Component {
 
     this.cloudTexture = resources.cloudTexture;
 
-    this.height = window.innerHeight < 1152? window.innerHeight: 1152;
+    this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
 
     this.aircraft = new Aircraft({
       image: resources.aircraftStraightTexture,
       width: CONSTANTS.AIRCRAFT_WIDTH,
       height: CONSTANTS.AIRCRAFT_HEIGHT,
-      x: 767 / 2,
-      y: this.height - 70,
+      x: CONSTANTS.FIELD_WIDTH / 2,
+      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
     });
     this.aircraft.addToStage(this.getStage());
 
-    let fixtureCallback = (result) => {
-      let resultList = result.getLinesList();
-
-      if (resultList && resultList.length) {
-          resultList.forEach(line => {
-            let geesePos = line.getGoosePositionsList();
-              geesePos.forEach(position => {
-                let goose = new Goose( {
-                  'frames': this.gooseFrames,
-                  'x': position,
-                  'y': CONSTANTS.START_Y_POSITION
-                });
-                goose.addToStage(this.getStage());
-                this.geese.push(goose);
-              });
-
-              let cloudsPos = line.getCloudPositionsList();
-                cloudsPos.forEach(position => {
-                  let cloud = new Cloud( {
-                    'texture': this.cloudTexture.texture,
-                    'x': position,
-                    'y': CONSTANTS.START_Y_POSITION
-                  });
-                  cloud.addToStage(this.getStage());
-                  this.clouds.push(cloud);
-              });
-          });
-      }
-    }
-
-    this.scoreInterval = setInterval(() => {
-      this.setState({
-        score: this.score,
-      });
-    }, CONSTANTS.SCORE_INTERVAL);
-
-    this.statisticsInterval = setInterval(() => {
-
-      this.service.updatePlayerScore(
-        {
-          playerId: this.state.playerId,
-          score: this.score,
-        },
-        (result) => { }
-      );
-
-      this.service.getTopPlayerScore((result) => {
-        let topScores = result.getTopScoresList()
-        .map(playerScore => {
-          return {
-            id: playerScore.getPlayerId(), 
-            score: playerScore.getScore(),
-          }
-        });
-
-        this.setState({
-          topScores: topScores,
-        });
-      });
-  
-    }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
-
-    this.fixtureInterval = setInterval(() => {
-      this.service.getFixture(fixtureCallback);
-    }, 1000)
+    this.runIntervals();
 
     this.app.ticker.add((delta) => {
       water.tilePosition.y += 1.25;
@@ -263,6 +228,84 @@ export class Game extends Component {
     });
   }
 
+  fixtureCallback = (result) => {
+    let resultList = result.getLinesList();
+
+    if (resultList && resultList.length) {
+      resultList.forEach(line => {
+        console.log(line);
+        setTimeout(() => {
+          let geesePos = line.getGoosePositionsList();
+          geesePos.forEach(position => {
+            let goose = new Goose( {
+              'frames': this.gooseFrames,
+              'x': position,
+              'y': CONSTANTS.START_Y_POSITION
+            });
+            goose.addToStage(this.getStage());
+            this.geese.push(goose);
+          });
+
+          let cloudsPos = line.getCloudPositionsList();
+            cloudsPos.forEach(position => {
+              let cloud = new Cloud( {
+                'texture': this.cloudTexture.texture,
+                'x': position,
+                'y': CONSTANTS.START_Y_POSITION
+              });
+              cloud.addToStage(this.getStage());
+              this.clouds.push(cloud);
+          });
+        }, CONSTANTS.INTERVAL_BETWEEN_LINES)
+      });
+    }
+  }
+
+  removeGeese = () => {
+    this.geese.forEach(item => item.removeFromStage(this.getStage()));
+    this.geese = [];
+  }
+
+  removeClouds = () => {
+    this.clouds.forEach(item => item.removeFromStage(this.getStage()));
+    this.clouds = [];
+  }
+
+  runIntervals = () => {
+    this.scoreInterval = setInterval( () => {
+      this.setState({
+        score: this.score,
+      });
+    }, CONSTANTS.SCORE_INTERVAL);
+
+    this.statisticsInterval = setInterval(() => {
+      this.service.updatePlayerScore(
+        {
+          playerId: this.state.playerId,
+          score: this.score,
+        },
+        (result) => { }
+      );
+
+      this.service.getTopPlayerScore((result) => {
+        let topScores = result.getTopScoresList()
+        .map(playerScore => {
+          return {
+            id: playerScore.getPlayerId(), 
+            score: playerScore.getScore(),
+          }
+        });
+
+        this.setState({
+          topScores: topScores,
+        });
+      });
+  
+    }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
+
+    this.fixtureInterval = setInterval(() => { this.service.getFixture(this.fixtureCallback) }, CONSTANTS.FIXTURE_INTERVAL)
+  }
+
   updateEnginesStatus = () => {
     this.collisionsCounter++;
     
@@ -294,10 +337,6 @@ export class Game extends Component {
 
       if (this.statisticsInterval) {
         clearInterval(this.statisticsInterval);
-      }
-
-      if (this.fixtureTimeout) {
-        clearTimeout(this.fixtureTimeout);
       }
 
       if (this.fixtureInterval) {
@@ -368,7 +407,11 @@ export class Game extends Component {
   }
 
   startAgain = (e) => {
-    console.log('start again');
+    this.removeGeese();
+    this.removeClouds();
+    this.init();
+    this.runIntervals();
+    this.app.ticker.start();
   }
 
   componentDidMount() {
@@ -414,7 +457,7 @@ export class Game extends Component {
                           <div className="goose_gameover"></div>
                         </div>
                         <div className="play_again" onClick={ (e) => this.startAgain(e) }>
-                          <p>play again</p>
+                          <p><a href="#">play again</a></p>
                         </div>
                       </div>
                     </div>

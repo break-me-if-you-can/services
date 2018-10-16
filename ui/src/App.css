@@ -94,9 +94,6 @@
 .app .game_over .content {
   top: 50%;
   left: 50%;
-  /* bring your own prefixes */
-  /* display: table-cell;    */
-  /* vertical-align: middle; */
 }
 
 .app .game_over .content .wrapper {
@@ -117,6 +114,11 @@
   -o-animation:      FONT-SIZE-ANIMATION 1s infinite;
 }
 
+.app .game_over.content .play_again a,
+.app .game_over.content .play_again a:hover,
+.app .game_over.content .play_again a:visited {
+  color: rgb(224, 224, 97)
+}
 
 .app .portrait {
   height: 100%;

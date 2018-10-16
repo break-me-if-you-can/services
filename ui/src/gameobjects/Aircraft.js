@@ -10,6 +10,11 @@ export class Aircraft extends PIXI.Sprite {
         this.y = props.y;
     }
 
+    setPosition(props) {
+        this.x = props.x;
+        this.y = props.y;
+    }
+
     addToStage(stage) {
         stage.addChild(this);
     }
