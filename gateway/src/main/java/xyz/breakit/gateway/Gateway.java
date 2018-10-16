@@ -15,16 +15,22 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.function.client.WebClient;
+import xyz.breakit.admin.AdminServiceGrpc;
+import xyz.breakit.admin.AdminServiceGrpc.AdminServiceStub;
+import xyz.breakit.admin.HealthCheckServiceGrpc;
+import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.geese.GeeseServiceGrpc;
@@ -34,6 +40,7 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 /**
  * Gateway service entry point.
@@ -85,8 +92,8 @@ public class Gateway {
     }
 
     @Bean
-    public FixtureService fixtureService(GeeseServiceFutureStub geeseClient,
-                                         CloudsServiceFutureStub cloudsClient,
+    public FixtureService fixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
+                                         Supplier<CloudsServiceFutureStub> cloudsClient,
                                          Flags flags) {
         return new FixtureService(geeseClient, cloudsClient, flags);
     }
@@ -97,54 +104,132 @@ public class Gateway {
     }
 
     @Bean
-    public GatewayAdminService adminService(SettableFlags flags) {
-        return new GatewayAdminService(flags);
+    public GatewayAdminService adminService(
+            SettableFlags flags,
+            @Qualifier("GeeseAdmin") AdminServiceStub geeseAdmin,
+            @Qualifier("CloudsAdmin") AdminServiceStub cloudsAdmin) {
+        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin);
     }
 
     @Bean
-    public HealthcheckService healthcheckService(Flags flags) {
-        return new HealthcheckService(flags);
+    public HealthcheckService healthcheckService(
+            Flags flags,
+            @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
+            @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck,
+            LeaderboardAdminClient lbAdminClient) {
+        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, lbAdminClient);
     }
 
     @Bean
-    public HealthcheckGrpcService healthcheckGrpc(HealthcheckService healthcheckService) {
+    public HealthcheckGrpcService healthcheckGrpc(
+            HealthcheckService healthcheckService) {
         return new HealthcheckGrpcService(healthcheckService);
     }
 
-    @Bean
-    public CloudsServiceFutureStub cloudsServiceClient(
+    @Bean("CloudsChannel")
+    public Channel cloudsChannel(
             @Value("${grpc.clouds.host:clouds}") String cloudsHost,
             @Value("${grpc.clouds.port:8080}") int cloudsPort,
-            GrpcTracing grpcTracing,
-            Limiter<GrpcClientRequestContext> limiter) {
-
-        Channel cloudsChannel = ManagedChannelBuilder
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                //.intercept(new ConcurrencyLimitClientInterceptor(limiter))
+                .usePlaintext()
+                .build();
+    }
+
+    @Bean("CloudsChannelWithRetries")
+    public Channel cloudsChannelWithRetries(
+            @Value("${grpc.clouds.host:clouds}") String cloudsHost,
+            @Value("${grpc.clouds.port:8080}") int cloudsPort,
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
+                .forAddress(cloudsHost, cloudsPort)
+                .intercept(grpcTracing.newClientInterceptor())
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
-        return CloudsServiceGrpc.newFutureStub(cloudsChannel);
     }
 
     @Bean
-    public GeeseServiceFutureStub geeseServiceClient(
+    public Supplier<CloudsServiceFutureStub> cloudsServiceClient(
+            @Qualifier("CloudsChannel") Channel cloudsChannel,
+            @Qualifier("CloudsChannelWithRetries") Channel cloudsChannelWithRetries,
+            Flags flags,
+            Limiter<GrpcClientRequestContext> limiter) {
+
+        //Channel channel = ClientInterceptors.intercept(cloudsChannel, new ConcurrencyLimitClientInterceptor(limiter));
+
+        CloudsServiceFutureStub client = CloudsServiceGrpc.newFutureStub(cloudsChannel);
+        CloudsServiceFutureStub clientWithRetries = CloudsServiceGrpc.newFutureStub(cloudsChannelWithRetries);
+
+        return () -> flags.isRetryEnabled() ? clientWithRetries : client;
+    }
+
+    @Bean("CloudsAdmin")
+    public AdminServiceStub cloudsAdmin(
+            @Qualifier("CloudsChannel") Channel cloudsChannel) {
+        return AdminServiceGrpc.newStub(cloudsChannel);
+    }
+
+    @Bean("CloudsHealthcheck")
+    public HealthCheckServiceFutureStub cloudsHealthcheckClient(
+            @Qualifier("CloudsChannel") Channel cloudsChannel) {
+        return HealthCheckServiceGrpc.newFutureStub(cloudsChannel);
+    }
+
+    @Bean("GeeseChannel")
+    public Channel geeseChannel(
             @Value("${grpc.geese.host:geese}") String geeseHost,
             @Value("${grpc.geese.port:8080}") int geesePort,
-            GrpcTracing grpcTracing,
-            Limiter<GrpcClientRequestContext> limiter) {
-        Channel geeseChannel = ManagedChannelBuilder
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
-                //.intercept(new ConcurrencyLimitClientInterceptor(limiter))
+                .usePlaintext()
+                .build();
+    }
+
+    @Bean("GeeseChannelWithRetries")
+    public Channel geeseChannelWithRetries(
+            @Value("${grpc.geese.host:geese}") String geeseHost,
+            @Value("${grpc.geese.port:8080}") int geesePort,
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
+                .forAddress(geeseHost, geesePort)
+                .intercept(grpcTracing.newClientInterceptor())
                 .enableRetry()
                 .maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
-        GeeseServiceFutureStub geeseStub = GeeseServiceGrpc.newFutureStub(geeseChannel);
-        return geeseStub;
+    }
+
+    @Bean
+    public Supplier<GeeseServiceFutureStub> geeseServiceClient(
+            @Qualifier("GeeseChannel") Channel geeseChannel,
+            @Qualifier("GeeseChannelWithRetries") Channel geeseChannelWithRetries,
+            Flags flags,
+            Limiter<GrpcClientRequestContext> limiter) {
+
+        //Channel channel = ClientInterceptors.intercept(geeseChannel, new ConcurrencyLimitClientInterceptor(limiter));
+
+        GeeseServiceFutureStub client = GeeseServiceGrpc.newFutureStub(geeseChannel);
+        GeeseServiceFutureStub clientWithRetries = GeeseServiceGrpc.newFutureStub(geeseChannelWithRetries);
+
+        return () -> flags.isRetryEnabled() ? clientWithRetries : client;
+    }
+
+    @Bean("GeeseAdmin")
+    public AdminServiceStub geeseAdmin(
+            @Qualifier("GeeseChannel") Channel geeseChannel) {
+        return AdminServiceGrpc.newStub(geeseChannel);
+    }
+
+    @Bean("GeeseHealthcheck")
+    public HealthCheckServiceFutureStub geeseHealthcheckClient(
+            @Qualifier("GeeseChannel") Channel geeseChannel) {
+        return HealthCheckServiceGrpc.newFutureStub(geeseChannel);
     }
 
     @Bean

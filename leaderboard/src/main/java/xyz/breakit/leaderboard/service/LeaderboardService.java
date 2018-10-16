@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.random;
+
 @Service
 public class LeaderboardService {
 
@@ -26,6 +28,10 @@ public class LeaderboardService {
     public void recordScore(String name, int newScore) {
         delayIfBroken();
         scores.put(name, newScore);
+    }
+
+    public boolean isBroken() {
+        return broken.get();
     }
 
     public List<LeaderboardEntry> getTopScores(int k) {
@@ -54,12 +60,8 @@ public class LeaderboardService {
     }
 
     private void delayIfBroken() {
-        if (broken.get()) {
-            try {
-                Thread.sleep(700);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        if (broken.get() && random() < 0.5) {
+            throw new RuntimeException("An error has been simulated!");
         }
     }
 

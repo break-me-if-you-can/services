@@ -1,5 +1,6 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
+import com.google.protobuf.util.Durations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import xyz.breakit.admin.AddedLatencySpec;
+import xyz.breakit.admin.HealthCheckResponse;
+import xyz.breakit.admin.ServiceHealthCheckStatus;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -35,6 +39,32 @@ public class LeaderboardAdminClient {
         httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl).build();
     }
 
+    public CompletableFuture<HealthCheckResponse> health() {
+        return httpClient
+                .get()
+                .uri("/admin/health")
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(Health.class))
+                .map(health -> {
+                    if (health.isBroken()) {
+                        return ServiceHealthCheckStatus.newBuilder()
+                                .setServiceName("leaderboard")
+                                .setAddedLatency(AddedLatencySpec.newBuilder().setDuration(Durations.fromMillis(700)).setProbability(0.5).build())
+                                .build();
+                    } else {
+                        return ServiceHealthCheckStatus.newBuilder()
+                                .setServiceName("leaderboard")
+                                .setAddedLatency(AddedLatencySpec.getDefaultInstance())
+                                .build();
+
+                    }
+                })
+                .map(status ->
+                        HealthCheckResponse.newBuilder().addServiceHealthStatus(status).build())
+                .toFuture();
+    }
 
     public CompletableFuture<Void> enableLimit(int limit) {
         return httpClient
@@ -44,6 +74,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -56,6 +87,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -69,6 +101,7 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -81,8 +114,22 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
     }
+
+    public CompletableFuture<Void> clear() {
+        return httpClient
+                .post()
+                .uri("/admin/clear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .doOnNext(this::checkStatusCode)
+                .flatMap(cr -> cr.bodyToMono(String.class))
+                .then().toFuture();
+    }
+
 
     private void checkStatusCode(ClientResponse cr) {
         if (cr.statusCode().value() != 200) {

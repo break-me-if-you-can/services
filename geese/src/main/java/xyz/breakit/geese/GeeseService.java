@@ -1,6 +1,8 @@
 package xyz.breakit.geese;
 
+import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
+import xyz.breakit.common.instrumentation.failure.FixtureFailureProvider;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceImplBase;
 
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -22,13 +25,16 @@ final class GeeseService extends GeeseServiceImplBase {
     private static final int MAX_GEESE_COUNT = 3;
 
     private static final int DEFAULT_GOOSE_WIDTH = 1;
-    private final BinaryOperator<Integer> numberOfLinesGenerator;
+    private final BinaryOperator<Integer> numberOfGeeseGenerator;
     private final UnaryOperator<Integer> geeseGenerator;
+    private final FixtureFailureProvider fixtureFailureProvider;
 
-    GeeseService(BinaryOperator<Integer> numberOfLinesGenerator,
-                 UnaryOperator<Integer> geeseGenerator) {
-        this.numberOfLinesGenerator = numberOfLinesGenerator;
+    GeeseService(BinaryOperator<Integer> numberOfGeeseGenerator,
+                 UnaryOperator<Integer> geeseGenerator,
+                 FixtureFailureProvider fixtureFailureProvider) {
+        this.numberOfGeeseGenerator = numberOfGeeseGenerator;
         this.geeseGenerator = geeseGenerator;
+        this.fixtureFailureProvider = fixtureFailureProvider;
     }
 
     @Override
@@ -51,13 +57,35 @@ final class GeeseService extends GeeseServiceImplBase {
                 "Goose width cannot exceed line width.");
 
         return GeeseLine.newBuilder()
-                .addAllGeesePositions(generateGeese(lineWidth, gooseWidth))
+                .addAllGeesePositions(generateGeese((int) lineWidth, (int) gooseWidth))
                 .build();
     }
 
     private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {
 
-        int geeseCount = numberOfLinesGenerator.apply(MIN_GEESE_COUNT, MAX_GEESE_COUNT);
+        Collection<Integer> geese;
+        if (fixtureFailureProvider.isFullFixtureEnabled()) {
+            geese = fullLineGeese(lineWidth, gooseWidth);
+        } else {
+            geese = geese(lineWidth, gooseWidth);
+        }
+        return geese;
+    }
+
+    private Collection<Integer> fullLineGeese(int lineWidth, int gooseWidth) {
+
+        ImmutableList.Builder<Integer> line = ImmutableList.builder();
+        int numberOfGeese = lineWidth / gooseWidth;
+
+        IntStream.range(0, numberOfGeese + 1)
+                .map(index -> index * gooseWidth)
+                .forEach(line::add);
+
+        return line.build();
+    }
+
+    private Collection<Integer> geese(int lineWidth, int gooseWidth) {
+        int geeseCount = numberOfGeeseGenerator.apply(MIN_GEESE_COUNT, MAX_GEESE_COUNT);
         List<Integer> positions = new ArrayList<>(geeseCount);
 
         while (positions.size() < geeseCount) {

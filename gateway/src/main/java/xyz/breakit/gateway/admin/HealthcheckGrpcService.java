@@ -1,5 +1,6 @@
 package xyz.breakit.gateway.admin;
 
+import com.google.common.util.concurrent.Futures;
 import io.grpc.stub.StreamObserver;
 import xyz.breakit.admin.HealthCheckRequest;
 import xyz.breakit.admin.HealthCheckResponse;
@@ -19,7 +20,12 @@ public final class HealthcheckGrpcService extends HealthCheckServiceImplBase {
     @Override
     public void healthCheck(HealthCheckRequest request,
                             StreamObserver<HealthCheckResponse> responseObserver) {
-        responseObserver.onNext(healthcheckService.healthCheck());
-        responseObserver.onCompleted();
+
+        Futures.transform(healthcheckService.healthCheck(), response -> {
+                    responseObserver.onNext(response);
+                    responseObserver.onCompleted();
+                    return null;
+                }
+        );
     }
 }

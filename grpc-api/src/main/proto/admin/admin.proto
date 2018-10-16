@@ -56,6 +56,10 @@ message InjectFailureRequest {
          */
         AddedLatencySpec added_latency = 2;
     }
+    /*
+     * Fixture (logical) failure to be added.
+     */
+    FixtureFailureSpec fixture_failure = 3;
 }
 
 /*
@@ -75,6 +79,16 @@ message AddedLatencySpec {
      * Duration to be added to server calls.
      */
     google.protobuf.Duration duration = 2;
+}
+
+/*
+ * Discribes fixture failure that can be injected.
+ */
+message FixtureFailureSpec {
+    /*
+     * When true, game fixture will be full of elements.
+     */
+    bool full_fixture_enabled = 1;
 }
 
 /*
@@ -138,8 +152,18 @@ message ServiceHealthCheckStatus {
      */
     bool partial_degradation_enabled = 2;
     /*
+     * true if retries are enabled,
+     * false if disabled.
+     */
+    bool retry_enabled = 3;
+    /*
      * Currently injected added latency failure.
      * Empty message if not injected.
      */
-    AddedLatencySpec added_latency = 3;
+    AddedLatencySpec added_latency = 4;
+    /*
+     * Currently injected fixture failure.
+     * Empty message if not injected.
+     */
+    FixtureFailureSpec fixture_failure = 5;
 }
