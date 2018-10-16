@@ -17,5 +17,5 @@ export const IMAGES = {
     CLOUD: cloudImg,
     WATER: waterImg,
     BANKS: banksImg,
-    PORTRAIT: portraitGif
+    PORTRAIT: portraitGif,
 }
