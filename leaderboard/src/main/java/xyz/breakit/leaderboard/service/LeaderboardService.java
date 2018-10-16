@@ -61,11 +61,7 @@ public class LeaderboardService {
 
     private void delayIfBroken() {
         if (broken.get() && random() < 0.5) {
-            try {
-                Thread.sleep(700);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new RuntimeException("An error has been simulated!");
         }
     }
 
