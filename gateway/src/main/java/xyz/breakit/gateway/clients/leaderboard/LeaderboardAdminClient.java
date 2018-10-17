@@ -1,6 +1,7 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
 import com.google.protobuf.util.Durations;
+import com.google.rpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import xyz.breakit.admin.AddedLatencySpec;
+import xyz.breakit.admin.FixtureFailureSpec;
 import xyz.breakit.admin.HealthCheckResponse;
 import xyz.breakit.admin.ServiceHealthCheckStatus;
 
@@ -47,23 +49,35 @@ public class LeaderboardAdminClient {
                 .timeout(Duration.ofMillis(500))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(Health.class))
-                .map(health -> {
-                    if (health.isBroken()) {
-                        return ServiceHealthCheckStatus.newBuilder()
-                                .setServiceName("leaderboard")
-                                .setAddedLatency(AddedLatencySpec.newBuilder().setDuration(Durations.fromMillis(700)).setProbability(0.5).build())
-                                .build();
-                    } else {
-                        return ServiceHealthCheckStatus.newBuilder()
-                                .setServiceName("leaderboard")
-                                .setAddedLatency(AddedLatencySpec.getDefaultInstance())
-                                .build();
-
-                    }
-                })
+                .map(this::toServiceHealthCheckStatus)
                 .map(status ->
                         HealthCheckResponse.newBuilder().addServiceHealthStatus(status).build())
                 .toFuture();
+    }
+
+    private ServiceHealthCheckStatus toServiceHealthCheckStatus(Health health) {
+        AddedLatencySpec addedLatencySpec = health.latencyEnabled() ?
+                AddedLatencySpec.newBuilder()
+                        .setDuration(Durations.fromMillis(health.latencyMs()))
+                        .setProbability(health.latencyProbability())
+                        .build()
+                : AddedLatencySpec.getDefaultInstance();
+
+        FixtureFailureSpec fixtureFailureSpec = health.failureEnabled() ?
+                FixtureFailureSpec.newBuilder()
+                        .setFullFixtureEnabled(true)
+                        .setFailureProbability(health.failureProbability())
+                        .setHttpStatusCode(health.httpErrorCode())
+                        .setGrpcStatusCode(Status.getDefaultInstance())
+                        .build()
+                : FixtureFailureSpec.getDefaultInstance();
+
+        return ServiceHealthCheckStatus.newBuilder()
+                    .setServiceName("leaderboard")
+                    .setFixtureFailure(fixtureFailureSpec)
+                    .setAddedLatency(addedLatencySpec)
+                    .build();
+
     }
 
     public CompletableFuture<Void> enableLimit(int limit) {
