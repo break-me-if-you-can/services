@@ -11,10 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import xyz.breakit.admin.AddedLatencySpec;
-import xyz.breakit.admin.FixtureFailureSpec;
-import xyz.breakit.admin.HealthCheckResponse;
-import xyz.breakit.admin.ServiceHealthCheckStatus;
+import xyz.breakit.admin.*;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -63,18 +60,16 @@ public class LeaderboardAdminClient {
                         .build()
                 : AddedLatencySpec.getDefaultInstance();
 
-        FixtureFailureSpec fixtureFailureSpec = health.failureEnabled() ?
-                FixtureFailureSpec.newBuilder()
-                        .setFullFixtureEnabled(true)
+        FailureCodeSpec failureCodeSpec = health.failureEnabled() ?
+                FailureCodeSpec.newBuilder()
                         .setFailureProbability(health.failureProbability())
                         .setHttpStatusCode(health.httpErrorCode())
-                        .setGrpcStatusCode(Status.getDefaultInstance())
                         .build()
-                : FixtureFailureSpec.getDefaultInstance();
+                : FailureCodeSpec.getDefaultInstance();
 
         return ServiceHealthCheckStatus.newBuilder()
                     .setServiceName("leaderboard")
-                    .setFixtureFailure(fixtureFailureSpec)
+                    .setCodeFailure(failureCodeSpec)
                     .setAddedLatency(addedLatencySpec)
                     .build();
 
