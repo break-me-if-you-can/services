@@ -90,10 +90,23 @@ message FixtureFailureSpec {
      * When true, game fixture will be full of elements.
      */
     bool full_fixture_enabled = 1;
-    double failure_probability = 2;
+}
+
+message FailureCodeSpec {
+    /* set failure probability, when 0 - failure is not trigerred,
+    when larger than 0 - triggered with a specified code
+
+    0. == 0%
+    1.0 == 100%
+    */
+    double failure_probability = 1;
+
     oneof failure_code {
-        google.rpc.Status grpc_status_code = 3;
-        int32 http_status_code = 4;
+        /* GRPC failure status code to inject */
+        google.rpc.Status grpc_status_code = 2;
+
+        /* HTTP Failure status code to inject*/
+        int32 http_status_code = 3;
     }
 }
 
@@ -172,4 +185,10 @@ message ServiceHealthCheckStatus {
      * Empty message if not injected.
      */
     FixtureFailureSpec fixture_failure = 5;
+
+    /*
+     * Currently injected code failure.
+     * Empty message if not injected.
+     */
+    FailureCodeSpec code_failure = 6;
 }
