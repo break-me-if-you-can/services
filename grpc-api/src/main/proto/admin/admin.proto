@@ -9,6 +9,7 @@ option java_outer_classname = "AdminProto";
 package geese;
 
 import "google/protobuf/duration.proto";
+import "google/rpc/status.proto";
 
 /*
  * Admin service. Allows failure injections, enabling partial degradation.
@@ -89,6 +90,11 @@ message FixtureFailureSpec {
      * When true, game fixture will be full of elements.
      */
     bool full_fixture_enabled = 1;
+    double failure_probability = 2;
+    oneof failure_code {
+        google.rpc.Status grpc_status_code = 3;
+        int32 http_status_code = 4;
+    }
 }
 
 /*
