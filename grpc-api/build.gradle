@@ -50,3 +50,9 @@ sourceSets {
 }
 
 apply plugin: 'idea'
+
+
+dependencies {
+    compile 'com.google.api.grpc:proto-google-common-protos:1.12.0'
+
+}

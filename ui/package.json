@@ -43,7 +43,7 @@
   "dependencies": {
     "css-loader": "^1.0.0",
     "google-protobuf": "^3.6.1",
-    "grpc-web": "^0.4.0",
+    "grpc-web": "^1.0.0",
     "debug": "^4.0.1",
     "pixi.js": "^4.8.2",
     "react": "^0.14.0",

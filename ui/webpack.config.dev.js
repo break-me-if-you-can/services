@@ -16,7 +16,7 @@ module.exports = {
     publicPath: '/static/'
   },
   resolve: {
-    extensions: ["", ".js", ".jsx", ".css", ".json", ".otf", ".ttf", ".png"]
+    extensions: ["", ".js", ".jsx", ".css", ".json", ".otf", ".ttf", ".png", ".gif"]
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
@@ -30,7 +30,7 @@ module.exports = {
         include: [path.join(__dirname, 'src'), path.join(__dirname, 'generated')]
       },
       {
-        test: /\.(png|svg)(\?[a-z0-9=.]+)?$/,
+        test: /\.(png|svg|gif)(\?[a-z0-9=.]+)?$/,
         loader: 'url-loader?limit=100000',
         include: path.join(__dirname, 'assets')
       },

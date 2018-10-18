@@ -11,7 +11,11 @@ import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
 import io.grpc.*;
+import io.opencensus.common.Duration;
+import io.opencensus.contrib.grpc.metrics.RpcViews;
 import io.opencensus.contrib.zpages.ZPageHandlers;
+import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
+import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,13 +63,30 @@ public class Gateway {
 
     @PostConstruct
     public void startGrpcServer() throws IOException {
+        startZPages();
+
         server.start();
+        //RpcViews.registerAllGrpcViews();
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void startZPages() throws IOException {
+
+        String gcpProjectId = System.getenv().get("GCP_PROJECTID");
+        if (gcpProjectId == null || gcpProjectId == "") {
+            gcpProjectId = "breakme-214404";
+        }
+
+        RpcViews.registerAllGrpcViews();
+
+        StackdriverStatsExporter.createAndRegister(
+                StackdriverStatsConfiguration.builder()
+                        .setProjectId(gcpProjectId)
+                        .setExportInterval(Duration.fromMillis(1000))
+                        .build());
+
         ZPageHandlers.startHttpServerAndRegisterAll(9080);
     }
 
@@ -152,8 +173,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }
@@ -205,8 +226,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }

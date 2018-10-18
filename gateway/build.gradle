@@ -72,6 +72,7 @@ dependencies {
 
     compile 'io.zipkin.brave:brave-instrumentation-grpc:5.3.3'
     compile 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.7.7'
+    compile 'io.opencensus:opencensus-exporter-stats-stackdriver:0.16.1'
     compile 'io.opencensus:opencensus-exporter-trace-stackdriver:0.16.1'
     compile 'io.opencensus:opencensus-contrib-zpages:0.16.1'
 

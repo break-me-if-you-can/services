@@ -1,100 +1,105 @@
 const grpc = {};
-    grpc.web = require('grpc-web');
+grpc.web = require('grpc-web');
 
-const { PlayerScore, UpdateScoreRequest, TopScoresRequest, GeneratePlayerIdRequest, GetFixtureRequest } = require("../generated/gateway_pb");
-const { LeaderboardServiceClient, FixtureServiceClient, PlayerIdServiceClient } = require("../generated/gateway_grpc_web_pb");
-const { InjectFailureRequest, PartialDegradationRequest } = require("../generated/admin/admin_pb");
-const { AdminServiceClient } = require("../generated/admin/admin_grpc_web_pb");
+import * as Requests from '../generated/gateway_pb';
+import * as Clients from '../generated/gateway_grpc_web_pb';
+import { CONSTANTS } from './Constants';
 
 export class Service {
   
     constructor(props) {
-      //this.fixtureServiceClient = new FixtureServiceClient('http://' + GATEWAY_SERVICE_HOST);
-      this.fixtureServiceClient = new FixtureServiceClient('http://35.233.196.238');
-      this.playerIdServiceClient = new PlayerIdServiceClient('http://35.233.196.238');
-      this.leaderboardServiceClient = new LeaderboardServiceClient('http://35.233.196.238');
-      this.adminServiceClient = new AdminServiceClient('http://35.233.196.238');
+      this.fixtureServiceClient = new Clients.FixtureServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.playerIdServiceClient = new Clients.PlayerIdServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.leaderboardServiceClient = new Clients.LeaderboardServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
     }
   
     getFixture = (callback) => {
-        let getFixtureRequest = new GetFixtureRequest();
-            getFixtureRequest.setLineWidth(767);
-            getFixtureRequest.setLinesCount(1);
-            getFixtureRequest.setGooseWidth(62);
-            getFixtureRequest.setCloudWidth(62);
+        let getFixtureRequest = new Requests.GetFixtureRequest();
+            getFixtureRequest.setLineWidth(CONSTANTS.FIELD_WIDTH);
+            getFixtureRequest.setLinesCount(CONSTANTS.LINES_COUNT);
+            getFixtureRequest.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
+            getFixtureRequest.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
 
-        this.fixtureServiceClient
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
+
+        call = this.fixtureServiceClient
             .getFixture(getFixtureRequest, { },
                 function(err, response) {
-                    callback(response);
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
                 }
             );
     }
 
     getPlayerId = (callback) => {
-        let generatePlayerIdRequest = new GeneratePlayerIdRequest();
+        let generatePlayerIdRequest = new Requests.GeneratePlayerIdRequest();
 
-        this.playerIdServiceClient.generatePlayerId(generatePlayerIdRequest, { },
-            function(err, response) {
-                callback(response);
-            }
-        );
-    }
-    
-    getPlayerId = (callback) => {
-        let generatePlayerIdRequest = new GeneratePlayerIdRequest();
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        this.playerIdServiceClient.generatePlayerId(generatePlayerIdRequest, { },
-            function(err, response) {
-                callback(response);
-            }
+        call = this.playerIdServiceClient
+            .generatePlayerId(generatePlayerIdRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
         );
     }
 
     getTopPlayerScore = (callback) => {
-        let topScoresRequest = new TopScoresRequest();
-        topScoresRequest.setSize(5);
+        let topScoresRequest = new Requests.TopScoresRequest();
+        topScoresRequest.setSize();
 
-        this.leaderboardServiceClient.getTopScores(topScoresRequest, { },
-            function(err, response) {
-                callback(response);
-            }
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
+
+        call = this.leaderboardServiceClient
+            .getTopScores(topScoresRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
         );
     }
-    
+
     updatePlayerScore = (data, callback) => {
-        let playerScore = new PlayerScore();
+        let playerScore = new Requests.PlayerScore();
         playerScore.setPlayerId(data.playerId);
         playerScore.setScore(data.score);
         
-        let updateScoreRequest = new UpdateScoreRequest();
+        let updateScoreRequest = new Requests.UpdateScoreRequest();
         updateScoreRequest.setPlayerScore(playerScore);
 
-        this.leaderboardServiceClient.updateScore(updateScoreRequest, { },
-            function(err, response) {
-                callback(response);
-            }
-        );
-    }
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-    injectFailure = (callback) => {
-        let injectFailureRequest = new InjectFailureRequest();
+        call = this.leaderboardServiceClient
+            .updateScore(updateScoreRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
 
-        this.adminServiceClient.injectFailure(injectFailureRequest, { }, 
-            function(err, reposnse) {
-                callback(response);
-            }
-        );
-    }
-
-    managePartialDegradation = (enable, callback) => {
-        let partialDegradationRequest = new PartialDegradationRequest();
-        partialDegradationRequest.setEnable(enable);
-
-        this.adminServiceClient.managePartialDegradation(partialDegradationRequest, { }, 
-            function(err, response) {
-                callback(response);
-            }
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
         );
     }
 }

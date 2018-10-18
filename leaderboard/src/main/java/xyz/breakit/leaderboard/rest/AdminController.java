@@ -19,9 +19,14 @@ public class AdminController {
 
     @GetMapping(value = "/health")
     public Health health() {
-        Health health = new Health();
-        health.setBroken(leaderboardService.isBroken());
-        return health;
+        return ImmutableHealth.builder()
+                .failureEnabled(leaderboardService.isBroken())
+                .failureProbability(0.5)
+                .httpErrorCode(500)
+                .latencyEnabled(false)
+                .latencyMs(0)
+                .latencyProbability(0.0)
+                .build();
     }
 
     @PostMapping(value = "/clear")
