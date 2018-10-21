@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var express = require('express');
+var webpack = require('webpack');
+var config = require('../webpack/prod.config.js');
+
+var HOST = process.env.HOST || '0.0.0.0';
+var PORT = process.env.PORT || 3001;
+var LISTEN_URL = `http://{HOST}:{PORT}`;
+
+config.output.publicPath = LISTEN_URL +  config.output.publicPath + '/';
+
+config.devServer.publicPath = config.output.publicPath;
+
+var app = express();
+app.get('*', function(req, res) { res.sendFile(path.join(__dirname, 'index.html')); });
+
+app.listen(Number(PORT), HOST, function(err) {
+  if (err) {
+    console.log(err);
+    return;
+  }
+
+  console.log(`Listening at {LISTEN_URL}`);
+});

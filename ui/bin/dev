@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+
 var path = require('path');
 var express = require('express');
 var webpack = require('webpack');
-var config = require('./webpack.config.dev');
+var config = require('../webpack/dev.config.js');
 
 var HOST = process.env.HOST || '0.0.0.0';
 var PORT = process.env.PORT || 3001;
@@ -17,7 +19,7 @@ app.use(require('webpack-dev-middleware')(compiler, {
 app.use(require('webpack-hot-middleware')(compiler));
 
 app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '../index'));
 });
 
 app.listen(Number(PORT), HOST, function(err) {
