@@ -7,13 +7,13 @@
     "port": 3001
   },
   "scripts": {
-    "clean": "rimraf dist",
-    "build:prod:webpack": "NODE_ENV=production webpack --config webpack.config.prod.js",
-    "build:dev:webpack": "NODE_ENV=development webpack --config webpack.config.dev.js --display-error-details",
-    "build:dev": "npm run clean && npm run build:dev:webpack",
+    "clean": "rm -rf ./dist",
+    "start": "./bin/dev",
+    "start:prod": "./bin/prod",
+    "build:prod:webpack": "webpack --config webpack/prod.config.js",
+    "build:dev:webpack": "webpack --config webpack/dev.config.js --display-error-details",
     "build:prod": "npm run clean && npm run build:dev:webpack",
-    "start": "node devServer.js",
-    "start:prod": "node dist/bundle.js"
+    "build:dev": "npm run clean && npm run build:dev:webpack"
   },
   "main": "index.js",
   "repository": "git@github.com-HalloGene:break-me-if-you-can/ui.git",
@@ -37,14 +37,14 @@
     "transform-loader": "^0.2.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.9.6",
-    "webpack-dev-middleware": "^1.2.0",
-    "webpack-hot-middleware": "^2.0.0"
+    "webpack-dev-middleware": "1.2.0",
+    "webpack-hot-middleware": "2.0.0"
   },
   "dependencies": {
     "css-loader": "^1.0.0",
+    "debug": "^4.0.1",
     "google-protobuf": "^3.6.1",
     "grpc-web": "^1.0.0",
-    "debug": "^4.0.1",
     "pixi.js": "^4.8.2",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
