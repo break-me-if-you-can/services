@@ -169,12 +169,13 @@
   100% { opacity: 0; }
 }
 
-/* .app .game > .left .leaderboard.blinking {
-    animation: BLINKING-ANIMATION 1s infinite;
+.app .game > .left .leaderboard.blinking {
+  opacity: 0;
+    /* animation: BLINKING-ANIMATION 1s infinite;
     -webkit-animation: BLINKING-ANIMATION 1s infinite;
     -moz-animation:    BLINKING-ANIMATION 1s infinite;
-    -o-animation:      BLINKING-ANIMATION 1s infinite;
-} */
+    -o-animation:      BLINKING-ANIMATION 1s infinite; */
+}
 
 .app .game > .left .status {
   padding-bottom: 35px;

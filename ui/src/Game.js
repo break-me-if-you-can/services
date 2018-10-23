@@ -53,8 +53,11 @@ export class Game extends Component {
     this.collisionsCounter = 0;
     this.statisticsInterval = null;
     this.scoreInterval = null;
+    this.statisticsUpdatePlayerScoreInterval = null;
+    this.statisticsTopPlayerScoreInterval = null;
     this.fixtureInterval = null;
     this.playerIdInterval = null;
+    this.leaderboardComboPressed = false;
 
     this.frames = {
       'goose': [],
@@ -278,7 +281,7 @@ export class Game extends Component {
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    this.statisticsInterval = setInterval(() => {
+    this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
       this.service.updatePlayerScore(
         {
           playerId: this.state.playerId,
@@ -286,8 +289,21 @@ export class Game extends Component {
         },
         (result) => { }
       );
+    }, CONSTANTS.SCORE_INTERVAL);
 
+    this.statisticsTopPlayerScoreInterval = setInterval(() => {
+      if (this.leaderboardOk) {
+        this.leaderboardOk = false;
+        this.setState({
+          leaderboardDown: false,
+        });
+      } else {
+        this.setState({
+          leaderboardDown: true,
+        });
+      }
       this.service.getTopPlayerScore((result) => {
+        this.leaderboardOk = true;
         let topScores = result.getTopScoresList()
         .map(playerScore => {
           return {
@@ -341,6 +357,14 @@ export class Game extends Component {
 
       if (this.fixtureInterval) {
         clearInterval(this.fixtureInterval);
+      }
+
+      if (this.statisticsUpdatePlayerScoreInterval) {
+        clearInterval(this.statisticsUpdatePlayerScoreInterval);
+      }
+  
+      if (this.statisticsTopPlayerScoreInterval) {
+        clearInterval(this.statisticsTopPlayerScoreInterval);
       }
     }
   }
@@ -399,11 +423,19 @@ export class Game extends Component {
       if (this.aircraft.x > CONSTANTS.AIRCRAFT_WIDTH / 2) {
         this.aircraft.x -= 5;
       }
-    } else if (e.keyCode == 39) { // right arrow
+    }
+    else if (e.keyCode == 39) { // right arrow
       if (this.aircraft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
         this.aircraft.x += 5;
       }
     }
+    else if (e.keyCode == 85 && e.ctrlKey) { // u + CTRL: LB off
+      this.leaderboardComboPressed = true;
+    }
+    else if (e.keyCode == 89 && e.ctrlKey) { // y + CTRL: LB on
+      this.leaderboardComboPressed = false;
+    }
+
   }
 
   startAgain = (e) => {
@@ -465,9 +497,17 @@ export class Game extends Component {
     }
 
     if (this.state.portrait) {
-      message = (<div className="message portrait">
-                  <img src= { portraitGif } alt=""></img>
-                  </div>)
+      message = (
+        <div className="message portrait">
+          <img src= { portraitGif } alt=""></img>
+        </div>
+      );
+    }
+
+    let leaderboardBlinking = '';
+    // console.log('Combo + LB down', this.leaderboardComboPressed && this.state.leaderboardDown);
+    if (this.leaderboardComboPressed && this.state.leaderboardDown) {
+      leaderboardBlinking = 'blinking'
     }
 
     return (
@@ -475,7 +515,7 @@ export class Game extends Component {
         { message}
         <div className="game">
           <div className="left stats">
-            <div className="leaderboard blinking">
+            <div className={"leaderboard " + leaderboardBlinking}>
               <div className="black">TOP 5</div>
               <div>{ topScoresList }</div>
             </div>
