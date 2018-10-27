@@ -9,6 +9,7 @@ export class ParallaxTexture extends PIXI.extras.TilingSprite {
         this.position.y = props.verticalOffset || 0;
         this.tilePosition.x = 0;
         this.tilePosition.y = 0;
+        //this.scale.set(props.ratio);
     }
 
     addToStage(stage) {
