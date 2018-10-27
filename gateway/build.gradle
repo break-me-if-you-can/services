@@ -105,6 +105,11 @@ task healthCheck(type: JavaExec) {
     main = 'xyz.breakit.gateway.GatewayHealthcheckClient'
 }
 
+task injectFailure(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'xyz.breakit.gateway.GatewayAdminClient'
+}
+
 def sysprops = System.getProperties()
 if (sysprops['idea.platform.prefix'] != null) {
     sourceSets {
