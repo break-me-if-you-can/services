@@ -1,9 +1,9 @@
 {
-  "short_name": "Cloud Native Geese",
+  "short_name": "Cloud Native Geese 234",
   "name": "Break Me If You Can Demo App",
   "icons": [
     {
-      "src": "goose.ico",
+      "src": "./favicon.ico",
       "sizes": "152x186",
       "type": "image/png"
     }
