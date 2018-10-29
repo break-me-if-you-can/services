@@ -1,3 +1,14 @@
+body, html {
+  margin: 0; padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root canvas {
+  width: 100%;
+  height: 100%;
+}
+
 @font-face {
   font-family: 'Goblin';
   src: url('../assets/fonts/AGoblinAppears.otf') format('opentype')
@@ -16,6 +27,7 @@
     display: none;
   }
 }
+
 
 .messageblock {
   position: absolute;
