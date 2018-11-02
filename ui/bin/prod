@@ -1,26 +1,20 @@
 #!/usr/bin/env node
 
-var path = require('path');
-var express = require('express');
-var webpack = require('webpack');
-var config = require('../webpack/prod.config.js');
+const express = require('express');
+const path = require('path');
+const app = express();
 
 var HOST = process.env.HOST || '0.0.0.0';
 var PORT = process.env.PORT || 3001;
-var LISTEN_URL = `http://{HOST}:{PORT}`;
 
-config.output.publicPath = LISTEN_URL +  config.output.publicPath + '/';
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/dist', express.static(path.join(__dirname, '../dist')));
+app.use('/diststatic', express.static(path.join(__dirname, '../dist/static')));
 
-config.devServer.publicPath = config.output.publicPath;
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
 
-var app = express();
-app.get('*', function(req, res) { res.sendFile(path.join(__dirname, 'index.html')); });
-
-app.listen(Number(PORT), HOST, function(err) {
-  if (err) {
-    console.log(err);
-    return;
-  }
-
-  console.log(`Listening at {LISTEN_URL}`);
+app.listen(PORT, function(req, res) {
+  console.log('Listen on http://' + HOST + ":" + PORT);
 });
