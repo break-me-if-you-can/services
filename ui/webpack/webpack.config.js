@@ -24,7 +24,7 @@ var cssLoader = {
 var jsLoader = {
   react: 'react-hot',
   babel: 'babel'
-}
+};
 var loaders = {
   js: {
     test: /\.js$/,
@@ -90,7 +90,8 @@ var productionPlugins = [
   new webpack.NoErrorsPlugin(),
   new webpack.DefinePlugin({
     'process.env': {
-      'NODE_ENV': JSON.stringify('production')
+      'NODE_ENV': JSON.stringify('production'),
+      'BABEL_ENV': JSON.stringify('production')
     },
     'THEME': {
       'ISNIGHT': JSON.stringify(false),
