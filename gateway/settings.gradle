@@ -1,3 +1,5 @@
 rootProject.name = 'gateway'
 
 includeBuild '../grpc-api'
+includeBuild '../grpc-common'
+

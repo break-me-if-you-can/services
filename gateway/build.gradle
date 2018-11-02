@@ -75,6 +75,7 @@ dependencies {
 
     compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
     compile "xyz.breakit:grpc-api"
+    compile "xyz.breakit:grpc-common"
 
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
