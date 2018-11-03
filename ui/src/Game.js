@@ -83,6 +83,7 @@ export class Game extends Component {
   gameRefCallback = (element) => {
     this.mainDiv = element;
     this.mainDiv.append(this.app.view);
+    this.counter = 0;
 
     this.playerIdInterval = setInterval(() => {
       this.service.getPlayerId((result) => {
@@ -219,7 +220,7 @@ export class Game extends Component {
 
         if (goose.y > this.getVerticalCutOff()) {
           goose.removeFromStage(this.getStage());
-        } if (Math.abs(goose.y - this.aircraftStraight.y) < 30 && Math.abs(goose.x - this.aircraftStraight.x) < 50) {
+        } if (Math.abs(goose.y - this.aircraftStraight.y) < CONSTANTS.AIRCRAFT_WIDTH / 2 && Math.abs(goose.x - this.aircraftStraight.x) < CONSTANTS.AIRCRAFT_HEIGHT / 2) {
           let explosion = new Explosion({
             frames: this.explosionFrames,
             x: goose.x,
@@ -426,24 +427,26 @@ export class Game extends Component {
 
   onDeviceOrientationHandler = (event) => {
     if (this.aircraftLeft && this.aircraftRight && this.aircraftStraight) {
-      if (Math.abs(event.beta) > 170) {
-        console.log(`${this.counter++}: a: ${event.alpha}\nb:${event.beta}\ng:${event.gamma}`);
-      }
+      // if (Math.abs(event.beta) > 170) {
+      //   console.log(`${this.counter++}: a: ${event.alpha}\nb:${event.beta}\ng:${event.gamma}`);
+      // }
 
       this.aircraftLeft.removeFromStage(this.getStage());
       this.aircraftRight.removeFromStage(this.getStage());
       this.aircraftStraight.removeFromStage(this.getStage());
 
       let betaNorm = event.beta / CONSTANTS.BETA_MAX_ABS;
-      let gammaNorm = event.gamma / CONSTANTS.GAMMA_MAX_ABS;
+      let gammaNorm = event.gamma / (2 * CONSTANTS.GAMMA_MAX_ABS);
 
-
-      let turn = betaNorm * gammaNorm;
-      if (turn > 0) {
+      let turn = betaNorm /* gammaNorm */ * CONSTANTS.AIRCRAFT_HORIZONTAL_STEP_MAX;
+      if (this.counter++ % 100 == 0) {
+        console.log(`${this.counter} step\nb: ${betaNorm}\ng: ${gammaNorm}\nturn: ${turn}\n----`)
+      }
+      if (turn < 0) {
         if (this.aircraftStraight.x > CONSTANTS.AIRCRAFT_WIDTH / 2 + turn) {
-          this.aircraftLeft.x -= turn;
-          this.aircraftRight.x -= turn;
-          this.aircraftStraight.x -= turn;
+          this.aircraftLeft.x += turn;
+          this.aircraftRight.x += turn;
+          this.aircraftStraight.x += turn;
           if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
             this.aircraftLeft.addToStage(this.getStage());
             this.aircraftLeft.play();
@@ -451,11 +454,11 @@ export class Game extends Component {
             this.aircraftStraight.addToStage(this.getStage());
           }
         }
-      } else if (turn < 0) {
+      } else if (turn > 0) {
         if (this.aircraftStraight.x < CONSTANTS.FIELD_WIDTH - (CONSTANTS.AIRCRAFT_WIDTH / 2 + turn)) {
-          this.aircraftLeft.x -= turn;
-          this.aircraftRight.x -= turn;
-          this.aircraftStraight.x -= turn;
+          this.aircraftLeft.x += turn;
+          this.aircraftRight.x += turn;
+          this.aircraftStraight.x += turn;
           if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
             this.aircraftRight.addToStage(this.getStage());
             this.aircraftRight.play();

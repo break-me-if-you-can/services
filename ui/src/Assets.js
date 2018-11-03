@@ -5,7 +5,6 @@ import gooseSpriteSheetImg from '../assets/spritesheets/goose.png';
 import cloudImg from '../assets/textures/cloud.png';
 import waterImg from '../assets/textures/water.png';
 import banksImg from '../assets/textures/banks.png';
-import portraitGif from '../assets/portrait.gif';
 
 export const IMAGES = {
     AIRCRAFT_LEFT_TURN_SPRITESHEET: aircraftLeftTurnSpriteSheetImg,
@@ -15,5 +14,4 @@ export const IMAGES = {
     CLOUD: cloudImg,
     WATER: waterImg,
     BANKS: banksImg,
-    PORTRAIT: portraitGif,
 }

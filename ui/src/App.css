@@ -21,8 +21,6 @@ body, html {
 }
 
 @media screen and (orientation:portrait) {
-  .messageblock {
-  }
 
   .gameblock {
     display: none;
@@ -58,7 +56,7 @@ body, html {
   100% { font-size: 15pt; }
 }
 
-/* Portrait or Game overmode message */
+/* Portrait mode or Game over message */
 .app .message {
   position: fixed;
   top: 0;
@@ -145,11 +143,13 @@ body, html {
   /* width: 75%; */
   /* max-width: 1438px; */
   width: 767px;
+  /* min-width: 767px */
 }
 
 .app .game > .left {
   font-family: 'Goblin';
   display: table-cell;
+  overflow: hidden;
   /*width: 25%;*/
   background: url("../assets/interface_bg.png") no-repeat center center fixed;
   -webkit-background-size: cover;
@@ -183,7 +183,6 @@ body, html {
 .app .game > .left .status .engine {
   display: inline;
   min-width: 30px;
-  height: 45px;
 }
 
 .app .game > .left .status .engine.alive {
