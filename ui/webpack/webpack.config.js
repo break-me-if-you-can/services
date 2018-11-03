@@ -1,24 +1,10 @@
 var path = require('path');
 var webpack = require('webpack');
 
-function params(json) {
-  var result = [];
-  for(var i in json) {
-    if(typeof json[i] === 'boolean' && json[i]){
-      result.push(i);
-    }
-    else{
-      result.push(i+'='+json[i]);
-    }
-  }
-  return result.join('&')
-}
-
 var cssLoader = {
   module: true,
   importLoaders: 2,
   sourceMap: true,
-  //localIdentName: '[local]___[hash:base64:5]'
   localIdentName: '[local]'
 };
 var jsLoader = {
@@ -45,15 +31,6 @@ var loaders = {
     },
     include: path.join(__dirname, '../assets')
   },
-  scss: {
-    test: /\.scss$/,
-    loaders: [
-      'style',
-      'css?'+params(cssLoader),
-      'postcss',
-      'sass'
-    ]
-  },
   json: {
     test: /\.json$/,
     loaders:['json'],
@@ -63,13 +40,6 @@ var loaders = {
     test: /\.tpl$|^((?!\.ng).)*\.html$/,
     loaders: ['raw']
   },
-  nghtml: {
-    test: /\.ng\.html$/,
-    loaders: [
-      'ngtemplate?relativeTo='+path.join(__dirname, '../src'),
-      'raw'
-    ]
-  },
   file: {
     test: /\.jpe?g$|\.gif$|\.png$|\.svg|\.woff|\.woff2|\.ttf|\.wav$|\.mp3$|\.eot/,
     loader: 'file?name=static/[sha512:hash:base64:7].[ext]'
@@ -77,12 +47,7 @@ var loaders = {
   dataurl: {
     test: /\.jpe?g$|\.gif$|\.png$|\.svg|\.woff|\.woff2|\.ttf|\.wav$|\.mp3$|\.eot/,
     loader: 'url'
-  },
-  doc: {
-    test: /__doc__\/index\.js$/,
-    loaders: ['react-router', jsLoader.babel],
-    exclude: /node_modules/
-  },
+  }
 }
 var productionPlugins = [
   new webpack.optimize.UglifyJsPlugin(),
@@ -94,10 +59,6 @@ var productionPlugins = [
       'GATEWAY_SERVICE_HOST': JSON.stringify('35.233.196.238'),
       'NODE_ENV': JSON.stringify('production'),
       'BABEL_ENV': JSON.stringify('production')
-    },
-    'THEME': {
-      'ISNIGHT': JSON.stringify(false),
-      'PORT': JSON.stringify('3001'),
     }
   })
 ]
@@ -106,21 +67,18 @@ module.exports = {
   output: {
     path: path.join(__dirname, '../dist'),
     filename: 'bundle.js',
-    publicPath: 'dist/'
-    //publicPath: 'http://0.0.0.0:3001/dist/'
+    publicPath: '../dist/'
   },
   module: {
     loaders: [
       loaders.js, loaders.css, loaders.fonts,
-      loaders.raw, loaders.file, loaders.doc,
-      loaders.json, loaders.nghtml
+      loaders.raw, loaders.file, loaders.json
     ]
   },
   newExtraParams: {
     loaders: loaders,
     cssLoader: cssLoader,
     jsLoader: jsLoader,
-    params: params,
     productionPlugins: productionPlugins
   }
 };
