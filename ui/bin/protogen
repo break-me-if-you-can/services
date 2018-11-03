@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# CD to services folder
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && cd ../../ && pwd)"
+cd "$DIR"
+
+# Remove old generated proto files with folder
+GENERATED_DIR="./ui/generated/"
+rm -rf "$GENERATED_DIR"
+mkdir "$GENERATED_DIR"
+
+# Generate files
+PROTO_DIR="./grpc-api/src/main/proto"
+GATEWAY_PROTO="gateway.proto"
+
+protoc -I="$PROTO_DIR" "$PROTO_DIR/$GATEWAY_PROTO" \
+        --js_out=import_style=commonjs:"$GENERATED_DIR" \
+        --grpc-web_out=import_style=commonjs,mode=grpcweb:"$GENERATED_DIR"
