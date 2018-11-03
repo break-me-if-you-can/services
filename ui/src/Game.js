@@ -28,10 +28,8 @@ export class Game extends Component {
       }
     );
 
-    let pattern = new RegExp('Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|', 'i');
-    this.isMobile = false || navigator.userAgent.match(pattern);
-
     this.mainDiv = null;
+    this.counter = 0;
 
     this.score = 0;
     this.state = {
@@ -76,11 +74,14 @@ export class Game extends Component {
 
   getStage = () => this.app.stage;
 
-  focusDiv = ()=> { this.mainDiv.focus() }
+  focusDiv = () => { this.mainDiv.focus() }
+
+  setAircraftVerticalPosition = () => this.height - CONSTANTS.AIRCRAFT_OFFSET;
+
+  getVerticalCutOff = () => this.height + CONSTANTS.CUT_OFF_OFFSET;
 
   gameRefCallback = (element) => {
     this.mainDiv = element;
-
     this.mainDiv.append(this.app.view);
 
     this.playerIdInterval = setInterval(() => {
@@ -103,7 +104,6 @@ export class Game extends Component {
         .add('explosionSpriteSheet', IMAGES.EXPLOSION_SPRITESHEET)
         .add('aircraftTurnLeftSpriteSheet', IMAGES.AIRCRAFT_LEFT_TURN_SPRITESHEET)
         .add('aircraftTurnRightSpriteSheet', IMAGES.AIRCRAFT_RIGHT_TURN_SPRITESHEET)
-        //.add('aircraftStraightTexture', IMAGES.AIRCRAFT_STRAIGHT)
         .add('cloudTexture', IMAGES.CLOUD)
         .add('waterTexture', IMAGES.WATER)
         .add('banksTexture', IMAGES.BANKS)
@@ -123,14 +123,12 @@ export class Game extends Component {
     });
   }
 
-  setAircraftVerticalPosition = () => this.height - CONSTANTS.AIRCRAFT_OFFSET;
-
   runGame = (resources) => {
     let water = new ParallaxTexture({
       image: resources.waterTexture,
       width: CONSTANTS.WATER_WIDTH,
       height: CONSTANTS.WATER_HEIGHT,
-      horizontalOffset: 65,
+      horizontalOffset: CONSTANTS.WATER_HORIZONTAL_OFFSET,
     });
     
     let banks = new ParallaxTexture({
@@ -212,15 +210,14 @@ export class Game extends Component {
     this.runIntervals();
 
     this.app.ticker.add((delta) => {
-      water.tilePosition.y += 1.25;
-      banks.tilePosition.y += 0.85;
+      water.tilePosition.y += CONSTANTS.WATER_VELOCITY;
+      banks.tilePosition.y += CONSTANTS.BANKS_VELOCITY;
 
-      this.score += 25;
-
+      this.score += CONSTANTS.POINTS_PER_TICK;
       let tempGeese = this.geese.reduce((newGeese, goose ) => {
-         goose.y += 2.5;
+         goose.y += CONSTANTS.GOOSE_VELOCITY;
 
-        if (goose.y > this.height + 50) {
+        if (goose.y > this.getVerticalCutOff()) {
           goose.removeFromStage(this.getStage());
         } if (Math.abs(goose.y - this.aircraftStraight.y) < 30 && Math.abs(goose.x - this.aircraftStraight.x) < 50) {
           let explosion = new Explosion({
@@ -242,9 +239,9 @@ export class Game extends Component {
       this.geese = tempGeese;
       
       let tempClouds = this.clouds.reduce((newClouds, cloud ) => {
-        cloud.y += 2.7;
+        cloud.y += CONSTANTS.CLOUD_VELOCITY;
 
-        if (cloud.y > this.height + 50) {
+        if (cloud.y > this.getVerticalCutOff()) {
           cloud.removeFromStage(this.getStage());
         } else {
           newClouds.push(cloud);
@@ -261,7 +258,7 @@ export class Game extends Component {
 
     if (resultList && resultList.length) {
       resultList.forEach(line => {
-        console.log(line);
+        //console.log(line);
         setTimeout(() => {
           let geesePos = line.getGoosePositionsList();
           geesePos.forEach(position => {
@@ -346,7 +343,7 @@ export class Game extends Component {
   
     }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
-    this.fixtureInterval = setInterval(() => { this.service.getFixture(this.fixtureCallback) }, CONSTANTS.FIXTURE_INTERVAL)
+    //this.fixtureInterval = setInterval(() => { this.service.getFixture(this.fixtureCallback) }, CONSTANTS.FIXTURE_INTERVAL)
   }
 
   updateEnginesStatus = () => {
@@ -356,11 +353,9 @@ export class Game extends Component {
       (obj, i) => (i < this.collisionsCounter? CONSTANTS.ENGINE_DEAD_CLASSNAME: CONSTANTS.ENGINE_ALIVE_CLASSNAME)
     );
 
-    this.setState(
-      {
-        enginesStatus: enginesStatus,
-      }
-    );
+    this.setState({
+      enginesStatus: enginesStatus,
+    });
     
     this.checkGameOver();
   }
@@ -401,11 +396,12 @@ export class Game extends Component {
   }
 
   updateDimensions = (event) => {
-    console.log('updateDimensions', event);
-    this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
-    this.aircraftLeft.y = this.setAircraftVerticalPosition();
-    this.aircraftRight.y = this.setAircraftVerticalPosition();
-    this.aircraftStraight.y = this.setAircraftVerticalPosition();
+    if (this.aircraftLeft && this.aircraftRight && this.aircraftStraight) {
+      this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
+      this.aircraftLeft.y = this.setAircraftVerticalPosition();
+      this.aircraftRight.y = this.setAircraftVerticalPosition();
+      this.aircraftStraight.y = this.setAircraftVerticalPosition();
+    }
   }
 
   onBlurHandler = (event) => {
@@ -420,48 +416,35 @@ export class Game extends Component {
   }
 
   onWindowKeydown = (event) => {
-    if (event.keyCode == 85 && event.ctrlKey) { // u + CTRL: LB off
-      console.log('combo pressed true');
+    if (event.keyCode == CONSTANTS.U_KEYCODE && event.ctrlKey) { // LB off
       this.leaderboardComboPressed = true;
     }
-    else if (event.keyCode == 89 && event.ctrlKey) { // y + CTRL: LB on
-      console.log('combo pressed false');
+    else if (event.keyCode == CONSTANTS.Y_KEYCODE && event.ctrlKey) { // LB on
       this.leaderboardComboPressed = false;
     }
   }
 
   onDeviceOrientationHandler = (event) => {
-    if (window.innerHeight > window.innerWidth) {
-      if (this.app.ticker.started) {
-        this.app.ticker.stop();
+    if (this.aircraftLeft && this.aircraftRight && this.aircraftStraight) {
+      if (Math.abs(event.beta) > 170) {
+        console.log(`${this.counter++}: a: ${event.alpha}\nb:${event.beta}\ng:${event.gamma}`);
       }
-      if (!this.state.portrait) {
-        this.setState({
-          portrait: true,
-        })
-      }
-    } else {
-      if (!this.app.ticker.started) {
-        this.app.ticker.start();
-      }
-      if (this.state.portrait) {
-        this.setState({
-          portrait: false,
-        });
-      }
-
 
       this.aircraftLeft.removeFromStage(this.getStage());
       this.aircraftRight.removeFromStage(this.getStage());
       this.aircraftStraight.removeFromStage(this.getStage());
 
-      let turn = Math.sign(event.gamma) * event.beta / 180 * 30;
+      let betaNorm = event.beta / CONSTANTS.BETA_MAX_ABS;
+      let gammaNorm = event.gamma / CONSTANTS.GAMMA_MAX_ABS;
+
+
+      let turn = betaNorm * gammaNorm;
       if (turn > 0) {
         if (this.aircraftStraight.x > CONSTANTS.AIRCRAFT_WIDTH / 2 + turn) {
           this.aircraftLeft.x -= turn;
           this.aircraftRight.x -= turn;
           this.aircraftStraight.x -= turn;
-          if (Math.abs(event.beta / 180) > 0.03) {
+          if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
             this.aircraftLeft.addToStage(this.getStage());
             this.aircraftLeft.play();
           } else {
@@ -473,7 +456,7 @@ export class Game extends Component {
           this.aircraftLeft.x -= turn;
           this.aircraftRight.x -= turn;
           this.aircraftStraight.x -= turn;
-          if (Math.abs(event.beta / 180) > 0.03) {
+          if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
             this.aircraftRight.addToStage(this.getStage());
             this.aircraftRight.play();
           } else {
@@ -501,11 +484,11 @@ export class Game extends Component {
   }
 
   onKeyDownHandler = (event) => {
-    if (event.keyCode == 37) { // left arrow
+    if (event.keyCode == CONSTANTS.LEFT_ARROW_KEYCODE) {
       if (this.aircraftLeft.x > CONSTANTS.AIRCRAFT_WIDTH / 2 ) {
-        this.aircraftLeft.x -= 5;
-        this.aircraftRight.x -= 5;
-        this.aircraftStraight.x -= 5;
+        this.aircraftLeft.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraftRight.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraftStraight.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
         this.aircraftLeft.removeFromStage(this.getStage());
         this.aircraftRight.removeFromStage(this.getStage());
         this.aircraftStraight.removeFromStage(this.getStage());
@@ -513,11 +496,11 @@ export class Game extends Component {
         this.aircraftLeft.play();
       }
     }
-    else if (event.keyCode == 39) { // right arrow
+    else if (event.keyCode == CONSTANTS.RIGHT_ARROW_KEYCODE) {
       if (this.aircraftLeft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
-        this.aircraftLeft.x += 5;
-        this.aircraftRight.x += 5;
-        this.aircraftStraight.x += 5;
+        this.aircraftLeft.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraftRight.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraftStraight.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
         this.aircraftLeft.removeFromStage(this.getStage());
         this.aircraftRight.removeFromStage(this.getStage());
         this.aircraftStraight.removeFromStage(this.getStage());
@@ -598,14 +581,6 @@ export class Game extends Component {
                       </div>
                     </div>
                   </div>);
-    }
-
-    if (this.state.portrait) {
-      message = (
-        <div className="message portrait">
-          <img src= { portraitGif } alt=""></img>
-        </div>
-      );
     }
 
     let leaderboardBlinking = '';

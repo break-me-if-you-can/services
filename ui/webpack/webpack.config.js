@@ -106,7 +106,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, '../dist'),
     filename: 'bundle.js',
-    publicPath: 'http://0.0.0.0:3001/dist/'
+    publicPath: 'dist/'
+    //publicPath: 'http://0.0.0.0:3001/dist/'
   },
   module: {
     loaders: [
