@@ -125,16 +125,18 @@ export class Game extends Component {
   }
 
   runGame = (resources) => {
+    //resources.waterTexture.baseTexture.mipmap=false;
     let water = new ParallaxTexture({
       image: resources.waterTexture,
-      width: CONSTANTS.WATER_WIDTH,
+      width: CONSTANTS.WATER_WIDTH <= window.innerWidth? CONSTANTS.WATER_WIDTH : window.innerWidth,
       height: CONSTANTS.WATER_HEIGHT,
       horizontalOffset: CONSTANTS.WATER_HORIZONTAL_OFFSET,
     });
     
+    //resources.banksTexture.baseTexture.mipmap=false;
     let banks = new ParallaxTexture({
       image: resources.banksTexture,
-      width: CONSTANTS.FIELD_WIDTH,
+      width: CONSTANTS.FIELD_WIDTH <= window.innerWidth? CONSTANTS.FIELD_WIDTH : window.innerWidth,
       height: CONSTANTS.FIELD_HEIGHT,
     });
 
@@ -184,31 +186,26 @@ export class Game extends Component {
       )
     }
 
+    let aircraftFramesObject = {
+      left: this.aircraftLeftFrames,
+      straight: [ this.aircraftLeftFrames[0] ],
+      right: this.aircraftRightFrames,
+    }
+
     this.cloudTexture = resources.cloudTexture;
 
     this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
 
-    this.aircraftStraight = new Aircraft({
-      frames: [ this.aircraftLeftFrames[0] ],
+    this.aircraft = new Aircraft({
+      framesObject: aircraftFramesObject,
       x: CONSTANTS.FIELD_WIDTH / 2,
       y: this.setAircraftVerticalPosition(),
     });
 
-    this.aircraftLeft = new Aircraft({
-      frames: this.aircraftLeftFrames,
-      x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.setAircraftVerticalPosition(),
-    });
-
-    this.aircraftRight = new Aircraft({
-      frames: this.aircraftRightFrames,
-      x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.setAircraftVerticalPosition(),
-    });
-
-    this.aircraftStraight.addToStage(this.getStage());
+    this.aircraft.showStraight(this.getStage());
 
     this.runIntervals();
+
 
     this.app.ticker.add((delta) => {
       water.tilePosition.y += CONSTANTS.WATER_VELOCITY;
@@ -220,7 +217,7 @@ export class Game extends Component {
 
         if (goose.y > this.getVerticalCutOff()) {
           goose.removeFromStage(this.getStage());
-        } if (Math.abs(goose.y - this.aircraftStraight.y) < CONSTANTS.AIRCRAFT_WIDTH / 2 && Math.abs(goose.x - this.aircraftStraight.x) < CONSTANTS.AIRCRAFT_HEIGHT / 2) {
+        } if (Math.abs(goose.y - this.aircraft.y) < CONSTANTS.AIRCRAFT_WIDTH / 2 && Math.abs(goose.x - this.aircraft.x) < CONSTANTS.AIRCRAFT_HEIGHT / 2) {
           let explosion = new Explosion({
             frames: this.explosionFrames,
             x: goose.x,
@@ -397,11 +394,10 @@ export class Game extends Component {
   }
 
   updateDimensions = (event) => {
-    if (this.aircraftLeft && this.aircraftRight && this.aircraftStraight) {
+    console.log(`H:${window.innerHeight} W: ${window.innerWidth}`);
+    if (this.aircraft) {
       this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
-      this.aircraftLeft.y = this.setAircraftVerticalPosition();
-      this.aircraftRight.y = this.setAircraftVerticalPosition();
-      this.aircraftStraight.y = this.setAircraftVerticalPosition();
+      this.aircraft.setY(this.setAircraftVerticalPosition());
     }
   }
 
@@ -426,98 +422,94 @@ export class Game extends Component {
   }
 
   onDeviceOrientationHandler = (event) => {
-    if (this.aircraftLeft && this.aircraftRight && this.aircraftStraight) {
-      // if (Math.abs(event.beta) > 170) {
-      //   console.log(`${this.counter++}: a: ${event.alpha}\nb:${event.beta}\ng:${event.gamma}`);
-      // }
-
-      this.aircraftLeft.removeFromStage(this.getStage());
-      this.aircraftRight.removeFromStage(this.getStage());
-      this.aircraftStraight.removeFromStage(this.getStage());
-
+    if (this.aircraft) {
+      let turn = 0;
       let betaNorm = event.beta / CONSTANTS.BETA_MAX_ABS;
-      let gammaNorm = event.gamma / (2 * CONSTANTS.GAMMA_MAX_ABS);
-
-      let turn = betaNorm /* gammaNorm */ * CONSTANTS.AIRCRAFT_HORIZONTAL_STEP_MAX;
-      if (this.counter++ % 100 == 0) {
-        console.log(`${this.counter} step\nb: ${betaNorm}\ng: ${gammaNorm}\nturn: ${turn}\n----`)
+      let gammaNorm = event.gamma / CONSTANTS.GAMMA_MAX_ABS;
+      if (Math.abs(betaNorm) < 0.85 && Math.abs(gammaNorm) < 0.85) {
+        turn = Math.sign(gammaNorm) * CONSTANTS.AIRCRAFT_HORIZONTAL_STEP_MAX * betaNorm;
       }
-      if (turn < 0) {
+
+      this.aircraft.removeFromStage(this.getStage());
+
+      if (turn > 0) {
+        let delta = this.aircraftStraight.x;
+        if (turn > delta) {
+          turn = delta - 1;
+        }
+
+        let position = this.aircraft.getPosition();
+
         if (this.aircraftStraight.x > CONSTANTS.AIRCRAFT_WIDTH / 2 + turn) {
-          this.aircraftLeft.x += turn;
-          this.aircraftRight.x += turn;
-          this.aircraftStraight.x += turn;
+          position.x -= turn;
+          this.aircraft.setPosition(position);
+
           if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
-            this.aircraftLeft.addToStage(this.getStage());
-            this.aircraftLeft.play();
+            this.aircraft.showLeft(this.getStage());
           } else {
-            this.aircraftStraight.addToStage(this.getStage());
+            this.aircraft.showStraight(this.getStage());
           }
         }
-      } else if (turn > 0) {
+      } else if (turn < 0) {
+        let delta = CONSTANTS.FIELD_WIDTH - this.aircraftStraight.x;
+        if (turn > delta) {
+          turn = delta - 1;
+        }
+
         if (this.aircraftStraight.x < CONSTANTS.FIELD_WIDTH - (CONSTANTS.AIRCRAFT_WIDTH / 2 + turn)) {
-          this.aircraftLeft.x += turn;
-          this.aircraftRight.x += turn;
-          this.aircraftStraight.x += turn;
+          position.x -= turn;
+          this.aircraft.setPosition(position);
           if (Math.abs(betaNorm) > CONSTANTS.EPSILON) {
-            this.aircraftRight.addToStage(this.getStage());
-            this.aircraftRight.play();
+            this.aircraft.showRight(this.getStage());
           } else {
-            this.aircraftStraight.addToStage(this.getStage());
+            this.aircraft.showStraight(this.getStage());
           }
         }
       } else {
-        this.aircraftStraight.addToStage(this.getStage());
+        this.aircraft.showStraight(this.getStage());
       }
     }
   }
 
   onDeviceMotionHandler = (event) => {
-    alert('Device Motion Event', e);
+    console.log('onDeviceMotionHandler');
+    //alert('Device Motion Event', e);
     tilt([event.acceleration.x * 2, event.acceleration.y * 2]);
   }
 
   onMozOrientationHandler = (event) => {
+    console.log('onDeviceMotionHandler');
     alert('MozOrientation');
     tilt([orientation.x * 50, orientation.y * 50]);
   }
 
   onOrientationChangedHandler = (e) => {
-    console.log('orientation changed', e);
+    console.log('onOrientationChangedHandler');
   }
 
   onKeyDownHandler = (event) => {
+    let position = this.aircraft.getPosition();
     if (event.keyCode == CONSTANTS.LEFT_ARROW_KEYCODE) {
-      if (this.aircraftLeft.x > CONSTANTS.AIRCRAFT_WIDTH / 2 ) {
-        this.aircraftLeft.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftRight.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftStraight.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftLeft.removeFromStage(this.getStage());
-        this.aircraftRight.removeFromStage(this.getStage());
-        this.aircraftStraight.removeFromStage(this.getStage());
-        this.aircraftLeft.addToStage(this.getStage());
-        this.aircraftLeft.play();
+      if (position.x > CONSTANTS.AIRCRAFT_WIDTH / 2 ) {
+        this.aircraft.removeFromStage(this.getStage());
+        position.x -= CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraft.setPosition(position);
+        this.aircraft.showLeft(this.getStage());
       }
     }
     else if (event.keyCode == CONSTANTS.RIGHT_ARROW_KEYCODE) {
-      if (this.aircraftLeft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
-        this.aircraftLeft.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftRight.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftStraight.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
-        this.aircraftLeft.removeFromStage(this.getStage());
-        this.aircraftRight.removeFromStage(this.getStage());
-        this.aircraftStraight.removeFromStage(this.getStage());
-        this.aircraftRight.addToStage(this.getStage());
-        this.aircraftRight.play();
+      if (position.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
+        this.aircraft.removeFromStage(this.getStage());
+        position.x += CONSTANTS.AIRCRAFT_KEYPRESS_HORIZONTAL_STEP_MAX;
+        this.aircraft.setPosition(position);
+        this.aircraft.showRight(this.getStage());
       }
     }
   }
 
   onKeyUpHandler = (e) => {
-    this.aircraftLeft.removeFromStage(this.getStage());
-    this.aircraftRight.removeFromStage(this.getStage());
-    this.aircraftStraight.removeFromStage(this.getStage());
-    this.aircraftStraight.addToStage(this.getStage());
+    this.aircraft.removeFromStage(this.getStage());
+    this.aircraft.showStraight(this.getStage());
   }
 
   startAgain = (e) => {
