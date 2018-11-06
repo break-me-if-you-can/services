@@ -22,12 +22,21 @@ repositories {
     mavenLocal()
 }
 
-def grpcVersion = '1.15.0'
+def grpcVersion = '1.16.1'
 def protobufVersion = '3.5.1'
+def opencensusVersion = '0.12.3'
 
 dependencies {
     compile "xyz.breakit:grpc-api"
     compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    compile "com.google.api.grpc:proto-google-common-protos:${opencensusVersion}"
+    compile "io.opencensus:opencensus-contrib-zpages:${opencensusVersion}"
+    compile "io.opencensus:opencensus-contrib-grpc-metrics:${opencensusVersion}"
+    compile "io.opencensus:opencensus-exporter-stats-stackdriver:${opencensusVersion}"
+    compile "io.opencensus:opencensus-exporter-trace-stackdriver:${opencensusVersion}"
+
+    runtimeOnly "io.opencensus:opencensus-impl:0.12.3"
+
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
     testCompile "org.mockito:mockito-core:1.9.5"

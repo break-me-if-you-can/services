@@ -11,11 +11,6 @@ import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
 import io.grpc.*;
-import io.opencensus.common.Duration;
-import io.opencensus.contrib.grpc.metrics.RpcViews;
-import io.opencensus.contrib.zpages.ZPageHandlers;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +24,7 @@ import xyz.breakit.admin.HealthCheckServiceGrpc;
 import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.common.instrumentation.census.GrpcCensusReporter;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
@@ -53,7 +49,8 @@ import java.util.function.Supplier;
 public class Gateway {
 
     private static final int MAX_RETRIES = 5;
-    public static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8080;
+    private static final int ZPAGES_PORT = 9080;
 
     @Autowired
     private Server server;
@@ -64,31 +61,13 @@ public class Gateway {
 
     @PostConstruct
     public void startGrpcServer() throws IOException {
-        startZPages();
-
         server.start();
-        //RpcViews.registerAllGrpcViews();
-
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
     }
 
-    //@PostConstruct
-    public void startZPages() throws IOException {
-
-        String gcpProjectId = System.getenv().get("GCP_PROJECTID");
-        if (gcpProjectId == null || gcpProjectId == "") {
-            gcpProjectId = "breakme-214404";
-        }
-
-        RpcViews.registerAllGrpcViews();
-
-        StackdriverStatsExporter.createAndRegister(
-                StackdriverStatsConfiguration.builder()
-                        .setProjectId(gcpProjectId)
-                        .setExportInterval(Duration.fromMillis(1000))
-                        .build());
-
-        ZPageHandlers.startHttpServerAndRegisterAll(9080);
+    @PostConstruct
+    public void startCensusReporting() throws IOException {
+        GrpcCensusReporter.registerAndExportViews(ZPAGES_PORT);
     }
 
     @Bean
