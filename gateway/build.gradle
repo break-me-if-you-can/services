@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def grpcVersion = '1.15.0'
+def grpcVersion = '1.16.1'
 def protobufVersion = '3.5.1'
 
 repositories {
@@ -63,7 +63,7 @@ dependencies {
     compile group: 'net.jodah', name: 'failsafe', version: '1.1.0'
     compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.1.4'
 
-    compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
+    compile "com.google.api.grpc:proto-google-common-protos:1.12.0"
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
@@ -72,15 +72,12 @@ dependencies {
 
     compile 'io.zipkin.brave:brave-instrumentation-grpc:5.3.3'
     compile 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.7.7'
-    compile 'io.opencensus:opencensus-exporter-stats-stackdriver:0.16.1'
-    compile 'io.opencensus:opencensus-exporter-trace-stackdriver:0.16.1'
-    compile 'io.opencensus:opencensus-contrib-zpages:0.16.1'
 
     compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
     compile "xyz.breakit:grpc-api"
     compile "xyz.breakit:grpc-common"
 
-    runtime 'io.opencensus:opencensus-impl:0.16.1'
+    runtimeOnly "io.opencensus:opencensus-impl:0.12.3"
 
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"

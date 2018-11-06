@@ -4,6 +4,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import xyz.breakit.common.healthcheck.CommonHealthcheckService;
+import xyz.breakit.common.instrumentation.census.GrpcCensusReporter;
 import xyz.breakit.common.instrumentation.failure.AddLatencyServerInterceptor;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
@@ -16,6 +17,8 @@ import java.util.Random;
  * Geese server entry point.
  */
 public class GeeseServer {
+
+    private static final int ZPAGES_PORT = 9080;
 
     public static void main(String... args) throws IOException, InterruptedException {
 
@@ -33,6 +36,8 @@ public class GeeseServer {
                 .addService(new CommonHealthcheckService("geese", failureProvider, failureProvider))
                 .build();
         server.start();
+
+        GrpcCensusReporter.registerAndExportViews(ZPAGES_PORT);
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
         server.awaitTermination();

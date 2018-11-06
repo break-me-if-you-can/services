@@ -3,6 +3,7 @@ package xyz.breakit.gateway.admin;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.JdkFutureAdapters;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import xyz.breakit.admin.HealthCheckRequest;
 import xyz.breakit.admin.HealthCheckResponse;
 import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
@@ -59,7 +60,8 @@ public final class HealthcheckService {
                             .forEach(response::addAllServiceHealthStatus);
 
                     return response.build();
-                }
+                },
+                MoreExecutors.directExecutor()
         );
     }
 
