@@ -78,6 +78,7 @@ dependencies {
 
     compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
     compile "xyz.breakit:grpc-api"
+    compile "xyz.breakit:grpc-common"
 
     runtime 'io.opencensus:opencensus-impl:0.16.1'
 
@@ -108,6 +109,11 @@ task runClient(type: JavaExec) {
 task healthCheck(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'xyz.breakit.gateway.GatewayHealthcheckClient'
+}
+
+task injectFailure(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'xyz.breakit.gateway.GatewayAdminClient'
 }
 
 def sysprops = System.getProperties()

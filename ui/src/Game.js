@@ -19,18 +19,14 @@ export class Game extends Component {
     super(props);
     this.service = new Service();
     this.loader = new PIXI.loaders.Loader();
+
     this.app = new PIXI.Application(
       {
-        width: CONSTANTS.FIELD_WIDTH,
+        width:  CONSTANTS.FIELD_WIDTH,
         height: CONSTANTS.FIELD_HEIGHT,
         transparent:false,
       }
     );
-
-    this.field = {
-      width: window.innerWidth * 0.75,
-      height: window.innerHeight,
-    }
 
     let pattern = new RegExp('Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|', 'i');
     this.isMobile = false || navigator.userAgent.match(pattern);
@@ -53,8 +49,11 @@ export class Game extends Component {
     this.collisionsCounter = 0;
     this.statisticsInterval = null;
     this.scoreInterval = null;
+    this.statisticsUpdatePlayerScoreInterval = null;
+    this.statisticsTopPlayerScoreInterval = null;
     this.fixtureInterval = null;
     this.playerIdInterval = null;
+    this.leaderboardComboPressed = false;
 
     this.frames = {
       'goose': [],
@@ -64,10 +63,6 @@ export class Game extends Component {
 
   init = () => {
     this.collisionsCounter = 0;
-    this.aircraft.setPosition({
-      x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
-    });
 
     this.score = 0;
     this.setState({
@@ -106,9 +101,9 @@ export class Game extends Component {
     this.loader
       .add('gooseSpriteSheet', IMAGES.GOOSE_SPRITESHEET)
         .add('explosionSpriteSheet', IMAGES.EXPLOSION_SPRITESHEET)
-        .add('aircraftTurnLeftSpriteSheetImg', IMAGES.AIRCRAFT_LEFT_TURN_SPRITESHEET)
-        .add('aircraftTurnRightSpriteSheetImg', IMAGES.AIRCRAFT_RIGHT_TURN_SPRITESHEET)
-        .add('aircraftStraightTexture', IMAGES.AIRCRAFT_STRAIGHT)
+        .add('aircraftTurnLeftSpriteSheet', IMAGES.AIRCRAFT_LEFT_TURN_SPRITESHEET)
+        .add('aircraftTurnRightSpriteSheet', IMAGES.AIRCRAFT_RIGHT_TURN_SPRITESHEET)
+        //.add('aircraftStraightTexture', IMAGES.AIRCRAFT_STRAIGHT)
         .add('cloudTexture', IMAGES.CLOUD)
         .add('waterTexture', IMAGES.WATER)
         .add('banksTexture', IMAGES.BANKS)
@@ -129,11 +124,10 @@ export class Game extends Component {
   }
 
   runGame = (resources) => {
-
     let water = new ParallaxTexture({
       image: resources.waterTexture,
-      width: 634,
-      height: 1152,
+      width: CONSTANTS.WATER_WIDTH,
+      height: CONSTANTS.WATER_HEIGHT,
       horizontalOffset: 65,
     });
     
@@ -169,18 +163,49 @@ export class Game extends Component {
       )
     }
 
+    console.log(resources);
+    this.aircraftLeftFrames = [];
+    for (let i = 0; i < CONSTANTS.AIRCRAFT_LEFT_TURN_FRAMES_COUNT; i++) {
+      this.aircraftLeftFrames.push(
+        new PIXI.Texture(
+          resources.aircraftTurnLeftSpriteSheet.texture,
+          new PIXI.Rectangle(0 + i * CONSTANTS.AIRCRAFT_WIDTH, 0, CONSTANTS.AIRCRAFT_WIDTH, CONSTANTS.AIRCRAFT_HEIGHT)
+        )
+      )
+    }
+    this.aircraftRightFrames = [];
+    for (let i = 0; i < CONSTANTS.AIRCRAFT_RIGHT_TURN_FRAMES_COUNT; i++) {
+      this.aircraftRightFrames.push(
+        new PIXI.Texture(
+          resources.aircraftTurnRightSpriteSheet.texture,
+          new PIXI.Rectangle(0 + i * CONSTANTS.AIRCRAFT_WIDTH, 0, CONSTANTS.AIRCRAFT_WIDTH, CONSTANTS.AIRCRAFT_HEIGHT)
+        )
+      )
+    }
+
     this.cloudTexture = resources.cloudTexture;
 
     this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
 
-    this.aircraft = new Aircraft({
-      image: resources.aircraftStraightTexture,
-      width: CONSTANTS.AIRCRAFT_WIDTH,
-      height: CONSTANTS.AIRCRAFT_HEIGHT,
+    this.aircraftStraight = new Aircraft({
+      frames: [ this.aircraftLeftFrames[0] ],
       x: CONSTANTS.FIELD_WIDTH / 2,
       y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
     });
-    this.aircraft.addToStage(this.getStage());
+
+    this.aircraftLeft = new Aircraft({
+      frames: this.aircraftLeftFrames,
+      x: CONSTANTS.FIELD_WIDTH / 2,
+      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+    });
+
+    this.aircraftRight = new Aircraft({
+      frames: this.aircraftRightFrames,
+      x: CONSTANTS.FIELD_WIDTH / 2,
+      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+    });
+
+    this.aircraftStraight.addToStage(this.getStage());
 
     this.runIntervals();
 
@@ -195,11 +220,12 @@ export class Game extends Component {
 
         if (goose.y > this.height + 50) {
           goose.removeFromStage(this.getStage());
-        } if (Math.abs(goose.y - this.aircraft.y) < 30 && Math.abs(goose.x - this.aircraft.x) < 50) {
+        } if (Math.abs(goose.y - this.aircraftStraight.y) < 30 && Math.abs(goose.x - this.aircraftStraight.x) < 50) {
           let explosion = new Explosion({
-            'frames': this.explosionFrames,
-            'x': goose.x,
-            'y': goose.y,
+            frames: this.explosionFrames,
+            x: goose.x,
+            y: goose.y,
+            ratio: this.ratio
           });
           goose.removeFromStage(this.getStage());
           explosion.playOnce(this.getStage());
@@ -278,7 +304,7 @@ export class Game extends Component {
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    this.statisticsInterval = setInterval(() => {
+    this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
       this.service.updatePlayerScore(
         {
           playerId: this.state.playerId,
@@ -286,8 +312,21 @@ export class Game extends Component {
         },
         (result) => { }
       );
+    }, CONSTANTS.SCORE_INTERVAL);
 
+    this.statisticsTopPlayerScoreInterval = setInterval(() => {
+      if (this.leaderboardOk) {
+        this.leaderboardOk = false;
+        this.setState({
+          leaderboardDown: false,
+        });
+      } else {
+        this.setState({
+          leaderboardDown: true,
+        });
+      }
       this.service.getTopPlayerScore((result) => {
+        this.leaderboardOk = true;
         let topScores = result.getTopScoresList()
         .map(playerScore => {
           return {
@@ -342,7 +381,19 @@ export class Game extends Component {
       if (this.fixtureInterval) {
         clearInterval(this.fixtureInterval);
       }
+
+      if (this.statisticsUpdatePlayerScoreInterval) {
+        clearInterval(this.statisticsUpdatePlayerScoreInterval);
+      }
+  
+      if (this.statisticsTopPlayerScoreInterval) {
+        clearInterval(this.statisticsTopPlayerScoreInterval);
+      }
     }
+  }
+
+  updateDimensions = (event) => {
+    console.log('updateDimensions', event);
   }
 
   onDeviceOrientationHandler = (event) => {
@@ -365,17 +416,37 @@ export class Game extends Component {
         });
       }
 
-      let turn = Math.sign(event.gamma) * event.beta / 180 * 30;
+      this.aircraftLeft.removeFromStage(this.getStage());
+      this.aircraftRight.removeFromStage(this.getStage());
+      this.aircraftStraight.removeFromStage(this.getStage());
 
-      let turnLeft = turn > 0;
-      if (turnLeft) {
-        if (this.aircraft.x > CONSTANTS.AIRCRAFT_WIDTH / 2 + turn) {
-          this.aircraft.x -= turn;
+      let turn = Math.sign(event.gamma) * event.beta / 180 * 30;
+      if (turn > 0) {
+        if (this.aircraftStraight.x > CONSTANTS.AIRCRAFT_WIDTH / 2 + turn) {
+          this.aircraftLeft.x -= turn;
+          this.aircraftRight.x -= turn;
+          this.aircraftStraight.x -= turn;
+          if (Math.abs(event.beta / 180) > 0.03) {
+            this.aircraftLeft.addToStage(this.getStage());
+            this.aircraftLeft.play();
+          } else {
+            this.aircraftStraight.addToStage(this.getStage());
+          }
+        }
+      } else if (turn < 0) {
+        if (this.aircraftStraight.x < CONSTANTS.FIELD_WIDTH - (CONSTANTS.AIRCRAFT_WIDTH / 2 + turn)) {
+          this.aircraftLeft.x -= turn;
+          this.aircraftRight.x -= turn;
+          this.aircraftStraight.x -= turn;
+          if (Math.abs(event.beta / 180) > 0.03) {
+            this.aircraftRight.addToStage(this.getStage());
+            this.aircraftRight.play();
+          } else {
+            this.aircraftStraight.addToStage(this.getStage());
+          }
         }
       } else {
-        if (this.aircraft.x < CONSTANTS.FIELD_WIDTH - (CONSTANTS.AIRCRAFT_WIDTH / 2 + turn)) {
-          this.aircraft.x -= turn;
-        }
+        this.aircraftStraight.addToStage(this.getStage());
       }
     }
   }
@@ -396,14 +467,42 @@ export class Game extends Component {
 
   onKeyDownHandler = (e) => {
     if (e.keyCode == 37) { // left arrow
-      if (this.aircraft.x > CONSTANTS.AIRCRAFT_WIDTH / 2) {
-        this.aircraft.x -= 5;
-      }
-    } else if (e.keyCode == 39) { // right arrow
-      if (this.aircraft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
-        this.aircraft.x += 5;
+      if (this.aircraftLeft.x > CONSTANTS.AIRCRAFT_WIDTH / 2 ) {
+        this.aircraftLeft.x -= 5;
+        this.aircraftRight.x -= 5;
+        this.aircraftStraight.x -= 5;
+        this.aircraftLeft.removeFromStage(this.getStage());
+        this.aircraftRight.removeFromStage(this.getStage());
+        this.aircraftStraight.removeFromStage(this.getStage());
+        this.aircraftLeft.addToStage(this.getStage());
+        this.aircraftLeft.play();
       }
     }
+    else if (e.keyCode == 39) { // right arrow
+      if (this.aircraftLeft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
+        this.aircraftLeft.x += 5;
+        this.aircraftRight.x += 5;
+        this.aircraftStraight.x += 5;
+        this.aircraftLeft.removeFromStage(this.getStage());
+        this.aircraftRight.removeFromStage(this.getStage());
+        this.aircraftStraight.removeFromStage(this.getStage());
+        this.aircraftRight.addToStage(this.getStage());
+        this.aircraftRight.play();
+      }
+    }
+    else if (e.keyCode == 85 && e.ctrlKey) { // u + CTRL: LB off
+      this.leaderboardComboPressed = true;
+    }
+    else if (e.keyCode == 89 && e.ctrlKey) { // y + CTRL: LB on
+      this.leaderboardComboPressed = false;
+    }
+  }
+
+  onKeyUpHandler = (e) => {
+    this.aircraftLeft.removeFromStage(this.getStage());
+    this.aircraftRight.removeFromStage(this.getStage());
+    this.aircraftStraight.removeFromStage(this.getStage());
+    this.aircraftStraight.addToStage(this.getStage());
   }
 
   startAgain = (e) => {
@@ -415,6 +514,7 @@ export class Game extends Component {
   }
 
   componentDidMount() {
+    window.addEventListener("resize", this.updateDimensions);
     window.addEventListener("orientationchange", this.onOrientationChangedHandler, false);
     
     if (window.DeviceOrientationEvent) {
@@ -427,6 +527,7 @@ export class Game extends Component {
   }
 
   componentWillUnmount() {
+    window.removeEventListener("resize", this.updateDimensions);
     window.removeEventListener('orientationchange', this.onOrientationChangedHandler, false);
   
     if (window.DeviceOrientationEvent) {
@@ -465,9 +566,16 @@ export class Game extends Component {
     }
 
     if (this.state.portrait) {
-      message = (<div className="message portrait">
-                  <img src= { portraitGif } alt=""></img>
-                  </div>)
+      message = (
+        <div className="message portrait">
+          <img src= { portraitGif } alt=""></img>
+        </div>
+      );
+    }
+
+    let leaderboardBlinking = '';
+    if (this.leaderboardComboPressed && this.state.leaderboardDown) {
+      leaderboardBlinking = 'blinking'
     }
 
     return (
@@ -475,7 +583,7 @@ export class Game extends Component {
         { message}
         <div className="game">
           <div className="left stats">
-            <div className="leaderboard blinking">
+            <div className={"leaderboard " + leaderboardBlinking}>
               <div className="black">TOP 5</div>
               <div>{ topScoresList }</div>
             </div>
@@ -490,6 +598,7 @@ export class Game extends Component {
           </div>
           <div className="right field" ref={this.gameRefCallback}
               onKeyDown={(e) => this.onKeyDownHandler(e) }
+              onKeyUp={(e) => this.onKeyUpHandler(e) }
               tabIndex="0">
           </div>
         </div>

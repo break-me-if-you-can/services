@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
-export class Aircraft extends PIXI.Sprite {
+export class Aircraft extends PIXI.extras.AnimatedSprite {
 
     constructor(props) {
-        super(props.image.texture);
+        super(props.frames);
         this.anchor.set(0.5);
-        this.width = props.width;
-        this.height = props.height;
         this.x = props.x;
         this.y = props.y;
+        this.animationSpeed = props.animationSpeed || 0.15;
+        this.loop = false;
     }
 
     setPosition(props) {

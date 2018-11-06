@@ -29,6 +29,7 @@ import xyz.breakit.admin.HealthCheckServiceGrpc;
 import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
@@ -103,7 +104,8 @@ public class Gateway {
             LeaderboardService leaderboardService,
             GatewayAdminService adminService,
             HealthcheckGrpcService healthcheckService,
-            Limiter<GrpcServerRequestContext> limiter) {
+            Limiter<GrpcServerRequestContext> limiter,
+            ForceNewTraceServerInterceptor forceNewTraceServerInterceptor) {
 
         return ServerBuilder.forPort(SERVER_PORT)
                 .addService(fixtureService)
@@ -112,8 +114,14 @@ public class Gateway {
                 .addService(adminService)
                 .addService(healthcheckService)
                 .intercept(grpcTracing.newServerInterceptor())
+                .intercept(forceNewTraceServerInterceptor)
                 //.intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
+    }
+
+    @Bean
+    public ForceNewTraceServerInterceptor forceNewTraceServerInterceptor() {
+        return new ForceNewTraceServerInterceptor();
     }
 
     @Bean

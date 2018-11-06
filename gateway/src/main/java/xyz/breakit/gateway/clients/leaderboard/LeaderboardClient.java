@@ -1,6 +1,5 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
-import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Service
@@ -28,16 +26,7 @@ public class LeaderboardClient {
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
 
-    private static final CircuitBreaker CIRCUIT_BREAKER = new CircuitBreaker()
-            .withFailureThreshold(3, 5);
-
-    private final static RetryPolicy RETRY_POLICY = new RetryPolicy()
-            .withBackoff(1, 30, TimeUnit.SECONDS, 2.0)
-            .withJitter(300, TimeUnit.MILLISECONDS)
-            .retryOn(Throwable.class)
-            .withMaxRetries(5);
-
-    private final static RetryPolicy RETRY_WITH_NO_BACKOFF = new RetryPolicy()
+    private final static RetryPolicy RETRY_POLICY_WITH_NO_BACKOFF = new RetryPolicy()
             .retryOn(Throwable.class)
             .withMaxRetries(5);
 
@@ -49,7 +38,6 @@ public class LeaderboardClient {
     private final String leaderboardUrl;
     private final WebClient httpClient;
     private RetryPolicy currentRetryPolicy;
-
 
     @Autowired
     public LeaderboardClient(
@@ -69,14 +57,9 @@ public class LeaderboardClient {
         currentRetryPolicy = NO_RETRY_POLICY;
     }
 
-    public void enableRetriesWithBackoff() {
-        currentRetryPolicy = RETRY_POLICY;
-    }
-
     public void enableRetriesWithNoBackoff() {
-        currentRetryPolicy = RETRY_POLICY;
+        currentRetryPolicy = RETRY_POLICY_WITH_NO_BACKOFF;
     }
-
 
     public CompletableFuture<List<LeaderboardEntry>> top5() {
         return Failsafe
@@ -85,7 +68,6 @@ public class LeaderboardClient {
                 .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
                 .future(() -> top5Request().toFuture());
     }
-
 
     public void updateScore(LeaderboardEntry newScore,
                             Runnable onMessage,
