@@ -9,6 +9,7 @@ export class Explosion extends PIXI.extras.AnimatedSprite {
         this.y = props.y;
         this.animationSpeed = props.animationSpeed || 0.15;
         this.loop = false;
+        this.scale.set(props.ratio);
     }
 
     playOnce(stage) {

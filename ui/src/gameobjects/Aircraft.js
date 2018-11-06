@@ -8,6 +8,7 @@ class AircraftSprite extends PIXI.extras.AnimatedSprite {
         this.y = props.y;
         this.animationSpeed = props.animationSpeed || 0.15;
         this.loop = false;
+        this.scale.set(props.ratio);
     }
 
     setPosition(props) {
@@ -29,23 +30,27 @@ export class Aircraft {
     constructor(props) {
         this.x = props.x,
         this.y = props.y,
+        this.ratio = props.ratio,
 
         this.left = new AircraftSprite({
             frames: props.framesObject.left,
             x: this.x,
             y: this.y,
+            ratio: this.ratio,
         });
 
         this.straight = new AircraftSprite({
             frames: props.framesObject.straight,
             x: this.x,
             y: this.y,
+            ratio: this.ratio,
         });
 
         this.right = new AircraftSprite({
             frames: props.framesObject.right,
             x: this.x,
             y: this.y,
+            ratio: this.ratio,
         });
     }
 
