@@ -505,6 +505,16 @@ export class Game extends Component {
         this.aircraft.showRight(this.getStage());
       }
     }
+    else if (event.keyCode == 85 && event.ctrlKey) { // u + CTRL: LB off
+      console.log('combo pressed true');
+      this.leaderboardComboPressed = true;
+    }
+    else if (event.keyCode == 89 && event.ctrlKey) { // y + CTRL: LB on
+      console.log('combo pressed false');
+      this.leaderboardComboPressed = false;
+    }
+
+
   }
 
   onKeyUpHandler = (e) => {

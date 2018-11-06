@@ -56,7 +56,7 @@ var productionPlugins = [
   new webpack.DefinePlugin({
     'process.env': {
       'GATEWAY_SERVICE_PORT': JSON.stringify('80'),
-      'GATEWAY_SERVICE_HOST': JSON.stringify('35.233.196.238'),
+      'GATEWAY_SERVICE_HOST': JSON.stringify('envoy.breakit.xyz'),
       'NODE_ENV': JSON.stringify('production'),
       'BABEL_ENV': JSON.stringify('production')
     }
