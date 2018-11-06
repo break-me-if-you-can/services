@@ -23,7 +23,7 @@ spec:
             - name: GATEWAY_SERVICE_HOST
               value: "envoy"
             - name: GATEWAY_SERVICE_PORT
-              value: "8080"
+              value: "80"
 ---
 apiVersion: v1
 kind: Service

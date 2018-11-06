@@ -123,6 +123,8 @@ export class Game extends Component {
     });
   }
 
+  setAircraftVerticalPosition = () => this.height - CONSTANTS.AIRCRAFT_OFFSET;
+
   runGame = (resources) => {
     let water = new ParallaxTexture({
       image: resources.waterTexture,
@@ -163,7 +165,6 @@ export class Game extends Component {
       )
     }
 
-    console.log(resources);
     this.aircraftLeftFrames = [];
     for (let i = 0; i < CONSTANTS.AIRCRAFT_LEFT_TURN_FRAMES_COUNT; i++) {
       this.aircraftLeftFrames.push(
@@ -173,6 +174,7 @@ export class Game extends Component {
         )
       )
     }
+
     this.aircraftRightFrames = [];
     for (let i = 0; i < CONSTANTS.AIRCRAFT_RIGHT_TURN_FRAMES_COUNT; i++) {
       this.aircraftRightFrames.push(
@@ -190,19 +192,19 @@ export class Game extends Component {
     this.aircraftStraight = new Aircraft({
       frames: [ this.aircraftLeftFrames[0] ],
       x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+      y: this.setAircraftVerticalPosition(),
     });
 
     this.aircraftLeft = new Aircraft({
       frames: this.aircraftLeftFrames,
       x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+      y: this.setAircraftVerticalPosition(),
     });
 
     this.aircraftRight = new Aircraft({
       frames: this.aircraftRightFrames,
       x: CONSTANTS.FIELD_WIDTH / 2,
-      y: this.height - CONSTANTS.AIRCRAFT_OFFSET,
+      y: this.setAircraftVerticalPosition(),
     });
 
     this.aircraftStraight.addToStage(this.getStage());
@@ -298,6 +300,8 @@ export class Game extends Component {
   }
 
   runIntervals = () => {
+    this.clearIntervals();
+
     this.scoreInterval = setInterval( () => {
       this.setState({
         score: this.score,
@@ -361,6 +365,28 @@ export class Game extends Component {
     this.checkGameOver();
   }
 
+  clearIntervals = () => {
+    if (this.scoreInterval) {
+      clearInterval(this.scoreInterval);
+    }
+
+    if (this.statisticsInterval) {
+      clearInterval(this.statisticsInterval);
+    }
+
+    if (this.fixtureInterval) {
+      clearInterval(this.fixtureInterval);
+    }
+
+    if (this.statisticsUpdatePlayerScoreInterval) {
+      clearInterval(this.statisticsUpdatePlayerScoreInterval);
+    }
+
+    if (this.statisticsTopPlayerScoreInterval) {
+      clearInterval(this.statisticsTopPlayerScoreInterval);
+    }
+  }
+
   checkGameOver = () => {
     if (this.collisionsCounter >= CONSTANTS.ENGINES_COUNT) {
 
@@ -370,30 +396,38 @@ export class Game extends Component {
         gameOver: true,
       });
 
-      if (this.scoreInterval) {
-        clearInterval(this.scoreInterval);
-      }
-
-      if (this.statisticsInterval) {
-        clearInterval(this.statisticsInterval);
-      }
-
-      if (this.fixtureInterval) {
-        clearInterval(this.fixtureInterval);
-      }
-
-      if (this.statisticsUpdatePlayerScoreInterval) {
-        clearInterval(this.statisticsUpdatePlayerScoreInterval);
-      }
-  
-      if (this.statisticsTopPlayerScoreInterval) {
-        clearInterval(this.statisticsTopPlayerScoreInterval);
-      }
+      this.clearIntervals();
     }
   }
 
   updateDimensions = (event) => {
     console.log('updateDimensions', event);
+    this.height = window.innerHeight < CONSTANTS.FIELD_HEIGHT? window.innerHeight: CONSTANTS.FIELD_HEIGHT;
+    this.aircraftLeft.y = this.setAircraftVerticalPosition();
+    this.aircraftRight.y = this.setAircraftVerticalPosition();
+    this.aircraftStraight.y = this.setAircraftVerticalPosition();
+  }
+
+  onBlurHandler = (event) => {
+    this.clearIntervals();
+    this.app.ticker.stop();
+  }
+
+  onFocusHandler = (event) => {
+    this.runIntervals();
+    this.focusDiv();
+    this.app.ticker.start();
+  }
+
+  onWindowKeydown = (event) => {
+    if (event.keyCode == 85 && event.ctrlKey) { // u + CTRL: LB off
+      console.log('combo pressed true');
+      this.leaderboardComboPressed = true;
+    }
+    else if (event.keyCode == 89 && event.ctrlKey) { // y + CTRL: LB on
+      console.log('combo pressed false');
+      this.leaderboardComboPressed = false;
+    }
   }
 
   onDeviceOrientationHandler = (event) => {
@@ -415,6 +449,7 @@ export class Game extends Component {
           portrait: false,
         });
       }
+
 
       this.aircraftLeft.removeFromStage(this.getStage());
       this.aircraftRight.removeFromStage(this.getStage());
@@ -465,8 +500,8 @@ export class Game extends Component {
     console.log('orientation changed', e);
   }
 
-  onKeyDownHandler = (e) => {
-    if (e.keyCode == 37) { // left arrow
+  onKeyDownHandler = (event) => {
+    if (event.keyCode == 37) { // left arrow
       if (this.aircraftLeft.x > CONSTANTS.AIRCRAFT_WIDTH / 2 ) {
         this.aircraftLeft.x -= 5;
         this.aircraftRight.x -= 5;
@@ -478,7 +513,7 @@ export class Game extends Component {
         this.aircraftLeft.play();
       }
     }
-    else if (e.keyCode == 39) { // right arrow
+    else if (event.keyCode == 39) { // right arrow
       if (this.aircraftLeft.x < CONSTANTS.FIELD_WIDTH - CONSTANTS.AIRCRAFT_WIDTH / 2) {
         this.aircraftLeft.x += 5;
         this.aircraftRight.x += 5;
@@ -490,12 +525,16 @@ export class Game extends Component {
         this.aircraftRight.play();
       }
     }
-    else if (e.keyCode == 85 && e.ctrlKey) { // u + CTRL: LB off
+    else if (event.keyCode == 85 && event.ctrlKey) { // u + CTRL: LB off
+      console.log('combo pressed true');
       this.leaderboardComboPressed = true;
     }
-    else if (e.keyCode == 89 && e.ctrlKey) { // y + CTRL: LB on
+    else if (event.keyCode == 89 && event.ctrlKey) { // y + CTRL: LB on
+      console.log('combo pressed false');
       this.leaderboardComboPressed = false;
     }
+
+
   }
 
   onKeyUpHandler = (e) => {
@@ -514,6 +553,9 @@ export class Game extends Component {
   }
 
   componentDidMount() {
+    window.addEventListener("blur", this.onBlurHandler);
+    window.addEventListener("focus", this.onFocusHandler);
+    window.addEventListener("keyDown", this.onWindowKeydown, true);
     window.addEventListener("resize", this.updateDimensions);
     window.addEventListener("orientationchange", this.onOrientationChangedHandler, false);
     
@@ -527,6 +569,9 @@ export class Game extends Component {
   }
 
   componentWillUnmount() {
+    window.removeEventListener("blur", this.onBlurHandler);
+    window.removeEventListener("focus", this.onFocusHandler);
+    window.removeEventListener("keyDown", this.onWindowKeydown);
     window.removeEventListener("resize", this.updateDimensions);
     window.removeEventListener('orientationchange', this.onOrientationChangedHandler, false);
   

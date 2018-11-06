@@ -14,7 +14,9 @@ buildscript {
 
 repositories {
     maven {
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+        url "https://maven-central.stor" +
+                "" +
+                "age-download.googleapis.com/repos/central/data/"
     }
     jcenter()
     mavenLocal()
