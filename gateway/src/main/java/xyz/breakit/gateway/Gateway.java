@@ -11,6 +11,11 @@ import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
 import io.grpc.*;
+import io.opencensus.common.Duration;
+import io.opencensus.contrib.grpc.metrics.RpcViews;
+import io.opencensus.contrib.zpages.ZPageHandlers;
+import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
+import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +36,7 @@ import xyz.breakit.gateway.admin.HealthcheckService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
+import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import zipkin2.reporter.AsyncReporter;
@@ -58,9 +64,31 @@ public class Gateway {
 
     @PostConstruct
     public void startGrpcServer() throws IOException {
+        startZPages();
+
         server.start();
+        //RpcViews.registerAllGrpcViews();
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+    }
+
+    //@PostConstruct
+    public void startZPages() throws IOException {
+
+        String gcpProjectId = System.getenv().get("GCP_PROJECTID");
+        if (gcpProjectId == null || gcpProjectId == "") {
+            gcpProjectId = "breakme-214404";
+        }
+
+        RpcViews.registerAllGrpcViews();
+
+        StackdriverStatsExporter.createAndRegister(
+                StackdriverStatsConfiguration.builder()
+                        .setProjectId(gcpProjectId)
+                        .setExportInterval(Duration.fromMillis(1000))
+                        .build());
+
+        ZPageHandlers.startHttpServerAndRegisterAll(9080);
     }
 
     @Bean
@@ -100,7 +128,9 @@ public class Gateway {
     public FixtureService fixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
                                          Supplier<CloudsServiceFutureStub> cloudsClient,
                                          Flags flags) {
-        return new FixtureService(geeseClient, cloudsClient, flags);
+        FixtureService fixtureService = new FixtureService(geeseClient, cloudsClient, flags);
+        ServerInterceptors.intercept(fixtureService, new FixtureMetricsReportingInterceptor());
+        return fixtureService;
     }
 
     @Bean
@@ -151,8 +181,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }
@@ -204,8 +234,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }
