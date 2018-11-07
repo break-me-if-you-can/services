@@ -7,6 +7,12 @@ export class Cloud extends PIXI.Sprite {
         this.anchor.set(0.5);
         this.x = props.x;
         this.y = props.y;
+        this.scale.set(props.ratio);
+    }
+
+    setPosition(props) {
+        this.x = props.x;
+        this.y = props.y;
     }
 
     addToStage(stage) {

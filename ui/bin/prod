@@ -7,7 +7,7 @@ const app = express();
 var HOST = process.env.HOST || '0.0.0.0';
 var PORT = process.env.PORT || 3001;
 
-app.use(express.static(path.join(__dirname, '../public')));
+//app.use(express.static(path.join(__dirname, '../public')));
 app.use('/dist', express.static(path.join(__dirname, '../dist')));
 app.use('/diststatic', express.static(path.join(__dirname, '../dist/static')));
 
