@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 class AircraftSprite extends PIXI.extras.AnimatedSprite {
     constructor(props) {
         super(props.frames);
-        this.anchor.set(0.5, 1);
+        this.anchor.set(0.5, 0.5);
         this.x = props.x;
         this.y = props.y;
         this.scale.set(props.ratio);

@@ -82,7 +82,7 @@ export class Game extends Component {
     return height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
   }
 
-  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET;
+  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - CONSTANTS.AIRCRAFT_HEIGHT / 2;
 
   getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
@@ -234,7 +234,7 @@ export class Game extends Component {
 
         if (goose.y > this.getVerticalCutOff()) {
           goose.removeFromStage(this.getStage());
-        } if (Math.abs(goose.y - position.y) < CONSTANTS.AIRCRAFT_WIDTH / 2 && Math.abs(goose.x - position.x) < CONSTANTS.AIRCRAFT_HEIGHT / 2) {
+        } if (Math.abs(goose.y - position.y) < CONSTANTS.AIRCRAFT_HEIGHT / 2 && Math.abs(goose.x - position.x) < CONSTANTS.AIRCRAFT_WIDTH / 2) {
           let explosion = new Explosion({
             frames: this.explosionFrames,
             x: goose.x,
