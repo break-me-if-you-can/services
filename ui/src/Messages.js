@@ -20,3 +20,7 @@ export function GameOver(props) {
               </div>
             </div>);
 }
+
+export function Portrait(props) {
+  return (<div className="message portrait"></div>);
+}

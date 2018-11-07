@@ -3,12 +3,12 @@ import * as PIXI from 'pixi.js';
 class AircraftSprite extends PIXI.extras.AnimatedSprite {
     constructor(props) {
         super(props.frames);
-        this.anchor.set(0.5);
+        this.anchor.set(0.5, 1);
         this.x = props.x;
         this.y = props.y;
+        this.scale.set(props.ratio);
         this.animationSpeed = props.animationSpeed || 0.15;
         this.loop = false;
-        this.scale.set(props.ratio);
     }
 
     setPosition(props) {
@@ -24,33 +24,31 @@ class AircraftSprite extends PIXI.extras.AnimatedSprite {
         stage.removeChild(this);
     }
 }
-
 export class Aircraft {
 
     constructor(props) {
         this.x = props.x,
         this.y = props.y,
-        this.ratio = props.ratio,
-
+        
         this.left = new AircraftSprite({
             frames: props.framesObject.left,
             x: this.x,
             y: this.y,
-            ratio: this.ratio,
+            ratio: props.ratio,
         });
 
         this.straight = new AircraftSprite({
             frames: props.framesObject.straight,
             x: this.x,
             y: this.y,
-            ratio: this.ratio,
+            ratio: props.ratio,
         });
 
         this.right = new AircraftSprite({
             frames: props.framesObject.right,
             x: this.x,
             y: this.y,
-            ratio: this.ratio,
+            ratio: props.ratio,
         });
     }
 
