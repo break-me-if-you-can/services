@@ -24,6 +24,8 @@ spec:
               value: "zipkin"
             - name: ZIPKIN_SERVICE_PORT
               value: "9411"
+            - name: GCP_PROJECTID
+              value: $GCP_PROJECT
 ---
 apiVersion: v1
 kind: Service

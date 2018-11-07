@@ -24,6 +24,7 @@ import xyz.breakit.admin.HealthCheckServiceGrpc;
 import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.common.instrumentation.census.GrpcCensusReporter;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
@@ -31,6 +32,7 @@ import xyz.breakit.gateway.admin.HealthcheckService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
+import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import zipkin2.reporter.AsyncReporter;
@@ -47,7 +49,8 @@ import java.util.function.Supplier;
 public class Gateway {
 
     private static final int MAX_RETRIES = 5;
-    public static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8080;
+    private static final int ZPAGES_PORT = 9080;
 
     @Autowired
     private Server server;
@@ -59,8 +62,12 @@ public class Gateway {
     @PostConstruct
     public void startGrpcServer() throws IOException {
         server.start();
-
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+    }
+
+    @PostConstruct
+    public void startCensusReporting() throws IOException {
+        GrpcCensusReporter.registerAndExportViews(ZPAGES_PORT);
     }
 
     @Bean
@@ -100,7 +107,9 @@ public class Gateway {
     public FixtureService fixtureService(Supplier<GeeseServiceFutureStub> geeseClient,
                                          Supplier<CloudsServiceFutureStub> cloudsClient,
                                          Flags flags) {
-        return new FixtureService(geeseClient, cloudsClient, flags);
+        FixtureService fixtureService = new FixtureService(geeseClient, cloudsClient, flags);
+        ServerInterceptors.intercept(fixtureService, new FixtureMetricsReportingInterceptor());
+        return fixtureService;
     }
 
     @Bean
@@ -151,8 +160,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(cloudsHost, cloudsPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }
@@ -204,8 +213,8 @@ public class Gateway {
         return ManagedChannelBuilder
                 .forAddress(geeseHost, geesePort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .enableRetry()
-                .maxRetryAttempts(MAX_RETRIES)
+                //.enableRetry()
+                //.maxRetryAttempts(MAX_RETRIES)
                 .usePlaintext()
                 .build();
     }

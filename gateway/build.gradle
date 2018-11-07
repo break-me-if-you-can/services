@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def grpcVersion = '1.15.0'
+def grpcVersion = '1.16.1'
 def protobufVersion = '3.5.1'
 
 repositories {
@@ -63,7 +63,7 @@ dependencies {
     compile group: 'net.jodah', name: 'failsafe', version: '1.1.0'
     compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.1.4'
 
-    compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
+    compile "com.google.api.grpc:proto-google-common-protos:1.12.0"
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
@@ -76,6 +76,8 @@ dependencies {
     compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
     compile "xyz.breakit:grpc-api"
     compile "xyz.breakit:grpc-common"
+
+    runtimeOnly "io.opencensus:opencensus-impl:0.12.3"
 
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
