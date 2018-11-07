@@ -20,28 +20,11 @@ body, html {
   src: url('../assets/fonts/fzero_gp_legend_font.ttf') format('truetype');
 }
 
-@media screen and (orientation:portrait) {
-
-  .gameblock {
-    display: none;
-  }
-}
-
-.messageblock {
-  position: absolute;
-
-}
-
-.gameblock {
-  display: table-row;;
-}
-
-.app  {
+.app {
   display: table;
   width: 100%;
   height: 100%;
 }
-
 
 .app .container {
   width: 100%;
@@ -56,7 +39,6 @@ body, html {
   100% { font-size: 15pt; }
 }
 
-/* Portrait mode or Game over message */
 .app .message {
   position: fixed;
   top: 0;
@@ -94,8 +76,6 @@ body, html {
   font-size: 20pt;
   text-transform: uppercase;
   color: rgb(255,235,132);
-  /*background-color: rgb(17, 29, 32);*/
-  /*background-color: rgb(23, 33, 52);*/
 }
 
 .app .game_over .content {
@@ -133,7 +113,6 @@ body, html {
   background: rgb(23, 33, 52) url('../assets/phone_anim.gif') center center no-repeat;
 }
 
-/* Game Block Style*/
 .app .game {
   display: table-row;
   width: 100%;
