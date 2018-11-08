@@ -56,6 +56,9 @@ export class Game extends Component {
     this.playerIdInterval = null;
     this.leaderboardComboPressed = false;
 
+    var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+    this.aircraftFactor = isFirefox? CONSTANTS.FIREFOX_FACTOR: CONSTANTS.OTHER_BROWSERS;
+
     this.frames = {
       'goose': [],
       'explosion': [],
@@ -82,7 +85,7 @@ export class Game extends Component {
     return height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
   }
 
-  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - CONSTANTS.AIRCRAFT_HEIGHT / 2;
+  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
 
   getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
