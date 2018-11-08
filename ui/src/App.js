@@ -18,9 +18,7 @@ export class App extends Component {
     }
 
     onOrientationChangedHandler = (e) => {
-        
         setTimeout(() => {
-            console.log('H/W:', window.innerHeight, window.innerWidth);
             let isPortrait = window.innerHeight > window.innerWidth;
             this.setState({
                 portrait: isPortrait,
