@@ -268,37 +268,42 @@ export class Game extends Component {
     });
   }
 
+  createGoose(position) {
+    let goose = new Goose( {
+      frames: this.gooseFrames,
+      x: position,
+      y: CONSTANTS.START_Y_POSITION,
+      ratio: this.ratio,
+    });
+    goose.addToStage(this.getStage());
+
+    return goose;
+  }
+
+  createCloud(position) {
+    let cloud = new Cloud( {
+      texture: this.cloudTexture.texture,
+      x: position,
+      y: CONSTANTS.START_Y_POSITION,
+      ratio: this.ratio,
+    });
+    cloud.addToStage(this.getStage());
+
+    return cloud;
+  }
+
   fixtureCallback = (result) => {
     let resultList = result.getLinesList();
 
     if (resultList && resultList.length) {
-      resultList.forEach(line => {
-        //console.log(line);
-        setTimeout(() => {
-          let geesePos = line.getGoosePositionsList();
-          geesePos.forEach(position => {
-            let goose = new Goose( {
-              frames: this.gooseFrames,
-              x: position,
-              y: CONSTANTS.START_Y_POSITION,
-              ratio: this.ratio,
-            });
-            goose.addToStage(this.getStage());
-            this.geese.push(goose);
-          });
+      resultList.forEach((line, index) => {
+          setTimeout(() => {
+            let geesePos = line.getGoosePositionsList();
+            geesePos.forEach(position => { this.geese.push(this.createGoose(position)); });
 
-          let cloudsPos = line.getCloudPositionsList();
-            cloudsPos.forEach(position => {
-              let cloud = new Cloud( {
-                texture: this.cloudTexture.texture,
-                x: position,
-                y: CONSTANTS.START_Y_POSITION,
-                ratio: this.ratio,
-              });
-              cloud.addToStage(this.getStage());
-              this.clouds.push(cloud);
-          });
-        }, CONSTANTS.INTERVAL_BETWEEN_LINES)
+            let cloudsPos = line.getCloudPositionsList();
+            cloudsPos.forEach(position => { this.clouds.push(this.createCloud(position)); });
+          }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
       });
     }
   }
@@ -421,7 +426,7 @@ export class Game extends Component {
         this.aircraft.setPosition(position);
       }
     }
-    setTimeout(() => { this.checkOrientation() }, 300);
+    setTimeout(() => { this.checkOrientation() }, CONSTANTS.CHECK_ORIENTATION_TIMEOUT);
   }
 
   onBlurHandler = (event) => {
@@ -440,7 +445,7 @@ export class Game extends Component {
       let turn = 0;
       let betaNorm = event.beta / CONSTANTS.BETA_MAX_ABS;
       let gammaNorm = event.gamma / CONSTANTS.GAMMA_MAX_ABS;
-      if (Math.abs(betaNorm) < 0.85 && Math.abs(gammaNorm) < 0.85) {
+      if (Math.abs(betaNorm) < CONSTANTS.ANGLE_NORM_CUT_OFF && Math.abs(gammaNorm) < CONSTANTS.ANGLE_NORM_CUT_OFF) {
         turn = Math.sign(gammaNorm) * CONSTANTS.AIRCRAFT_HORIZONTAL_STEP_MAX * betaNorm;
       }
 
@@ -486,14 +491,11 @@ export class Game extends Component {
   }
 
   onDeviceMotionHandler = (event) => {
-    console.log('onDeviceMotionHandler');
-    tilt([event.acceleration.x * 2, event.acceleration.y * 2]);
+    //console.log('onDeviceMotionHandler');
   }
 
   onMozOrientationHandler = (e) => {
-    console.log('onDeviceMotionHandler');
-    alert('MozOrientation');
-    tilt([orientation.x * 50, orientation.y * 50]);
+    //console.log('onDeviceMotionHandler');
   }
 
   onOrientationChangedHandler = (e) => {
@@ -526,10 +528,10 @@ export class Game extends Component {
         this.aircraft.showRight(this.getStage());
       }
     }
-    else if (event.keyCode == 85 && event.ctrlKey) { // u + CTRL: LB off
+    else if (event.keyCode == CONSTANTS.U_KEYCODE && event.ctrlKey) { // u + CTRL: LB off
       this.leaderboardComboPressed = true;
     }
-    else if (event.keyCode == 89 && event.ctrlKey) { // y + CTRL: LB on
+    else if (event.keyCode == CONSTANTS.Y_KEYCODE && event.ctrlKey) { // y + CTRL: LB on
       this.leaderboardComboPressed = false;
     }
   }

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Game } from './Game';
 import { Portrait } from './Messages';
+import { CONSTANTS } from './Constants';
 import './App.css';
 
 export class App extends Component {
@@ -25,7 +26,7 @@ export class App extends Component {
             });
 
             window.removeEventListener('orientationchange', this.onOrientationChangedHandler, false);
-        }, 200);
+        }, CONSTANTS.CHECK_ORIENTATION_TIMEOUT);
     }
     
     render() {
