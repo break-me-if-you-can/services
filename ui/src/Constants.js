@@ -79,4 +79,6 @@ export const CONSTANTS = {
 
     FIREFOX_FACTOR: 2.5,
     OTHER_BROWSERS: 0.5,
+
+    TOUCH_INTERVAL: 50
 };
