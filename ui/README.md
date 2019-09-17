@@ -10,11 +10,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
     - [yarn build:prod](#yarn-build-prod)
     - [yarn start:prod](#yarn-start-prod)
 - [Deployment](#deployment)
-    - [cd bin](#cd-bin)
-    - [./protogen](#protogen)
-    - [yarn build:prod](#yarn-build-prod)
-    - [./gradlew pushdocker](#gradlew-pushdocker)
-    - [./gradlew deploy](#gradlew-deploy)
+    - [steps](#steps)
 
 ## Available Scripts
 
@@ -48,9 +44,10 @@ Open [http://0.0.0.0:3001](http://0.0.0.0:3001) to view it in the browser.
     Steps for an application deployment.
     As a prerequisites you need to have gcp configured, got 'export GCP_PROJECT' variable, got protoc and yarn installed.
 
-### `cd bin`
-### `./protogen`
-### `yarn build:prod`
-### `./gradlew pushdocker`
-### `./gradlew deploy`
+### `Steps`
+1. yarn
+2. ./bin/protogen
+3. yarn build:prod
+4. ./gradlew pushdocker
+5. ./gradlew deploy
 
