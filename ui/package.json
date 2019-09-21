@@ -28,7 +28,6 @@
     "babel-plugin-transform-react-jsx": "7.0.0-beta.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "brfs": "^1.4.1",
-    "css-loader": "^0.14.5",
     "debug": "^4.0.1",
     "eslint": "^5.16.0"
   },
