@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {h, render, Component } from 'preact';
 
 export function GameOver(props) {
     return (<div className="game_over">

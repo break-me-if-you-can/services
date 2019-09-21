@@ -1,5 +1,4 @@
-import React, {Component} from 'react';
-import ReactDOM from 'react-dom';
+import React, {h, render, Component} from 'preact';
 import * as PIXI from 'pixi.js';
 
 import { Service } from './Service';
