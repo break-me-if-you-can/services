@@ -1,3 +1,5 @@
+// import React, {h, render, Component } from 'react';
+import React, {h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 export class Cloud extends PIXI.Sprite {
