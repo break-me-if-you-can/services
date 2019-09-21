@@ -1,4 +1,3 @@
-//import React, {h, render, Component } from 'react';
 import React, {h, render, Component } from 'preact';
 import { Game } from './Game';
 import { Portrait } from './Messages';

@@ -1,4 +1,3 @@
-//import React, {h, render, Component } from 'react';
 import React, {h, render, Component } from 'preact';
 
 export function GameOver(props) {
