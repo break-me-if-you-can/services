@@ -52,7 +52,6 @@ export class Game extends Component {
     this.statisticsUpdatePlayerScoreInterval = null;
     this.statisticsTopPlayerScoreInterval = null;
     this.fixtureInterval = null;
-    this.playerIdInterval = null;
     this.leaderboardComboPressed = false;
 
     var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
@@ -99,10 +98,10 @@ export class Game extends Component {
     this.mainDiv.append(this.app.view);
     this.counter = 0;
 
-    this.playerIdInterval = setInterval(() => {
+    let playerIdInterval = setInterval(() => {
       this.service.getPlayerId()
         .then((result) => {
-          clearInterval(this.playerIdInterval);
+          clearInterval(playerIdInterval);
           this.setState({
             playerId: result.getPlayerId(),
           });
@@ -318,19 +317,20 @@ export class Game extends Component {
     this.clearIntervals();
 
     this.scoreInterval = setInterval( () => {
+
       this.setState({
         score: this.score,
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    let playerId = this.state.playerId;
-    let score = this.score;
-
     this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
+      let playerId = this.state.playerId;
+      let score = this.score;
+
       this.service.updatePlayerScore({ playerId, score })
         .then(
           (result) => { },
-          (error) => console.log('then player score', error))
+          (error) => console.log('then player score error', error))
         .catch(
           (error) => console.log('then player score', error)
         );
