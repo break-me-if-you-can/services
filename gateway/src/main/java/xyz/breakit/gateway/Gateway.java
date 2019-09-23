@@ -24,7 +24,12 @@ import xyz.breakit.admin.HealthCheckServiceGrpc;
 import xyz.breakit.admin.HealthCheckServiceGrpc.HealthCheckServiceFutureStub;
 import xyz.breakit.clouds.CloudsServiceGrpc;
 import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
+import xyz.breakit.common.healthcheck.CommonHealthcheckService;
 import xyz.breakit.common.instrumentation.census.GrpcCensusReporter;
+import xyz.breakit.common.instrumentation.failure.AddLatencyServerInterceptor;
+import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
+import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
+import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
@@ -84,18 +89,34 @@ public class Gateway {
             GatewayAdminService adminService,
             HealthcheckGrpcService healthcheckService,
             Limiter<GrpcServerRequestContext> limiter,
-            ForceNewTraceServerInterceptor forceNewTraceServerInterceptor) {
+            ForceNewTraceServerInterceptor forceNewTraceServerInterceptor,
+            FailureInjectionService failureInjectionService,
+            InjectedFailureProvider failureProvider
+            ) {
+
+        AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
 
         return ServerBuilder.forPort(SERVER_PORT)
                 .addService(fixtureService)
-                .addService(playerIdService)
+                .addService(ServerInterceptors.intercept(playerIdService, latencyInterceptor))
                 .addService(leaderboardService)
                 .addService(adminService)
                 .addService(healthcheckService)
                 .intercept(grpcTracing.newServerInterceptor())
                 .intercept(forceNewTraceServerInterceptor)
-                //.intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
+                .addService(new FailureInjectionAdminService(new FailureInjectionService(failureProvider, failureProvider)))
+                .addService(new CommonHealthcheckService("gateway", failureProvider, failureProvider))
                 .build();
+    }
+
+    @Bean
+    public InjectedFailureProvider gwFailureProvider() {
+        return new InjectedFailureProvider();
+    }
+
+    @Bean
+    public FailureInjectionService failureInjectionService(InjectedFailureProvider failureProvider) {
+        return new FailureInjectionService(failureProvider, failureProvider);
     }
 
     @Bean
@@ -121,8 +142,9 @@ public class Gateway {
     public GatewayAdminService adminService(
             SettableFlags flags,
             @Qualifier("GeeseAdmin") AdminServiceStub geeseAdmin,
-            @Qualifier("CloudsAdmin") AdminServiceStub cloudsAdmin) {
-        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin);
+            @Qualifier("CloudsAdmin") AdminServiceStub cloudsAdmin,
+            FailureInjectionService failureInjectionService) {
+        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin, failureInjectionService);
     }
 
     @Bean
