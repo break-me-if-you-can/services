@@ -172,7 +172,7 @@ public class AdminController {
 
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, true);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 1, 100000, false);
+        CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 1, 10000000, false);
 
         try {
             CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
@@ -186,7 +186,7 @@ public class AdminController {
                                                         double failureProbability,
                                                         long failureDurationMs,
                                                         boolean fixtureFailureEnabled) {
-        CompletableFuture<Object> cloudsResult = new CompletableFuture<>();
+        CompletableFuture<Object> result = new CompletableFuture<>();
 
         gwAdminService.injectFailure(
                 InjectFailureRequest.newBuilder()
@@ -200,13 +200,12 @@ public class AdminController {
                 new StreamObserver<InjectFailureResponse>() {
                     @Override
                     public void onNext(InjectFailureResponse value) {
-                        cloudsResult.complete(null);
+                        result.complete(null);
                     }
 
                     @Override
                     public void onError(Throwable t) {
-                        cloudsResult.completeExceptionally(t);
-
+                        result.completeExceptionally(t);
                     }
 
                     @Override
@@ -214,6 +213,6 @@ public class AdminController {
 
                     }
                 });
-        return cloudsResult;
+        return result;
     }
 }

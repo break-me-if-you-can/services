@@ -54,6 +54,8 @@ public class GatewayAdminService extends AdminServiceImplBase {
             cloudsAdmin.injectFailure(request, responseObserver);
         } else if (GATEWAY_SERVICE.equalsIgnoreCase(request.getServiceName())) {
             failureInjectionService.injectFailure(request);
+            responseObserver.onNext(InjectFailureResponse.newBuilder().build());
+            responseObserver.onCompleted();
         } else {
             StatusRuntimeException invalidArgumentException =
                     Status.INVALID_ARGUMENT
