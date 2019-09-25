@@ -1,11 +1,9 @@
 FROM node
 WORKDIR /
-ADD ./bin bin
 ADD ./dist dist
-ADD ./public public
 ADD ./package.json .
 
-RUN npm install express;
+RUN npm i yarn && yarn global add serve;
 
 EXPOSE 3001
-CMD npm run start:prod
+CMD yarn serve:build
