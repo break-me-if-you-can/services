@@ -1,6 +1,3 @@
-const grpc = {};
-grpc.web = require('grpc-web');
-
 import {GetFixtureRequest, GeneratePlayerIdRequest,
             TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
 
