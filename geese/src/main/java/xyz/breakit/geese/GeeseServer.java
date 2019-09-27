@@ -35,7 +35,7 @@ public class GeeseServer {
                 new GeeseService(
                         (min, max) -> min + random.nextInt(max - min + 1),
                         random::nextInt,
-                        () -> GooseType.forNumber(random.nextInt(maxGooseType)),
+                        () -> GooseType.forNumber(random.nextInt(maxGooseType)+1),
                         failureProvider);
 
         Server server = ServerBuilder.forPort(8090)

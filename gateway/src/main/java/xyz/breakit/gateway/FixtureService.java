@@ -109,14 +109,10 @@ final class FixtureService extends FixtureServiceImplBase {
     private FixtureLine mergeLine(int index, @Nullable GeeseResponse geese, @Nullable CloudsResponse clouds) {
         FixtureLine.Builder builder = FixtureLine.newBuilder();
         if (geese != null) {
-            builder.addAllGoosePositions(geese.getLines(index).getGeesePositionsList());
-            builder.addAllGeeseTypes(geese.getLines(index).getGeeseTypesList().stream()
-                    .map(g -> GooseType.forNumber(g.getNumber())) // convert geese enum to gateway enum
-                    .collect(Collectors.toList())
-            );
+            builder.addAllGooseLocators(geese.getLines(index).getGeeseLocatorsList());
         }
         if (clouds != null) {
-            builder.addAllCloudPositions(clouds.getLines(index).getCloudPositionsList());
+            builder.addAllCloudLocators(clouds.getLines(index).getCloudLocatorsList());
         }
         return builder.build();
     }

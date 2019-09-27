@@ -28,16 +28,16 @@ final class GeeseService extends GeeseServiceImplBase {
     private static final int DEFAULT_GOOSE_WIDTH = 1;
     private final BinaryOperator<Integer> numberOfGeeseGenerator;
     private final UnaryOperator<Integer> geeseGenerator;
-    private final Supplier<GooseType> geeseTypeGenerator;
+    private final Supplier<GooseType> gooseTypeGenerator;
     private final FixtureFailureProvider fixtureFailureProvider;
 
     GeeseService(BinaryOperator<Integer> numberOfGeeseGenerator,
                  UnaryOperator<Integer> geeseGenerator,
-                 Supplier<GooseType> geeseTypeGenerator,
+                 Supplier<GooseType> gooseTypeGenerator,
                  FixtureFailureProvider fixtureFailureProvider) {
         this.numberOfGeeseGenerator = numberOfGeeseGenerator;
         this.geeseGenerator = geeseGenerator;
-        this.geeseTypeGenerator = geeseTypeGenerator;
+        this.gooseTypeGenerator = gooseTypeGenerator;
         this.fixtureFailureProvider = fixtureFailureProvider;
     }
 
@@ -60,23 +60,21 @@ final class GeeseService extends GeeseServiceImplBase {
         checkArgument(lineWidth >= gooseWidth,
                 "Goose width cannot exceed line width.");
 
-        Collection<Integer> geesePositions = generateGeese((int) lineWidth, (int) gooseWidth);
-        Collection<GooseType> geeseTypes = generateGeeseTypes(geesePositions.size());
+        Collection<GooseLocator> geeseLocators = generateGeese((int) lineWidth, (int) gooseWidth);
         return GeeseLine.newBuilder()
-                .addAllGeesePositions(geesePositions)
-                .addAllGeeseTypes(geeseTypes)
+                .addAllGeeseLocators(geeseLocators)
                 .build();
     }
 
     private Collection<GooseType> generateGeeseTypes(int size) {
         return IntStream.range(0, size)
-                .mapToObj(i -> geeseTypeGenerator.get())
+                .mapToObj(i -> gooseTypeGenerator.get())
                 .collect(Collectors.toList());
     }
 
-    private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {
+    private Collection<GooseLocator> generateGeese(int lineWidth, int gooseWidth) {
 
-        Collection<Integer> geese;
+        Collection<GooseLocator> geese;
         if (fixtureFailureProvider.isFullFixtureEnabled()) {
             geese = fullLineGeese(lineWidth, gooseWidth);
         } else {
@@ -85,7 +83,7 @@ final class GeeseService extends GeeseServiceImplBase {
         return geese;
     }
 
-    private Collection<Integer> fullLineGeese(int lineWidth, int gooseWidth) {
+    private Collection<GooseLocator> fullLineGeese(int lineWidth, int gooseWidth) {
 
         ImmutableList.Builder<Integer> line = ImmutableList.builder();
         int numberOfGeese = lineWidth / gooseWidth;
@@ -94,10 +92,12 @@ final class GeeseService extends GeeseServiceImplBase {
                 .map(index -> index * gooseWidth)
                 .forEach(line::add);
 
-        return line.build();
+        List<Integer> positions = line.build();
+
+        return createLocatorsFromPositions(positions);
     }
 
-    private Collection<Integer> geese(int lineWidth, int gooseWidth) {
+    private Collection<GooseLocator> geese(int lineWidth, int gooseWidth) {
         int geeseCount = numberOfGeeseGenerator.apply(MIN_GEESE_COUNT, MAX_GEESE_COUNT);
         List<Integer> positions = new ArrayList<>(geeseCount);
 
@@ -120,7 +120,16 @@ final class GeeseService extends GeeseServiceImplBase {
                 positions.add(nextPosition);
             }
         }
-        return positions;
+        return createLocatorsFromPositions(positions);
+    }
+
+    private Collection<GooseLocator> createLocatorsFromPositions(List<Integer> positions) {
+        return positions.stream()
+                .map(i -> GooseLocator.newBuilder()
+                        .setGoosePosition(i)
+                        .setGooseType(gooseTypeGenerator.get())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private boolean overlap(int candidate, int existingStart, int existingEnd) {
