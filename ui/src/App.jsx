@@ -1,41 +1,39 @@
-import React, {h, render, Component } from 'preact';
+import { h, render, Component } from 'preact';
 import { Game } from './Game';
 import { Portrait } from './Messages';
 import { CONSTANTS } from './Constants';
-import './App.css';
+import './App.scss';
 
 export class App extends Component {
-  
     constructor(props) {
         super(props);
 
-        let isPortrait = window.innerHeight > window.innerWidth;
-        if (isPortrait) {
-            window.addEventListener("orientationchange", this.onOrientationChangedHandler, false);
+        const portrait = window.innerHeight > window.innerWidth;
+        const deadline = props.param === 'deadline';
+
+        if (portrait) {
+            window.addEventListener('orientationchange', this.onOrientationChangedHandler, false);
         }
-        this.state = {
-            portrait: isPortrait,
-        }
+
+        this.state = { portrait, deadline };
     }
 
-    onOrientationChangedHandler = (e) => {
+    onOrientationChangedHandler = () => {
         setTimeout(() => {
-            let isPortrait = window.innerHeight > window.innerWidth;
-            this.setState({
-                portrait: isPortrait,
-            });
+            const portrait = window.innerHeight > window.innerWidth;
+
+            this.setState({ portrait });
 
             window.removeEventListener('orientationchange', this.onOrientationChangedHandler, false);
         }, CONSTANTS.CHECK_ORIENTATION_TIMEOUT);
     }
-    
-    render() {
-        let view = (this.state.portrait? (<Portrait />): (<Game />));
 
+    render() {
         return (
             <div className="app">
-                { view }
+                { this.state.portrait && <Portrait /> }
+                { !this.state.portrait && <Game deadline={this.state.deadline}/> }
             </div>
-        )
+        );
     }
 }

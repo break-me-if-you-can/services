@@ -13,5 +13,5 @@ export const IMAGES = {
     GOOSE_SPRITESHEET: gooseSpriteSheetImg,
     CLOUD: cloudImg,
     WATER: waterImg,
-    BANKS: banksImg,
-}
+    BANKS: banksImg
+};
