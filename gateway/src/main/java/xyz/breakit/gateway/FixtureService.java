@@ -17,6 +17,7 @@ import xyz.breakit.geese.GetGeeseRequest;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
@@ -109,6 +110,10 @@ final class FixtureService extends FixtureServiceImplBase {
         FixtureLine.Builder builder = FixtureLine.newBuilder();
         if (geese != null) {
             builder.addAllGoosePositions(geese.getLines(index).getGeesePositionsList());
+            builder.addAllGeeseTypes(geese.getLines(index).getGeeseTypesList().stream()
+                    .map(g -> GooseType.forNumber(g.getNumber())) // convert geese enum to gateway enum
+                    .collect(Collectors.toList())
+            );
         }
         if (clouds != null) {
             builder.addAllCloudPositions(clouds.getLines(index).getCloudPositionsList());

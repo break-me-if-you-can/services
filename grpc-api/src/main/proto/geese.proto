@@ -48,6 +48,16 @@ message GeeseResponse {
 }
 
 /*
+ * Geese Types
+ */
+enum GooseType {
+    CANADA_GOOSE = 0;
+    BLACK_GOOSE = 1;
+    WHITE_GOOSE = 2;
+    GREY_GOOSE = 3;
+}
+
+/*
  * Contains goose positions in a horizontal line.
  */
 message GeeseLine {
@@ -57,4 +67,11 @@ message GeeseLine {
      * and tenth positions of the line.
      */
     repeated int32 geese_positions = 1;
+
+    /*
+     * Array of geese types. For each goose in the geese_position array,
+     * there should be a corresponding goose type on the same position in geese_types array.
+     */
+    repeated GooseType geese_types = 2;
+
 }

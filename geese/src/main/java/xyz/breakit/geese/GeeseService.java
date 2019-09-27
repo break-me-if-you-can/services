@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,13 +28,16 @@ final class GeeseService extends GeeseServiceImplBase {
     private static final int DEFAULT_GOOSE_WIDTH = 1;
     private final BinaryOperator<Integer> numberOfGeeseGenerator;
     private final UnaryOperator<Integer> geeseGenerator;
+    private final Supplier<GooseType> geeseTypeGenerator;
     private final FixtureFailureProvider fixtureFailureProvider;
 
     GeeseService(BinaryOperator<Integer> numberOfGeeseGenerator,
                  UnaryOperator<Integer> geeseGenerator,
+                 Supplier<GooseType> geeseTypeGenerator,
                  FixtureFailureProvider fixtureFailureProvider) {
         this.numberOfGeeseGenerator = numberOfGeeseGenerator;
         this.geeseGenerator = geeseGenerator;
+        this.geeseTypeGenerator = geeseTypeGenerator;
         this.fixtureFailureProvider = fixtureFailureProvider;
     }
 
@@ -56,9 +60,18 @@ final class GeeseService extends GeeseServiceImplBase {
         checkArgument(lineWidth >= gooseWidth,
                 "Goose width cannot exceed line width.");
 
+        Collection<Integer> geesePositions = generateGeese((int) lineWidth, (int) gooseWidth);
+        Collection<GooseType> geeseTypes = generateGeeseTypes(geesePositions.size());
         return GeeseLine.newBuilder()
-                .addAllGeesePositions(generateGeese((int) lineWidth, (int) gooseWidth))
+                .addAllGeesePositions(geesePositions)
+                .addAllGeeseTypes(geeseTypes)
                 .build();
+    }
+
+    private Collection<GooseType> generateGeeseTypes(int size) {
+        return IntStream.range(0, size)
+                .mapToObj(i -> geeseTypeGenerator.get())
+                .collect(Collectors.toList());
     }
 
     private Collection<Integer> generateGeese(int lineWidth, int gooseWidth) {

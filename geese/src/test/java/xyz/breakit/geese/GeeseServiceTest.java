@@ -7,6 +7,7 @@ import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceBlockingStub;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
@@ -25,11 +26,12 @@ public class GeeseServiceTest {
 
         AtomicInteger counter = new AtomicInteger();
         UnaryOperator<Integer> sequentialGenerator = i -> counter.getAndIncrement();
+        Supplier<GooseType> staticGeeseTypeGenerator = () -> GooseType.GREY_GOOSE;
 
         int numberOfGeese = 5;
         grpcServerRule.getServiceRegistry()
                 .addService(new GeeseService((min, max) -> numberOfGeese,
-                        sequentialGenerator, new InjectedFailureProvider()));
+                        sequentialGenerator, staticGeeseTypeGenerator, new InjectedFailureProvider()));
 
         GeeseServiceBlockingStub geeseClient = GeeseServiceGrpc.newBlockingStub(grpcServerRule.getChannel());
 
@@ -37,7 +39,10 @@ public class GeeseServiceTest {
                 .setLinesCount(1).setGooseWidth(10).setLineWidth(50).build());
 
         GeeseResponse geeseResponse = GeeseResponse.newBuilder()
-                .addLines(GeeseLine.newBuilder().addAllGeesePositions(asList(0, 10, 20, 30, 40)).build())
+                .addLines(GeeseLine.newBuilder()
+                        .addAllGeesePositions(asList(0, 10, 20, 30, 40))
+                        .addAllGeeseTypes(asList(GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE))
+                        .build())
                 .build();
         assertThat(response).isEqualTo(geeseResponse);
     }
@@ -46,9 +51,11 @@ public class GeeseServiceTest {
     public void shouldReturnLineFullOfGeeseIfFullFixtureFailureIsEnabled() {
         InjectedFailureProvider fixtureFailureProvider = new InjectedFailureProvider();
         fixtureFailureProvider.setFullFixtureEnabled(true);
+        Supplier<GooseType> staticGeeseTypeGenerator = () -> GooseType.GREY_GOOSE;
+
         grpcServerRule.getServiceRegistry()
                 .addService(new GeeseService((min, max) -> 0,
-                        index -> 0, fixtureFailureProvider));
+                        index -> 0, staticGeeseTypeGenerator, fixtureFailureProvider));
 
         GeeseServiceBlockingStub geeseClient = GeeseServiceGrpc.newBlockingStub(grpcServerRule.getChannel());
 
@@ -56,7 +63,10 @@ public class GeeseServiceTest {
                 .setLinesCount(1).setGooseWidth(4).setLineWidth(21).build());
 
         GeeseResponse geeseResponse = GeeseResponse.newBuilder()
-                .addLines(GeeseLine.newBuilder().addAllGeesePositions(asList(0, 4, 8, 12, 16, 20)).build())
+                .addLines(GeeseLine.newBuilder()
+                        .addAllGeesePositions(asList(0, 4, 8, 12, 16, 20))
+                        .addAllGeeseTypes(asList(GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE, GooseType.GREY_GOOSE))
+                        .build())
                 .build();
         assertThat(response).isEqualTo(geeseResponse);
     }
