@@ -21,8 +21,8 @@ repositories {
     mavenLocal()
 }
 
-def grpcVersion = '1.16.1'
-def protocVersion = '3.5.1-1'
+def grpcVersion = '1.23.0'
+def protocVersion = '3.9.0'
 
 dependencies {
     compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
