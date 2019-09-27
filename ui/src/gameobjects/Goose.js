@@ -1,8 +1,6 @@
-import React, {h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 export class Goose extends PIXI.extras.AnimatedSprite {
-
     constructor(props) {
         super(props.frames);
         this.anchor.set(0.5);
@@ -25,5 +23,4 @@ export class Goose extends PIXI.extras.AnimatedSprite {
     removeFromStage(stage) {
         stage.removeChild(this);
     }
-
 }
