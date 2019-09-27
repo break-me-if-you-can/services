@@ -12,38 +12,36 @@ import { ParallaxTexture } from './gameobjects/ParallaxTexture';
 import { CONSTANTS } from './Constants';
 import { IMAGES } from './Assets';
 
-import * as Messages from './Messages';
+import { Portrait, Spinner, GameOver } from './Messages';
+import * as Helper from './helper';
 
 export class Game extends Component {
     constructor(props) {
         super(props);
-        this.service = new Service(props.deadline);
-        this.loader = new PIXI.loaders.Loader();
-
         const width = CONSTANTS.FIELD_WIDTH;
         const height = CONSTANTS.FIELD_HEIGHT;
         const transparent = false;
 
+        this.loader = new PIXI.loaders.Loader();
         this.app = new PIXI.Application({ width, height, transparent });
+
+        this.service = new Service(props.deadline);
+
+        const playerId = '';
+        const score = 0;
+        const topScores = Helper.createArray(CONSTANTS.TOP_SCORES_COUNT, { playerId, score });
+        const enginesStatus = Helper.createArray(CONSTANTS.ENGINES_COUNT, CONSTANTS.ENGINE_ALIVE_CLASSNAME);
+        const portrait = window.innerHeight > window.innerWidth;
+        const gameOver = false;
+
+        this.state = { playerId, score, topScores, enginesStatus, portrait, gameOver };
 
         this.mainDiv = null;
         this.counter = 0;
         this.orientationIsChanging = false;
         this.score = 0;
-
-        this.state = {
-            playerId: '',
-            score: this.score,
-            topScores: new Array(CONSTANTS.TOP_SCORES_COUNT).fill({
-                playerId: '',
-                score: 0
-            }),
-            enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
-            portrait: window.innerHeight > window.innerWidth,
-            gameOver: false
-        };
-
         this.collisionsCounter = 0;
+
         this.statisticsInterval = null;
         this.scoreInterval = null;
         this.statisticsUpdatePlayerScoreInterval = null;
@@ -51,26 +49,14 @@ export class Game extends Component {
         this.fixtureInterval = null;
         this.leaderboardComboPressed = false;
 
+        const goose = [];
+        const explosion = [];
+
+        this.frames = { goose, explosion };
+
         const firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
         this.aircraftFactor = (firefox ? CONSTANTS.FIREFOX_FACTOR : CONSTANTS.OTHER_BROWSERS);
-
-        this.frames = {
-            'goose': [],
-            'explosion': []
-        };
-    }
-
-    mobileAndTabletcheck = () => {
-        let check = false;
-
-        (function(a) {
-            if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) {
-                check = true;
-            }
-        })(navigator.userAgent || navigator.vendor || window.opera);
-
-        return check;
     }
 
     init = () => {
@@ -100,28 +86,14 @@ export class Game extends Component {
 
     getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
-    gameRefCallback = (element) => {
-        this.mainDiv = element;
-        this.mainDiv.append(this.app.view);
-        this.counter = 0;
+    handleError = (message = 'Error occured: ', error) => console.log(message, error);
 
-        this.service.getPlayerId()
-            .then((result) => {
-                this.setState({
-                    playerId: result.getPlayerId()
-                });
+    handleGetPalyerIdResult = (result) => {
+        const playerId = result.getPlayerId();
 
-                this.loadAssets((loader, resources) => this.runGame(resources));
-            },
-            (error) => {
-                this.setState({
-                    playerId: 'Timeout :) :) :)'
-                });
-                console.log('then error player id', error);
-            })
-            .catch((error) => console.log('then error player id', error));
+        this.setState({ playerId });
 
-        this.focusDiv();
+        this.loadAssets((loader, resources) => this.runGame(resources));
     }
 
     loadAssets = (onAssetsLoaded) => {
@@ -134,6 +106,23 @@ export class Game extends Component {
             .add('waterTexture', IMAGES.WATER)
             .add('banksTexture', IMAGES.BANKS)
             .load(onAssetsLoaded);
+    }
+
+    gameRefCallback = (element) => {
+        this.mainDiv = element;
+        this.mainDiv.append(this.app.view);
+        this.counter = 0;
+
+        this.service.getPlayerId()
+            .then(
+                (result) => this.handleGetPalyerIdResult(result),
+                (error) => this.handleError(error)
+            )
+            .catch(
+                (error) => this.handleError(error)
+            );
+
+        this.focusDiv();
     }
 
     runGame = (resources) => {
@@ -318,85 +307,92 @@ export class Game extends Component {
         this.clouds = [];
     }
 
+    updateScoreHandler = () => {
+
+    }
+
+    updatePlayerScoreCall = () => {
+        const playerId = this.state.playerId;
+        const score = this.score;
+
+        this.service.updatePlayerScore({ playerId, score })
+            .then(
+                () => { },
+                (error) => this.handleError(error)
+            )
+            .catch(
+                (error) => this.handleError(error)
+            );
+    }
+
+    getTopPlayerScoreCall = () => {
+        if (this.leaderboardOk) {
+            this.leaderboardOk = false;
+            this.setState({ leaderboardDown: false });
+        } else {
+            this.setState({ leaderboardDown: true });
+        }
+
+        this.service.getTopPlayerScore()
+            .then(
+                (result) => {
+                    this.leaderboardOk = true;
+                    const topScores = result.getTopScoresList()
+                        .map(playerScore => {
+                            return {
+                                id: playerScore.getPlayerId(),
+                                score: playerScore.getScore()
+                            };
+                        });
+
+                    this.setState({
+                        topScores: topScores
+                    });
+                },
+                (error) => this.handleError(error)
+            )
+            .catch(
+                (error) => this.handleError(error)
+            );
+    }
+
+    renderLine = (line, index) => {
+        setTimeout(() => {
+            const geesePos = line.getGoosePositionsList();
+
+            geesePos.forEach(position => this.geese.push(this.createGoose(position)));
+
+            const cloudsPos = line.getCloudPositionsList();
+
+            cloudsPos.forEach(position => this.clouds.push(this.createCloud(position)));
+        }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
+    }
+
+    getFixtureCall = () => {
+        this.service.getFixture()
+            .then(
+                (result) => {
+                    const lines = result.getLinesList();
+
+                    lines.forEach(this.renderLine);
+                },
+                (error) => this.handleError(error)
+            )
+            .catch(
+                (error) => this.handleError(error)
+            );
+    }
+
     runIntervals = () => {
         this.clearIntervals();
 
-        this.scoreInterval = setInterval(() => {
-            this.setState({
-                score: this.score
-            });
-        }, CONSTANTS.SCORE_INTERVAL);
+        this.scoreInterval = setInterval(() => this.setState({ score: this.score }), CONSTANTS.SCORE_INTERVAL);
 
-        this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
-            const playerId = this.state.playerId;
+        this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
 
-            const score = this.score;
+        this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
-            this.service.updatePlayerScore({ playerId, score })
-                .then(
-                    () => { },
-                    (error) => console.log('then player score error', error))
-                .catch(
-                    (error) => console.log('then player score', error)
-                );
-        }, CONSTANTS.SCORE_INTERVAL);
-
-        this.statisticsTopPlayerScoreInterval = setInterval(() => {
-            if (this.leaderboardOk) {
-                this.leaderboardOk = false;
-                this.setState({
-                    leaderboardDown: false
-                });
-            } else {
-                this.setState({
-                    leaderboardDown: true
-                });
-            }
-            this.service.getTopPlayerScore()
-                .then(
-                    (result) => {
-                        this.leaderboardOk = true;
-                        const topScores = result.getTopScoresList()
-                            .map(playerScore => {
-                                return {
-                                    id: playerScore.getPlayerId(),
-                                    score: playerScore.getScore()
-                                };
-                            });
-
-                        this.setState({
-                            topScores: topScores
-                        });
-                    },
-                    (error) => console.log('then error getTopPlayer', error))
-                .catch((error) => console.log('catch error getTopPlayer', error));
-        }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
-
-        this.fixtureInterval = setInterval(
-            () => {
-                this.service.getFixture()
-                    .then((result) => {
-                        const resultList = result.getLinesList();
-
-                        if (resultList && resultList.length) {
-                            resultList.forEach((line, index) => {
-                                setTimeout(() => {
-                                    const geesePos = line.getGoosePositionsList();
-
-                                    geesePos.forEach(position => this.geese.push(this.createGoose(position)));
-
-                                    const cloudsPos = line.getCloudPositionsList();
-
-                                    cloudsPos.forEach(position => this.clouds.push(this.createCloud(position)));
-                                }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
-                            });
-                        }
-                    }, (error) => console.log('then getFixture error', error))
-                    .catch((error) => console.log('catch getFixture error', error));
-            }
-
-
-            , CONSTANTS.FIXTURE_INTERVAL);
+        this.fixtureInterval = setInterval(this.getFixtureCall.bind(this), CONSTANTS.FIXTURE_INTERVAL);
     }
 
     updateEnginesStatus = () => {
@@ -406,10 +402,7 @@ export class Game extends Component {
             (obj, i) => (i < this.collisionsCounter ? CONSTANTS.ENGINE_DEAD_CLASSNAME : CONSTANTS.ENGINE_ALIVE_CLASSNAME)
         );
 
-        this.setState({
-            enginesStatus: enginesStatus
-        });
-
+        this.setState({ enginesStatus });
         this.checkGameOver();
     }
 
@@ -643,7 +636,7 @@ export class Game extends Component {
         let message = '';
 
         if (this.state.gameOver) {
-            message = (<Messages.GameOver onClick={ (e) => this.startAgain(e) } />);
+            message = (<GameOver onClick={ (e) => this.startAgain(e) } />);
         }
 
         let portraitClass = '';
@@ -653,9 +646,9 @@ export class Game extends Component {
         let rightArrow = '';
 
         if (this.state.portrait) {
-            message = (<Messages.Portrait />);
+            message = (<Portrait />);
             portraitClass = 'hideField';
-        } else if (this.mobileAndTabletcheck()) {
+        } else if (Helper.mobileAndTabletcheck()) {
             leftArrow = (<div className="arrow left"
                 onTouchStart={ (e) => this.onLeftArrowTouchStart(e) }
                 onTouchEnd={ (e) => this.onLeftArrowTouchEnd(e) }>
@@ -688,7 +681,7 @@ export class Game extends Component {
         } else {
             stats = (
                 <div className="stats-spinner">
-                    <Messages.Spinner />
+                    <Spinner />
                 </div>
             );
         }
