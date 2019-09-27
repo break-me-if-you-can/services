@@ -11,7 +11,7 @@ package geese;
  * Geese Types
  */
 enum GooseType {
-    GOOSE_TYPE_UNDEFINED = 0;
+    GOOSE_TYPE_UNSPECIFIED = 0;
     GOOSE_TYPE_CANADA_GOOSE = 1;
     GOOSE_TYPE_BLACK_GOOSE = 2;
     GOOSE_TYPE_WHITE_GOOSE = 3;
