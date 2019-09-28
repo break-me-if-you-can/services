@@ -63,8 +63,8 @@ public class FixtureMetricsReportingInterceptor implements ServerInterceptor {
     }
 
     private static void reportLineCounters(MeasureMap measureMap, FixtureLine line) {
-        measureMap.put(GEESE_COUNT, line.getGoosePositionsCount());
-        measureMap.put(CLOUDS_COUNT, line.getCloudPositionsCount());
+        measureMap.put(GEESE_COUNT, line.getGooseLocatorsCount());
+        measureMap.put(CLOUDS_COUNT, line.getCloudLocatorsCount());
     }
 
 }

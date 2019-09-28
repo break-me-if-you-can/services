@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -45,11 +46,11 @@ final class CloudsService extends CloudsServiceImplBase {
                 "Cloud width cannot exceed line width.");
 
         return CloudsLine.newBuilder()
-                .addAllCloudPositions(generateClouds(lineWidth, cloudWidth))
+                .addAllCloudLocators(generateClouds(lineWidth, cloudWidth))
                 .build();
     }
 
-    private Collection<Integer> generateClouds(int lineWidth, int cloudWidth) {
+    private Collection<CloudLocator> generateClouds(int lineWidth, int cloudWidth) {
         int cloudsCount = random.nextInt(MAX_CLOUDS_COUNT + 1);
         List<Integer> positions = new ArrayList<>(cloudsCount);
 
@@ -67,7 +68,9 @@ final class CloudsService extends CloudsServiceImplBase {
                 positions.add(nextPosition);
             }
         }
-        return positions;
+        return positions.stream()
+                .map(i -> CloudLocator.newBuilder().setCloudPosition(i).build())
+                .collect(Collectors.toList());
     }
 
 }
