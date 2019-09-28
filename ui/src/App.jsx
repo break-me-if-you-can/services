@@ -9,7 +9,7 @@ export class App extends Component {
         super(props);
 
         const portrait = window.innerHeight > window.innerWidth;
-        const deadline = props.param === 'deadline';
+        const deadline = props.matches.deadline === 'true';
 
         if (portrait) {
             window.addEventListener('orientationchange', this.onOrientationChangedHandler, false);
