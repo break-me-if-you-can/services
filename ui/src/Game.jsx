@@ -366,7 +366,7 @@ export class Game extends Component {
             );
     }
 
-    renderLine = (line, index) => {
+    renderOnScreen = (line, index) => {
         setTimeout(() => {
             const geeseLocators = line.getGooseLocatorsList();
 
