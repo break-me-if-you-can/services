@@ -86,7 +86,7 @@ export class Game extends Component {
 
     getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
-    handleError = (message = 'Error occured: ', error) => console.log(message, error);
+    handleError = (error, message = 'Error occured: ') => console.log(message, error);
 
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
@@ -271,10 +271,11 @@ export class Game extends Component {
         });
     }
 
-    createGoose(position) {
+    createGoose(locator) {
         const goose = new Goose({
             frames: this.gooseFrames,
-            x: position,
+            x: locator.getGoosePosition(),
+            type: locator.getGooseType(),
             y: CONSTANTS.START_Y_POSITION,
             ratio: this.ratio
         });
@@ -284,10 +285,10 @@ export class Game extends Component {
         return goose;
     }
 
-    createCloud(position) {
+    createCloud(locator) {
         const cloud = new Cloud({
             texture: this.cloudTexture.texture,
-            x: position,
+            x: locator.getCloudPosition(),
             y: CONSTANTS.START_Y_POSITION,
             ratio: this.ratio
         });
@@ -307,9 +308,7 @@ export class Game extends Component {
         this.clouds = [];
     }
 
-    updateScoreHandler = () => {
-
-    }
+    updateScoreHandler = () => { }
 
     updatePlayerScoreCall = () => {
         const playerId = this.state.playerId;
@@ -358,13 +357,13 @@ export class Game extends Component {
 
     renderLine = (line, index) => {
         setTimeout(() => {
-            const geesePos = line.getGoosePositionsList();
+            const geeseLocators = line.getGooseLocatorsList();
 
-            geesePos.forEach(position => this.geese.push(this.createGoose(position)));
+            geeseLocators.forEach(locator => this.geese.push(this.createGoose(locator)));
 
-            const cloudsPos = line.getCloudPositionsList();
+            const cloudsLocators = line.getCloudLocatorsList();
 
-            cloudsPos.forEach(position => this.clouds.push(this.createCloud(position)));
+            cloudsLocators.forEach(locator => this.clouds.push(this.createCloud(locator)));
         }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
     }
 
