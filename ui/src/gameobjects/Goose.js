@@ -5,9 +5,12 @@ export class Goose extends PIXI.extras.AnimatedSprite {
         super(props.frames);
         this.anchor.set(0.5);
         this.x = props.x;
+        this.type = props.type;
         this.y = props.y;
         this.scale.set(props.ratio);
         this.animationSpeed = props.animationSpeed || 0.25;
+
+        console.log('Goose of type: ', this.type);
     }
 
     setPosition(props) {
