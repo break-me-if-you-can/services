@@ -382,9 +382,9 @@ export class Game extends Component {
         this.service.getFixture()
             .then(
                 (result) => {
-                    const lines = result.getLinesList();
+                    const geeseAndClouds = result.getLinesList();
 
-                    lines.forEach(this.renderLine);
+                    geeseAndClouds.forEach(this.renderOnScreen);
                 },
                 (error) => this.handleError(error)
             )
