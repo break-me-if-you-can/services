@@ -57,8 +57,6 @@ export class Service {
     }
 
     constructor(withDeadline) {
-        console.log('Deadline:', withDeadline);
-
         this.withDeadline = withDeadline;
 
         this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);

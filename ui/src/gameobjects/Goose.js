@@ -9,8 +9,6 @@ export class Goose extends PIXI.extras.AnimatedSprite {
         this.y = props.y;
         this.scale.set(props.ratio);
         this.animationSpeed = props.animationSpeed || 0.25;
-
-        console.log('Goose of type: ', this.type);
     }
 
     setPosition(props) {
