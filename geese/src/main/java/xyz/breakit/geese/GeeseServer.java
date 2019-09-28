@@ -28,6 +28,7 @@ public class GeeseServer {
         AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
 
         int maxGooseType = Arrays.stream(GooseType.values())
+                .filter(g -> !g.equals(GooseType.UNRECOGNIZED))
                 .mapToInt(GooseType::getNumber)
                 .max().orElse(0);
 
