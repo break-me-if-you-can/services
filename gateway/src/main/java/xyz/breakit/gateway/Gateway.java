@@ -81,7 +81,7 @@ public class Gateway {
     }
 
     @Bean
-    public Server grpcServer(
+    public static Server grpcServer(
             GrpcTracing grpcTracing,
             FixtureService fixtureService,
             PlayerIdService playerIdService,
