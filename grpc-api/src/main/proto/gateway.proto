@@ -8,6 +8,7 @@ option java_outer_classname = "GatewayProto";
 
 import "geese_shared.proto";
 import "clouds_shared.proto";
+import "leaderboard_shared.proto";
 
 package gateway;
 
@@ -23,17 +24,17 @@ service FixtureService {
 }
 
 /*
- * Leaderbaord, service to keep track of top players.
+ * Leaderboard, service to keep track of top players.
  */
 service LeaderboardService {
     /*
      * Returns current top scores (up to a requested number).
      */
-    rpc GetTopScores (TopScoresRequest) returns (TopScoresResponse);
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
     /*
      * Updates single player's score.
      */
-    rpc UpdateScore (UpdateScoreRequest) returns (UpdateScoreResponse);
+    rpc UpdateScore (leaderboard.UpdateScoreRequest) returns (leaderboard.UpdateScoreResponse);
 }
 
 /*
@@ -103,56 +104,6 @@ message FixtureLine {
 
 }
 
-/*
- * Contains single player's score.
- */
-message PlayerScore {
-    /*
-     * Player's unique id.
-     */
-    string player_id = 1;
-    /*
-     * Current player's score.
-     */
-    int32 score = 2;
-}
-
-/*
- * Request to request current top scores.
- */
-message TopScoresRequest {
-    /*
-     * Max number of scores to return.
-     */
-    int32 size = 1;
-}
-
-/*
- * Contains current top scores.
- */
-message TopScoresResponse {
-    /*
-     * List of top scores.
-     * Position in this list represents player'sc position in the leaderboard.
-     */
-    repeated PlayerScore top_scores = 1;
-}
-
-/*
- * Request to update player's score.
- */
-message UpdateScoreRequest {
-    /*
-     * Contains player's unique id and new score.
-     */
-    PlayerScore player_score = 1;
-}
-
-/*
- * Response message, currently empty.
- */
-message UpdateScoreResponse {
-}
 
 /*
  * Request for player id generation. Empty message.
