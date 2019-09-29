@@ -12,7 +12,7 @@ import { ParallaxTexture } from './gameobjects/ParallaxTexture';
 import { CONSTANTS } from './Constants';
 import { IMAGES } from './Assets';
 
-import { Portrait, Spinner, GameOver } from './Messages';
+import { Portrait, Spinner, GameOver, Notification } from './Messages';
 import * as Helper from './helper';
 
 export class Game extends Component {
@@ -91,7 +91,7 @@ export class Game extends Component {
     handleGetPlayerIdError = (error) => {
         switch (error.code) {
             case CONSTANTS.TIMEOUT_ERROR_CODE:
-                alert('Check your internet connection');
+                this.setState({ notification: CONSTANTS.DEADLINE_NOTIFICATION });
                 break;
             default:
         }
@@ -647,7 +647,9 @@ export class Game extends Component {
 
         let message = '';
 
-        if (this.state.gameOver) {
+        if (this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
+            message = (<Notification message="Check your internet connection" />);
+        } else if (this.state.gameOver) {
             message = (<GameOver onClick={ (e) => this.startAgain(e) } />);
         }
 

@@ -2,8 +2,10 @@ import { GetFixtureRequest, GeneratePlayerIdRequest } from '../generated/gateway
 
 import { TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/leaderboard_shared_pb';
 
-import { FixtureServicePromiseClient, PlayerIdServicePromiseClient,
-    LeaderboardServicePromiseClient, StreamingLeaderboardServiceClient } from '../generated/gateway_grpc_web_pb';
+import {
+    FixtureServicePromiseClient, PlayerIdServicePromiseClient,
+    LeaderboardServicePromiseClient, StreamingLeaderboardServiceClient
+} from '../generated/gateway_grpc_web_pb';
 
 import { CONSTANTS } from './Constants';
 
@@ -22,9 +24,7 @@ export class Service {
     getPlayerId = () => {
         const request = new GeneratePlayerIdRequest();
 
-        const metadata = this.getMetadata();
-
-        return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
+        return this.playerIdServicePromiseClient.generatePlayerId(request, this.getMetadata());
     }
 
     getTopPlayerScore = () => {
@@ -32,9 +32,7 @@ export class Service {
 
         request.setSize();
 
-        const metadata = this.getMetadata();
-
-        return this.leaderboardServicePromiseClient.getTopScores(request, metadata);
+        return this.leaderboardServicePromiseClient.getTopScores(request, this.getMetadata());
     }
 
     subscribeOnTopScoreStream = (handler) => {
@@ -46,7 +44,7 @@ export class Service {
 
         stream.on('data', (data) => {
             console.log('On data: ', data);
-            // handler(data);
+            handler(data);
         });
 
         stream.on('status', (status) => console.log('On Status: ', status));
@@ -64,9 +62,7 @@ export class Service {
 
         updateScoreRequest.setPlayerScore(playerScore);
 
-        const metadata = this.getMetadata();
-
-        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, metadata);
+        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, this.getMetadata());
     }
 
     constructor(withDeadline) {
