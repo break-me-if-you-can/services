@@ -7,6 +7,11 @@ import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
 import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
+import xyz.breakit.leaderboard.PlayerScore;
+import xyz.breakit.leaderboard.TopScoresRequest;
+import xyz.breakit.leaderboard.TopScoresResponse;
+import xyz.breakit.leaderboard.UpdateScoreRequest;
+import xyz.breakit.leaderboard.UpdateScoreResponse;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
