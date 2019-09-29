@@ -26,7 +26,6 @@ public class LeaderboardGrpcService extends LeaderboardServiceGrpc.LeaderboardSe
                 .build());
 
         leaderboardService.getLeaderboardUpdatesFlux()
-                .log()
                 .map(updated -> topScores(request))
                 .doOnNext(scores -> responseObserver.onNext(
                         TopScoresResponse.newBuilder()

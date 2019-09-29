@@ -17,6 +17,7 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+            - containerPort: 8090
           env:
             - name: foobar
               value: "$(date +%s)"
@@ -36,6 +37,10 @@ spec:
   ports:
    - port: 8080
      targetPort: 8080
+     protocol: TCP
+     name: rest
+   - port: 8080
+     targetPort: 8090
      protocol: TCP
      name: rest
 YAML
