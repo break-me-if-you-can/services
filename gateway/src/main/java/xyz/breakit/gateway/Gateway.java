@@ -42,6 +42,8 @@ import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -88,6 +90,7 @@ public class Gateway {
             FixtureService fixtureService,
             PlayerIdService playerIdService,
             LeaderboardService leaderboardService,
+            StreamingLeaderboardService streamingLeaderboardService,
             GatewayAdminService adminService,
             HealthcheckGrpcService healthcheckService,
             Limiter<GrpcServerRequestContext> limiter,
@@ -102,6 +105,7 @@ public class Gateway {
                 .addService(fixtureService)
                 .addService(ServerInterceptors.intercept(playerIdService, latencyInterceptor))
                 .addService(leaderboardService)
+                .addService(streamingLeaderboardService)
                 .addService(adminService)
                 .addService(healthcheckService)
                 .addService(ProtoReflectionService.newInstance())
@@ -218,8 +222,14 @@ public class Gateway {
         return HealthCheckServiceGrpc.newFutureStub(cloudsChannel);
     }
 
-    @Bean("Leaderboard")
-    public StreamingLeaderboardServiceStub leaderboardClient(
+    @Bean
+    public LeaderboardServiceStub unaryLeaderboardClient(
+            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
+        return LeaderboardServiceGrpc.newStub(leaderboardChannel);
+    }
+
+    @Bean("StreamingLeaderboard")
+    public StreamingLeaderboardServiceStub streamingLeaderboardClient(
             @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
         return StreamingLeaderboardServiceGrpc.newStub(leaderboardChannel);
     }

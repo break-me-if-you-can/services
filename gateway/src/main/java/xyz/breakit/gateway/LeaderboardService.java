@@ -7,6 +7,7 @@ import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
 import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
 import xyz.breakit.leaderboard.PlayerScore;
 import xyz.breakit.leaderboard.TopScoresRequest;
 import xyz.breakit.leaderboard.TopScoresResponse;
@@ -23,48 +24,24 @@ import java.util.stream.Collectors;
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
 
-    private final LeaderboardClient leaderboardClient;
+    private final LeaderboardServiceStub leaderboardClient;
 
     @Autowired
-    public LeaderboardService(LeaderboardClient leaderboardClient) {
+    public LeaderboardService(LeaderboardServiceStub leaderboardClient) {
         this.leaderboardClient = leaderboardClient;
     }
 
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
-        CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
-        top5.whenComplete((l, e) -> {
-            if (e != null) {
-                responseObserver.onError(e);
-            } else {
-                List<PlayerScore> playerScores = l.stream()
-                        .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
-                        .collect(Collectors.toList());
-
-                TopScoresResponse response = TopScoresResponse.newBuilder()
-                        .addAllTopScores(playerScores)
-                        .build();
-
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-            }
-        });
+        leaderboardClient.getTopScoresOnce( request, responseObserver);
+        responseObserver.onCompleted();
     }
 
     @Override
     public void updateScore(UpdateScoreRequest request,
                             StreamObserver<UpdateScoreResponse> responseObserver) {
-
-        LeaderboardEntry entry = ImmutableLeaderboardEntry
-                .builder()
-                .name(request.getPlayerScore().getPlayerId())
-                .score(request.getPlayerScore().getScore())
-                .build();
-
-        leaderboardClient.updateScore(entry,
-                () -> responseObserver.onNext(UpdateScoreResponse.getDefaultInstance()),
-                responseObserver::onError,
-                responseObserver::onCompleted);
+        leaderboardClient.updateScore(request, responseObserver);
+        responseObserver.onCompleted();
     }
 }
