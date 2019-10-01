@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of gateway leaderboard service.
- * Currently returns predefined responses, but should make
- * remote calls to leaderboard service instead.
  */
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {

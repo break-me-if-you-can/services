@@ -32,6 +32,7 @@ import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
+import xyz.breakit.gateway.StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
@@ -215,6 +216,24 @@ public class Gateway {
     public HealthCheckServiceFutureStub cloudsHealthcheckClient(
             @Qualifier("CloudsChannel") Channel cloudsChannel) {
         return HealthCheckServiceGrpc.newFutureStub(cloudsChannel);
+    }
+
+    @Bean("Leaderboard")
+    public StreamingLeaderboardServiceStub leaderboardClient(
+            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
+        return StreamingLeaderboardServiceGrpc.newStub(leaderboardChannel);
+    }
+
+    @Bean("LeaderboardChannel")
+    public Channel leaderboardChannel(
+            @Value("${grpc.leaderboard.host:leaderboard}") String lbHost,
+            @Value("${grpc.leaderboard.port:8090}") int lbPort,
+            GrpcTracing grpcTracing) {
+        return ManagedChannelBuilder
+                .forAddress(lbHost, lbPort)
+                .intercept(grpcTracing.newClientInterceptor())
+                .usePlaintext()
+                .build();
     }
 
     @Bean("GeeseChannel")
