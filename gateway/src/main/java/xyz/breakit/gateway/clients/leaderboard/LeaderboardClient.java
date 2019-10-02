@@ -41,8 +41,8 @@ public class LeaderboardClient {
 
     @Autowired
     public LeaderboardClient(
-            @Value("${rest.leaderboard.host}") String leaderboardHost,
-            @Value("${rest.leaderboard.port}") int leaderboardPort,
+            @Value("${rest.leaderboard.host:leaderboard}") String leaderboardHost,
+            @Value("${rest.leaderboard.port:8080}") int leaderboardPort,
             @Qualifier("tracingWebClient") WebClient webClientTemplate
     ) {
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
