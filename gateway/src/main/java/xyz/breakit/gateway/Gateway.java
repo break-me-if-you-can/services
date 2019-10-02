@@ -223,15 +223,9 @@ public class Gateway {
     }
 
     @Bean
-    public LeaderboardServiceStub unaryLeaderboardClient(
+    public LeaderboardServiceStub leaderboardClient(
             @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
         return LeaderboardServiceGrpc.newStub(leaderboardChannel);
-    }
-
-    @Bean
-    public StreamingLeaderboardServiceStub streamingLeaderboardClient(
-            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
-        return StreamingLeaderboardServiceGrpc.newStub(leaderboardChannel);
     }
 
     @Bean("LeaderboardChannel")

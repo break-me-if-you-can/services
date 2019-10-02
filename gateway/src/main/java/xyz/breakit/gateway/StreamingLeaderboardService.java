@@ -3,6 +3,7 @@ package xyz.breakit.gateway;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc;
 import xyz.breakit.leaderboard.TopScoresRequest;
 import xyz.breakit.leaderboard.TopScoresResponse;
 
@@ -12,18 +13,18 @@ import xyz.breakit.leaderboard.TopScoresResponse;
 @Service
 public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceImplBase {
 
-    private final StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub streamingLeaderboardClient;
+    private final LeaderboardServiceGrpc.LeaderboardServiceStub leaderboardClient;
 
     @Autowired
-    public StreamingLeaderboardService(StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub streamingLeaderboardClient) {
-        this.streamingLeaderboardClient = streamingLeaderboardClient;
+    public StreamingLeaderboardService(LeaderboardServiceGrpc.LeaderboardServiceStub leaderboardClient) {
+        this.leaderboardClient = leaderboardClient;
     }
 
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
 
-        streamingLeaderboardClient.getTopScores(
+        leaderboardClient.getTopScoresStream(
                 request,
                 responseObserver);
     }
