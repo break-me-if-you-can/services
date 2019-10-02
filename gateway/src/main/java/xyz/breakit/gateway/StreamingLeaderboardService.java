@@ -12,18 +12,18 @@ import xyz.breakit.leaderboard.TopScoresResponse;
 @Service
 public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceImplBase {
 
-    private final StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub leaderboardClient;
+    private final StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub streamingLeaderboardClient;
 
     @Autowired
-    public StreamingLeaderboardService(StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub leaderboardClient) {
-        this.leaderboardClient = leaderboardClient;
+    public StreamingLeaderboardService(StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub streamingLeaderboardClient) {
+        this.streamingLeaderboardClient = streamingLeaderboardClient;
     }
 
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
 
-        leaderboardClient.getTopScores(
+        streamingLeaderboardClient.getTopScores(
                 request,
                 new StreamObserver<TopScoresResponse>() {
                     @Override
