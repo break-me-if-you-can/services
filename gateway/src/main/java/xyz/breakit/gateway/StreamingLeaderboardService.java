@@ -13,6 +13,7 @@ import xyz.breakit.leaderboard.TopScoresResponse;
 @Service
 public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceImplBase {
 
+    private static final int DEFAULT_SIZE = 5;
     private final LeaderboardServiceGrpc.LeaderboardServiceStub leaderboardClient;
 
     @Autowired
@@ -23,7 +24,9 @@ public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
-
+        if (request.getSize() == 0) {
+            request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build()
+        }
         leaderboardClient.getTopScoresStream(
                 request,
                 responseObserver);
