@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest
 @TestPropertySource("classpath:test.properties")
 @RunWith(SpringRunner.class)
-public class LeaderboardClientTest {
+public class LeaderboardRestClientTest {
 
     @Autowired
-    private LeaderboardClient client;
+    private LeaderboardRestClient client;
 
     @Autowired
     private Tracer tracer;

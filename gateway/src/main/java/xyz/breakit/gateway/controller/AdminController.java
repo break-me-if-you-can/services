@@ -13,7 +13,7 @@ import xyz.breakit.admin.InjectFailureRequest;
 import xyz.breakit.admin.InjectFailureResponse;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
-import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardRestClient;
 import xyz.breakit.gateway.flags.SettableFlags;
 
 import java.util.concurrent.CompletableFuture;
@@ -31,14 +31,14 @@ public class AdminController {
 
     private final LeaderboardAdminClient lbAdminClient;
     private final GatewayAdminService gwAdminService;
-    private final LeaderboardClient lbClient;
+    private final LeaderboardRestClient lbClient;
     private final SettableFlags flags;
 
     @Autowired
     public AdminController(
             LeaderboardAdminClient lbAdminClient,
             GatewayAdminService gwAdminService,
-            LeaderboardClient lbClient,
+            LeaderboardRestClient lbClient,
             SettableFlags flags) {
         this.lbAdminClient = lbAdminClient;
         this.gwAdminService = gwAdminService;

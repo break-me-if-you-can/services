@@ -16,6 +16,7 @@ import xyz.breakit.leaderboard.UpdateScoreResponse;
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
 
+    private static final int DEFAULT_SIZE = 5;
     private final LeaderboardServiceStub leaderboardClient;
 
     @Autowired
@@ -26,6 +27,9 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
+        if (request.getSize() == 0) {
+            request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
+        }
         leaderboardClient.getTopScoresOnce( request, responseObserver);
     }
 
