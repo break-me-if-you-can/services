@@ -25,22 +25,7 @@ public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc
 
         streamingLeaderboardClient.getTopScores(
                 request,
-                new StreamObserver<TopScoresResponse>() {
-                    @Override
-                    public void onNext(TopScoresResponse value) {
-                        responseObserver.onNext(value);
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        responseObserver.onError(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        responseObserver.onCompleted();
-                    }
-                });
+                responseObserver);
     }
 
 }
