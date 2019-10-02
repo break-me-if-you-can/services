@@ -25,7 +25,7 @@ public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
         if (request.getSize() == 0) {
-            request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build()
+            request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
         }
         leaderboardClient.getTopScoresStream(
                 request,
