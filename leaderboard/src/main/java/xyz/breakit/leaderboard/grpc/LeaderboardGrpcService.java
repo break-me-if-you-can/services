@@ -31,9 +31,7 @@ public class LeaderboardGrpcService extends LeaderboardServiceGrpc.LeaderboardSe
                         TopScoresResponse.newBuilder()
                                 .addAllTopScores(scores)
                                 .build()))
-                .doFinally(signalType -> responseObserver.onCompleted())
                 .subscribe();
-
     }
 
     @Override
