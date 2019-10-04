@@ -32,7 +32,6 @@ import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
-import xyz.breakit.gateway.StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;

@@ -27,11 +27,13 @@ public class LeaderboardGrpcService extends LeaderboardServiceGrpc.LeaderboardSe
 
         leaderboardService.getLeaderboardUpdatesFlux()
                 .map(updated -> topScores(request))
-                .doOnNext(scores -> responseObserver.onNext(
-                        TopScoresResponse.newBuilder()
-                                .addAllTopScores(scores)
-                                .build()))
-                .subscribe();
+                .doFinally(signalType -> responseObserver.onCompleted())
+                .subscribe(
+                        scores -> responseObserver.onNext(
+                                TopScoresResponse.newBuilder()
+                                        .addAllTopScores(scores)
+                                        .build())
+                );
     }
 
     @Override
