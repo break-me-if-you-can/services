@@ -14,6 +14,7 @@ PROTO_DIR="./grpc-api/src/main/proto"
 GATEWAY_PROTO="gateway.proto"
 CLOUDS_SHARED_PROTO="clouds_shared.proto"
 GEESE_SHARED_PROTO="geese_shared.proto"
+LEADERBOARD_SHARED_PROTO="leaderboard_shared.proto"
 
 protoc -I="$PROTO_DIR" "$PROTO_DIR/$GATEWAY_PROTO" \
         --js_out=import_style=commonjs:"$GENERATED_DIR" \
@@ -24,5 +25,9 @@ protoc -I="$PROTO_DIR" "$PROTO_DIR/$CLOUDS_SHARED_PROTO" \
         --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
 
 protoc -I="$PROTO_DIR" "$PROTO_DIR/$GEESE_SHARED_PROTO" \
+        --js_out=import_style=commonjs:"$GENERATED_DIR" \
+        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
+
+protoc -I="$PROTO_DIR" "$PROTO_DIR/$LEADERBOARD_SHARED_PROTO" \
         --js_out=import_style=commonjs:"$GENERATED_DIR" \
         --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"

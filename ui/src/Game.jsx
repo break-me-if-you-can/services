@@ -396,6 +396,8 @@ export class Game extends Component {
     runIntervals = () => {
         this.clearIntervals();
 
+        this.service.subscribeOnTopScoreStream((data) => console.log('handler shows data ', data));
+
         this.scoreInterval = setInterval(() => this.setState({ score: this.score }), CONSTANTS.SCORE_INTERVAL);
 
         this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
