@@ -47,6 +47,8 @@ export const CONSTANTS = {
 
     POINTS_PER_TICK: 25,
 
+    D_KEYCODE: 68,
+    S_KEYCODE: 83,
     U_KEYCODE: 85,
     Y_KEYCODE: 89,
     LEFT_ARROW_KEYCODE: 37,

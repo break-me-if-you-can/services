@@ -68,7 +68,9 @@ export class Game extends Component {
         this.setState({
             score: this.score,
             enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
-            gameOver: false
+            gameOver: false,
+            multipleTypes: false,
+            useStreamingPressed: false
         });
 
         this.focusDiv();
@@ -313,20 +315,23 @@ export class Game extends Component {
     createGoose(locator) {
         let gooseFrames;
 
-        switch (locator.getGooseType()) {
-            case GooseType.GOOSE_TYPE_BLACK_GOOSE:
-                gooseFrames = this.gooseBlackFrames;
-                break;
-            case GooseType.GOOSE_TYPE_WHITE_GOOSE:
-                gooseFrames = this.gooseWhiteFrames;
-                break;
-            case GooseType.GOOSE_TYPE_GREY_GOOSE:
-                gooseFrames = this.gooseGreyFrames;
-                break;
-            default:
-                gooseFrames = this.gooseCanadaFrames;
+        if (this.state.multipleTypes) {
+            switch (locator.getGooseType()) {
+                case GooseType.GOOSE_TYPE_BLACK_GOOSE:
+                    gooseFrames = this.gooseBlackFrames;
+                    break;
+                case GooseType.GOOSE_TYPE_WHITE_GOOSE:
+                    gooseFrames = this.gooseWhiteFrames;
+                    break;
+                case GooseType.GOOSE_TYPE_GREY_GOOSE:
+                    gooseFrames = this.gooseGreyFrames;
+                    break;
+                default:
+                    gooseFrames = this.gooseCanadaFrames;
+            }
+        } else {
+            gooseFrames = this.gooseCanadaFrames;
         }
-
 
         const goose = new Goose({
             frames: gooseFrames,
@@ -440,8 +445,6 @@ export class Game extends Component {
 
     runIntervals = () => {
         this.clearIntervals();
-
-        this.service.subscribeOnTopScoreStream((data) => console.log('handler shows data ', data));
 
         this.scoreInterval = setInterval(() => this.setState({ score: this.score }), CONSTANTS.SCORE_INTERVAL);
 
@@ -617,6 +620,13 @@ export class Game extends Component {
             this.leaderboardComboPressed = true;
         } else if (event.keyCode === CONSTANTS.Y_KEYCODE && event.ctrlKey) { // y + CTRL: LB on
             this.leaderboardComboPressed = false;
+        } else if (event.keyCode === CONSTANTS.D_KEYCODE && event.ctrlKey) { // d + CTRL: multiple types toggle
+            this.setState((prevState) => ({ multipleTypes: !prevState.multipleTypes }));
+        } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
+            if (!this.state.useStreamingPressed) {
+                this.service.subscribeOnTopScoreStream((/* data */) => { /* console.log('handler shows data ', data); */ });
+                this.setState({ useStreamingPressed: true });
+            }
         }
     }
 
