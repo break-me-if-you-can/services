@@ -15,9 +15,15 @@ package leaderboard;
  */
 service LeaderboardService {
     /*
-     * Returns current top scores (up to a requested number).
+     * Returns a stream current top scores (up to a requested number).
      */
-    rpc GetTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+    rpc GetTopScoresStream (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+
+    /*
+     * Returns a single instance of current top scores (up to a requested number).
+     */
+    rpc GetTopScoresOnce (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
+
     /*
      * Updates single player's score.
      */

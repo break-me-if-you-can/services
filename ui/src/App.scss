@@ -40,6 +40,13 @@ body, html {
   100% { font-size: 15pt; }
 }
 
+@keyframes NOTIF-FONT-SIZE-ANIMATION {
+  0%   { font-size: 0.6em; }
+  50%  { font-size: 0.75em; }
+  100% { font-size: 0.6em; }
+}
+
+
 #root canvas {
   width: 100%;
   height: 100%;
@@ -86,7 +93,8 @@ body, html {
     left: 0;
     width: 100%;
     height: 100%;
-    text-align: center;
+    display: flex;
+    justify-content: center;
     font-family: 'Goblin';
     font-size: 1em;
     text-transform: uppercase;
@@ -104,7 +112,38 @@ body, html {
       left: 50%;
       transform: translate(-50%, -50%);
     }
+
+    &.portrait {
+      height: 100%;
+      width: 100%;
+      background: rgb(23, 33, 52) url('../assets/phone_anim.gif') center center no-repeat;
+    }
   }
+
+  .notification_container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    text-transform: uppercase;
+    color: rgb(255,235,132);
+
+    .notification_content {
+      margin-top: 25%;
+
+      font-family: 'Goblin';
+      font-size: 0.5em;
+      animation:         NOTIF-FONT-SIZE-ANIMATION 1s infinite;
+      -webkit-animation: NOTIF-FONT-SIZE-ANIMATION 1s infinite;
+      -moz-animation:    NOTIF-FONT-SIZE-ANIMATION 1s infinite;
+      -o-animation:      NOTIF-FONT-SIZE-ANIMATION 1s infinite;
+    }
+  }
+
 
   .game_over {
     position: fixed;
@@ -144,12 +183,6 @@ body, html {
         }
       }
     }
-  }
-
-  .portrait {
-    height: 100%;
-    width: 100%;
-    background: rgb(23, 33, 52) url('../assets/phone_anim.gif') center center no-repeat;
   }
 
   .game {
@@ -215,6 +248,19 @@ body, html {
         }
       }
 
+      .stats-spinner {
+        position: absolute;
+        height: 50%;
+        width: 100%;
+      
+        .spinner {
+          position: absolute;
+          height: 100%;
+          width: 100%;
+          background: url('../assets/loader.gif') center center no-repeat;
+        }
+      }
+
       .profile {
         padding-bottom: 25px;
         font-size: 0.75em;
@@ -225,17 +271,4 @@ body, html {
       display: none;
     }
   }
-
-  .spinner {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    background: url('../assets/loader.gif') center center no-repeat;
-  }
-}
-
-.stats-spinner {
-  position: absolute;
-  height: 50%;
-  width: 100%;
 }

@@ -30,12 +30,23 @@ service LeaderboardService {
     /*
      * Returns current top scores (up to a requested number).
      */
-    rpc GetTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
     /*
      * Updates single player's score.
      */
     rpc UpdateScore (leaderboard.UpdateScoreRequest) returns (leaderboard.UpdateScoreResponse);
 }
+
+/*
+ * Streaming leaderboard service.
+ */
+service StreamingLeaderboardService {
+    /*
+     * Returns a stream of current top scores
+     */
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+}
+
 
 /*
  * Service to generate player id.
