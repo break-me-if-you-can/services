@@ -11,6 +11,7 @@ import { ParallaxTexture } from './gameobjects/ParallaxTexture';
 
 import { CONSTANTS } from './Constants';
 import { IMAGES } from './Assets';
+import { StatusCode } from 'grpc-web';
 
 import { Portrait, Spinner, GameOver, Notification } from './Messages';
 import * as Helper from './helper';
@@ -94,7 +95,7 @@ export class Game extends Component {
 
     handleGetPlayerIdError = (error) => {
         switch (error.code) {
-            case CONSTANTS.TIMEOUT_ERROR_CODE:
+            case StatusCode.DEADLINE_EXCEEDED:
                 this.setState({ notification: CONSTANTS.DEADLINE_NOTIFICATION });
                 break;
             default:
@@ -450,7 +451,7 @@ export class Game extends Component {
 
         this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
 
-        this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
+        // this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
         this.fixtureInterval = setInterval(this.getFixtureCall.bind(this), CONSTANTS.FIXTURE_INTERVAL);
     }
@@ -624,10 +625,34 @@ export class Game extends Component {
             this.setState((prevState) => ({ multipleTypes: !prevState.multipleTypes }));
         } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
             if (!this.state.useStreamingPressed) {
-                this.service.subscribeOnTopScoreStream((/* data */) => { /* console.log('handler shows data ', data); */ });
                 this.setState({ useStreamingPressed: true });
+
+                const stream = this.service.openTopScoreStream();
+
+                stream.on('data', this.onStreamData.bind(this));
+
+                stream.on('status', (status) => console.log('On Status: ', status));
+
+                stream.on('end', (end) => console.log('Signal end: ', end));
             }
         }
+    }
+
+    onStreamData = (data) => {
+        console.log('On data: ', data);
+
+        this.leaderboardOk = true;
+        const topScores = data.getTopScoresList()
+            .map(playerScore => {
+                return {
+                    id: playerScore.getPlayerId(),
+                    score: playerScore.getScore()
+                };
+            });
+
+        this.setState({
+            topScores: topScores
+        });
     }
 
     onLeftArrowTouchStart = () => {

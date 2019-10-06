@@ -35,21 +35,12 @@ export class Service {
         return this.leaderboardServicePromiseClient.getTopScores(request, this.getMetadata());
     }
 
-    subscribeOnTopScoreStream = (handler) => {
+    openTopScoreStream = () => {
         const request = new TopScoresRequest();
 
         request.setSize();
 
-        var stream = this.streamingLeaderboardServiceClient.getTopScores(request, this.getMetadata());
-
-        stream.on('data', (data) => {
-            console.log('On data: ', data);
-            handler(data);
-        });
-
-        stream.on('status', (status) => console.log('On Status: ', status));
-
-        stream.on('end', (end) => console.log('Signal end: ', end));
+        return this.streamingLeaderboardServiceClient.getTopScores(request, this.getMetadata());
     }
 
     updatePlayerScore = ({ playerId, score }) => {
