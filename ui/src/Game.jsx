@@ -99,8 +99,8 @@ export class Game extends Component {
                 this.setState({ notification: CONSTANTS.DEADLINE_NOTIFICATION });
                 break;
             default:
+                this.handleError(error);
         }
-        this.handleError(error);
     }
 
 
@@ -135,9 +135,6 @@ export class Game extends Component {
         this.service.getPlayerId()
             .then(
                 (result) => this.handleGetPalyerIdResult(result),
-                (error) => this.handleGetPlayerIdError(error)
-            )
-            .catch(
                 (error) => this.handleGetPlayerIdError(error)
             );
 
@@ -380,9 +377,6 @@ export class Game extends Component {
             .then(
                 () => { },
                 (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
             );
     }
 
@@ -411,9 +405,6 @@ export class Game extends Component {
                     });
                 },
                 (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
             );
     }
 
@@ -438,9 +429,6 @@ export class Game extends Component {
                     geeseAndClouds.forEach(this.renderOnScreen);
                 },
                 (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
             );
     }
 
@@ -451,7 +439,7 @@ export class Game extends Component {
 
         this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
 
-        // this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
+        this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
         this.fixtureInterval = setInterval(this.getFixtureCall.bind(this), CONSTANTS.FIXTURE_INTERVAL);
     }
@@ -641,7 +629,7 @@ export class Game extends Component {
     onStreamData = (data) => {
         console.log('On data: ', data);
 
-        this.leaderboardOk = true;
+        /*this.leaderboardOk = true;
         const topScores = data.getTopScoresList()
             .map(playerScore => {
                 return {
@@ -652,7 +640,7 @@ export class Game extends Component {
 
         this.setState({
             topScores: topScores
-        });
+        });*/
     }
 
     onLeftArrowTouchStart = () => {
