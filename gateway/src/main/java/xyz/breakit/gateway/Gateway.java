@@ -149,8 +149,9 @@ public class Gateway {
             SettableFlags flags,
             @Qualifier("GeeseAdmin") AdminServiceStub geeseAdmin,
             @Qualifier("CloudsAdmin") AdminServiceStub cloudsAdmin,
+            @Qualifier("LeadeboardAdmin") AdminServiceStub leaderboardAdmin,
             FailureInjectionService failureInjectionService) {
-        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin, failureInjectionService);
+        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin, leaderboardAdmin, failureInjectionService);
     }
 
     @Bean
@@ -158,8 +159,8 @@ public class Gateway {
             Flags flags,
             @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
             @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck,
-            LeaderboardAdminClient lbAdminClient) {
-        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, lbAdminClient);
+            @Qualifier("LeaderboardHealthcheck") HealthCheckServiceFutureStub leaderboardHealthcheck) {
+        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, leaderboardHealthcheck);
     }
 
     @Bean
@@ -209,6 +210,12 @@ public class Gateway {
         return () -> flags.isRetryEnabled() ? clientWithRetries : client;
     }
 
+    @Bean("LeadeboardAdmin")
+    public AdminServiceStub leaderboardAdmin(
+            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
+        return AdminServiceGrpc.newStub(leaderboardChannel);
+    }
+
     @Bean("CloudsAdmin")
     public AdminServiceStub cloudsAdmin(
             @Qualifier("CloudsChannel") Channel cloudsChannel) {
@@ -219,6 +226,12 @@ public class Gateway {
     public HealthCheckServiceFutureStub cloudsHealthcheckClient(
             @Qualifier("CloudsChannel") Channel cloudsChannel) {
         return HealthCheckServiceGrpc.newFutureStub(cloudsChannel);
+    }
+
+    @Bean("LeaderboardHealthcheck")
+    public HealthCheckServiceFutureStub leaderboardHealthcheckClient(
+            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
+        return HealthCheckServiceGrpc.newFutureStub(leaderboardChannel);
     }
 
     @Bean
