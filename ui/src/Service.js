@@ -24,7 +24,11 @@ export class Service {
     getPlayerId = () => {
         const request = new GeneratePlayerIdRequest();
 
-        return this.playerIdServicePromiseClient.generatePlayerId(request, this.getMetadata());
+        const metadata = this.getMetadata();
+
+        console.log('Player Id metdata: ', metadata);
+
+        return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
     }
 
     getTopPlayerScore = () => {
@@ -57,6 +61,7 @@ export class Service {
     }
 
     constructor(withDeadline) {
+        console.log('Service with deadline: ', withDeadline);
         this.withDeadline = withDeadline;
 
         this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);

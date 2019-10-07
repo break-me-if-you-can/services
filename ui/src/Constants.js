@@ -47,6 +47,7 @@ export const CONSTANTS = {
 
     D_KEYCODE: 68,
     S_KEYCODE: 83,
+    T_KEYCODE: 84,
     U_KEYCODE: 85,
     Y_KEYCODE: 89,
     LEFT_ARROW_KEYCODE: 37,
