@@ -6,26 +6,79 @@ option java_multiple_files = true;
 option java_package = "xyz.breakit.leaderboard";
 option java_outer_classname = "leaderboardProto";
 
-import "leaderboard_shared.proto";
-
 package leaderboard;
 
 /*
- * Leaderboard service to keep track of top players.
+ * Leaderboard, service to keep track of top players.
  */
 service LeaderboardService {
     /*
-     * Returns a stream current top scores (up to a requested number).
+     * Returns current top scores (up to a requested number).
      */
-    rpc GetTopScoresStream (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
-
-    /*
-     * Returns a single instance of current top scores (up to a requested number).
-     */
-    rpc GetTopScoresOnce (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
-
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
     /*
      * Updates single player's score.
      */
     rpc UpdateScore (leaderboard.UpdateScoreRequest) returns (leaderboard.UpdateScoreResponse);
+}
+
+/*
+ * Streaming leaderboard service.
+ */
+service StreamingLeaderboardService {
+    /*
+     * Returns a stream of current top scores
+     */
+    rpc StreamTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+}
+
+/*
+ * Contains single player's score.
+ */
+message PlayerScore {
+    /*
+     * Player's unique id.
+     */
+    string player_id = 1;
+    /*
+     * Current player's score.
+     */
+    int32 score = 2;
+}
+
+/*
+ * Request to request current top scores.
+ */
+message TopScoresRequest {
+    /*
+     * Max number of scores to return.
+     */
+    int32 size = 1;
+}
+
+/*
+ * Contains current top scores.
+ */
+message TopScoresResponse {
+    /*
+     * List of top scores.
+     * Position in this list represents player'sc position in the leaderboard.
+     */
+    repeated PlayerScore top_scores = 1;
+}
+
+/*
+ * Request to update player's score.
+ */
+message UpdateScoreRequest {
+    /*
+     * Contains player's unique id and new score.
+     */
+    PlayerScore player_score = 1;
+}
+
+/*
+ * Response message, currently empty.
+ */
+message UpdateScoreResponse {
 }

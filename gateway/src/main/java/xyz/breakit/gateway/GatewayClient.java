@@ -6,11 +6,8 @@ import brave.sampler.Sampler;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
-import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
-import xyz.breakit.leaderboard.PlayerScore;
-import xyz.breakit.leaderboard.TopScoresRequest;
-import xyz.breakit.leaderboard.TopScoresResponse;
-import xyz.breakit.leaderboard.UpdateScoreRequest;
+import xyz.breakit.leaderboard.*;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 

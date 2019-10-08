@@ -3,7 +3,7 @@ package xyz.breakit.gateway;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
+import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
 import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
 import xyz.breakit.leaderboard.TopScoresRequest;
 import xyz.breakit.leaderboard.TopScoresResponse;
@@ -30,7 +30,7 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
         if (request.getSize() == 0) {
             request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
         }
-        leaderboardClient.getTopScoresOnce( request, responseObserver);
+        leaderboardClient.getTopScores(request, responseObserver);
     }
 
     @Override
