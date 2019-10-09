@@ -2,7 +2,6 @@ import { h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 import { Service } from './Service';
-
 import { Goose } from './gameobjects/Goose';
 import { Cloud } from './gameobjects/Cloud';
 import { Aircraft } from './gameobjects/Aircraft';
@@ -11,6 +10,7 @@ import { ParallaxTexture } from './gameobjects/ParallaxTexture';
 
 import { CONSTANTS } from './Constants';
 import { IMAGES } from './Assets';
+import { StatusCode } from 'grpc-web';
 
 import { Portrait, Spinner, GameOver, Notification } from './Messages';
 import * as Helper from './helper';
@@ -27,16 +27,18 @@ export class Game extends Component {
         this.loader = new PIXI.loaders.Loader();
         this.app = new PIXI.Application({ width, height, transparent });
 
-        this.service = new Service(props.deadline);
-
         const playerId = '';
         const score = 0;
         const topScores = Helper.createArray(CONSTANTS.TOP_SCORES_COUNT, { playerId, score });
         const enginesStatus = Helper.createArray(CONSTANTS.ENGINES_COUNT, CONSTANTS.ENGINE_ALIVE_CLASSNAME);
         const portrait = window.innerHeight > window.innerWidth;
         const gameOver = false;
+        const leaderboardOk = true;
 
-        this.state = { playerId, score, topScores, enginesStatus, portrait, gameOver };
+        this.state = { playerId, score, topScores, enginesStatus, portrait, gameOver, leaderboardOk };
+
+        this.deadline = props.deadline;
+        this.service = new Service(this.deadline);
 
         this.mainDiv = null;
         this.counter = 0;
@@ -94,14 +96,18 @@ export class Game extends Component {
 
     handleGetPlayerIdError = (error) => {
         switch (error.code) {
-            case CONSTANTS.TIMEOUT_ERROR_CODE:
-                this.setState({ notification: CONSTANTS.DEADLINE_NOTIFICATION });
+            case StatusCode.DEADLINE_EXCEEDED:
+            case StatusCode.UNAVAILABLE:
+                this.setState({
+                    notification: CONSTANTS.DEADLINE_NOTIFICATION
+                });
                 break;
             default:
+                this.handleError(error);
         }
-        this.handleError(error);
     }
 
+    handleLeaderboardError = () => this.setState({ leaderboardOk: false });
 
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
@@ -134,9 +140,6 @@ export class Game extends Component {
         this.service.getPlayerId()
             .then(
                 (result) => this.handleGetPalyerIdResult(result),
-                (error) => this.handleGetPlayerIdError(error)
-            )
-            .catch(
                 (error) => this.handleGetPlayerIdError(error)
             );
 
@@ -379,9 +382,6 @@ export class Game extends Component {
             .then(
                 () => { },
                 (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
             );
     }
 
@@ -395,25 +395,25 @@ export class Game extends Component {
 
         this.service.getTopPlayerScore()
             .then(
-                (result) => {
-                    this.leaderboardOk = true;
-                    const topScores = result.getTopScoresList()
-                        .map(playerScore => {
-                            return {
-                                id: playerScore.getPlayerId(),
-                                score: playerScore.getScore()
-                            };
-                        });
-
-                    this.setState({
-                        topScores: topScores
-                    });
-                },
-                (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
+                (result) => this.handleTopPlayerScore(result),
+                (error) => this.handleLeaderboardError(error)
             );
+    }
+
+    handleTopPlayerScore = (result) => {
+        this.leaderboardOk = true;
+        const topScores = result.getTopScoresList()
+            .map(playerScore => {
+                return {
+                    id: playerScore.getPlayerId(),
+                    score: playerScore.getScore()
+                };
+            });
+
+        this.setState({
+            topScores: topScores,
+            leaderboardOk: true
+        });
     }
 
     renderOnScreen = (line, index) => {
@@ -437,10 +437,17 @@ export class Game extends Component {
                     geeseAndClouds.forEach(this.renderOnScreen);
                 },
                 (error) => this.handleError(error)
-            )
-            .catch(
-                (error) => this.handleError(error)
             );
+    }
+
+    subscribeToTheStream = () => {
+        const stream = this.service.openTopScoreStream();
+
+        stream.on('data', (data) => this.handleTopPlayerScore(data),);
+
+        stream.on('status', (status) => console.log('On Status: ', status));
+
+        stream.on('end', (end) => console.log('Signal end: ', end));
     }
 
     runIntervals = () => {
@@ -622,10 +629,24 @@ export class Game extends Component {
             this.leaderboardComboPressed = false;
         } else if (event.keyCode === CONSTANTS.D_KEYCODE && event.ctrlKey) { // d + CTRL: multiple types toggle
             this.setState((prevState) => ({ multipleTypes: !prevState.multipleTypes }));
+        } else if (event.keyCode === CONSTANTS.T_KEYCODE && event.ctrlKey) { // t + CTRL: deadline/timeout
+            this.setState({ playerId: '' });
+            this.deadline = !this.deadline;
+
+            this.service = new Service(this.deadline);
+            this.init();
+            this.service.getPlayerId()
+                .then(
+                    (result) => this.setState({ playerId: result.getPlayerId() }),
+                    (error) => this.handleGetPlayerIdError(error)
+                );
         } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
+            this.setState({ useStreamingPressed: true });
+
             if (!this.state.useStreamingPressed) {
-                this.service.subscribeOnTopScoreStream((/* data */) => { /* console.log('handler shows data ', data); */ });
                 this.setState({ useStreamingPressed: true });
+
+                this.subscribeToTheStream();
             }
         }
     }
@@ -701,7 +722,7 @@ export class Game extends Component {
         let message = '';
 
         if (this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
-            message = (<Notification message="Check your internet connection" />);
+            message = (<Notification message="Technical difficulties" />);
         } else if (this.state.gameOver) {
             message = (<GameOver onClick={ (e) => this.startAgain(e) } />);
         }
@@ -730,7 +751,7 @@ export class Game extends Component {
 
         let stats;
 
-        if (this.state.playerId) {
+        if (this.state.playerId && this.state.leaderboardOk) {
             stats = (<div>
                 <div className={`leaderboard ${leaderboardBlinking}`}>
                     <div className="black">TOP 5</div>
