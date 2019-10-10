@@ -3,33 +3,31 @@ package xyz.breakit.gateway;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import xyz.breakit.leaderboard.LeaderboardServiceGrpc;
-import xyz.breakit.leaderboard.TopScoresRequest;
-import xyz.breakit.leaderboard.TopScoresResponse;
+import xyz.breakit.leaderboard.*;
+import xyz.breakit.leaderboard.StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub;
 
 /**
- * Implementation of streaming gateway leaderboard service.
-  */
+ * Implementation of streaming leaderboard service.
+ */
 @Service
 public class StreamingLeaderboardService extends StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceImplBase {
 
     private static final int DEFAULT_SIZE = 5;
-    private final LeaderboardServiceGrpc.LeaderboardServiceStub leaderboardClient;
+    private final StreamingLeaderboardServiceStub streamingLeaderboardClient;
 
     @Autowired
-    public StreamingLeaderboardService(LeaderboardServiceGrpc.LeaderboardServiceStub leaderboardClient) {
-        this.leaderboardClient = leaderboardClient;
+    public StreamingLeaderboardService(StreamingLeaderboardServiceStub streamingLeaderboardClient) {
+        this.streamingLeaderboardClient = streamingLeaderboardClient;
     }
 
     @Override
-    public void getTopScores(TopScoresRequest request,
-                             StreamObserver<TopScoresResponse> responseObserver) {
+    public void streamTopScores(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
+        request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
         if (request.getSize() == 0) {
             request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
         }
-        leaderboardClient.getTopScoresStream(
-                request,
-                responseObserver);
+        streamingLeaderboardClient.streamTopScores(request, responseObserver);
     }
-
 }
+
+
