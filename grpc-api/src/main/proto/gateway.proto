@@ -8,7 +8,6 @@ option java_outer_classname = "GatewayProto";
 
 import "geese_shared.proto";
 import "clouds_shared.proto";
-import "leaderboard.proto";
 
 package gateway;
 

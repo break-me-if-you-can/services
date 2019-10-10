@@ -441,6 +441,7 @@ export class Game extends Component {
     }
 
     subscribeToTheStream = () => {
+        console.log('Stream');
         const stream = this.service.openTopScoreStream();
 
         stream.on('data', (data) => this.handleTopPlayerScore(data),);
@@ -641,8 +642,6 @@ export class Game extends Component {
                     (error) => this.handleGetPlayerIdError(error)
                 );
         } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
-            this.setState({ useStreamingPressed: true });
-
             if (!this.state.useStreamingPressed) {
                 this.setState({ useStreamingPressed: true });
 
