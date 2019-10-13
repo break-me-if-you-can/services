@@ -71,7 +71,7 @@ export class Game extends Component {
             score: this.score,
             enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
             gameOver: false,
-            multipleTypes: false,
+            multipleTypes: true,
             useStreamingPressed: false
         });
 
@@ -105,6 +105,12 @@ export class Game extends Component {
             default:
                 this.handleError(error);
         }
+
+        if (this.statisticsTopPlayerScoreInterval) {
+            clearInterval(this.statisticsTopPlayerScoreInterval);
+        }
+        this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
+
     }
 
     handleLeaderboardError = () => this.setState({ leaderboardOk: false });
@@ -276,7 +282,7 @@ export class Game extends Component {
 
                 if (Math.abs(goose.y - position.y) < CONSTANTS.AIRCRAFT_HEIGHT / 2 && Math.abs(goose.x - position.x) < CONSTANTS.AIRCRAFT_WIDTH / 2) {
                     if (goose.type === GooseType.GOOSE_TYPE_GREY_GOOSE && this.collisionsCounter > 0) {
-                        this.collisionsCounter--;
+                        this.collisionsCounter = CONSTANTS.ENGINES_COUNT;
                     } else {
                         this.collisionsCounter++;
                     }
@@ -376,13 +382,16 @@ export class Game extends Component {
 
     updatePlayerScoreCall = () => {
         const playerId = this.state.playerId;
-        const score = this.score;
 
-        this.service.updatePlayerScore({ playerId, score })
-            .then(
-                () => { },
-                (error) => this.handleError(error)
-            );
+        if (playerId) {
+            const score = this.score;
+
+            this.service.updatePlayerScore({ playerId, score })
+                .then(
+                    () => { },
+                    (error) => this.handleError(error)
+                );
+        }
     }
 
     getTopPlayerScoreCall = () => {
@@ -402,6 +411,7 @@ export class Game extends Component {
 
     handleTopPlayerScore = (result) => {
         this.leaderboardOk = true;
+        console.log('Top Score: ', result.getTopScoresList());
         const topScores = result.getTopScoresList()
             .map(playerScore => {
                 return {
@@ -415,6 +425,10 @@ export class Game extends Component {
             leaderboardOk: true
         });
     }
+
+    handleStreamStatus = (status) => console.log('On Stream status: ', status);
+
+    handleStreamStatus = (end) => console.log('On Stream End: ', end);
 
     renderOnScreen = (line, index) => {
         setTimeout(() => {
@@ -440,15 +454,14 @@ export class Game extends Component {
             );
     }
 
-    subscribeToTheStream = () => {
-        console.log('Stream');
+    subscribeToStream = () => {
         const stream = this.service.openTopScoreStream();
 
-        stream.on('data', (data) => this.handleTopPlayerScore(data),);
+        stream.on('data', (data) => this.handleTopPlayerScore(data));
 
-        stream.on('status', (status) => console.log('On Status: ', status));
+        stream.on('status', (status) => this.handleStreamStatus(status));
 
-        stream.on('end', (end) => console.log('Signal end: ', end));
+        stream.on('end', (end) => this.handleStreamStatus(end));
     }
 
     runIntervals = () => {
@@ -645,7 +658,7 @@ export class Game extends Component {
             if (!this.state.useStreamingPressed) {
                 this.setState({ useStreamingPressed: true });
 
-                this.subscribeToTheStream();
+                this.subscribeToStream();
             }
         }
     }
@@ -750,7 +763,8 @@ export class Game extends Component {
 
         let stats;
 
-        if (this.state.playerId && this.state.leaderboardOk) {
+        if ((this.state.playerId && this.state.leaderboardOk) ||
+            this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
             stats = (<div>
                 <div className={`leaderboard ${leaderboardBlinking}`}>
                     <div className="black">TOP 5</div>
