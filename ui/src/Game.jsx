@@ -411,7 +411,6 @@ export class Game extends Component {
 
     handleTopPlayerScore = (result) => {
         this.leaderboardOk = true;
-        console.log('Top Score: ', result.getTopScoresList());
         const topScores = result.getTopScoresList()
             .map(playerScore => {
                 return {
