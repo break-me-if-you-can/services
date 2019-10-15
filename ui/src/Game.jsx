@@ -71,7 +71,6 @@ export class Game extends Component {
             score: this.score,
             enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
             gameOver: false,
-            multipleTypes: true,
             useStreamingPressed: false
         });
 
@@ -143,11 +142,7 @@ export class Game extends Component {
         this.mainDiv.append(this.app.view);
         this.counter = 0;
 
-        this.service.getPlayerId()
-            .then(
-                (result) => this.handleGetPalyerIdResult(result),
-                (error) => this.handleGetPlayerIdError(error)
-            );
+        this.getPlayerIdCall();
 
         this.focusDiv();
     }
@@ -197,15 +192,7 @@ export class Game extends Component {
         this.gooseBlackFrames = getGooseFrames(resources.gooseBlackSpriteSheet);
         this.gooseCanadaFrames = getGooseFrames(resources.gooseCanadaSpriteSheet);
         this.gooseWhiteFrames = getGooseFrames(resources.gooseWhiteSpriteSheet);
-
-
-        this.gooseGreyFrames = [];
-        this.gooseGreyFrames.push(
-            new PIXI.Texture(
-                resources.gooseGreySpriteSheet.texture,
-                new PIXI.Rectangle(0, 0, 62, 110)
-            )
-        );
+        this.gooseGreyFrames = getGooseFrames(resources.gooseGreySpriteSheet);
 
         this.explosionFrames = [];
         for (let i = 0; i < CONSTANTS.EXPLOSION_FRAMES_COUNT; i++) {
@@ -281,7 +268,7 @@ export class Game extends Component {
                 }
 
                 if (Math.abs(goose.y - position.y) < CONSTANTS.AIRCRAFT_HEIGHT / 2 && Math.abs(goose.x - position.x) < CONSTANTS.AIRCRAFT_WIDTH / 2) {
-                    if (goose.type === GooseType.GOOSE_TYPE_GREY_GOOSE && this.collisionsCounter > 0) {
+                    if (goose.type === GooseType.GOOSE_TYPE_GREY_GOOSE) {
                         this.collisionsCounter = CONSTANTS.ENGINES_COUNT;
                     } else {
                         this.collisionsCounter++;
@@ -324,22 +311,18 @@ export class Game extends Component {
     createGoose(locator) {
         let gooseFrames;
 
-        if (this.state.multipleTypes) {
-            switch (locator.getGooseType()) {
-                case GooseType.GOOSE_TYPE_BLACK_GOOSE:
-                    gooseFrames = this.gooseBlackFrames;
-                    break;
-                case GooseType.GOOSE_TYPE_WHITE_GOOSE:
-                    gooseFrames = this.gooseWhiteFrames;
-                    break;
-                case GooseType.GOOSE_TYPE_GREY_GOOSE:
-                    gooseFrames = this.gooseGreyFrames;
-                    break;
-                default:
-                    gooseFrames = this.gooseCanadaFrames;
-            }
-        } else {
-            gooseFrames = this.gooseCanadaFrames;
+        switch (locator.getGooseType()) {
+            case GooseType.GOOSE_TYPE_BLACK_GOOSE:
+                gooseFrames = this.gooseBlackFrames;
+                break;
+            case GooseType.GOOSE_TYPE_WHITE_GOOSE:
+                gooseFrames = this.gooseWhiteFrames;
+                break;
+            case GooseType.GOOSE_TYPE_GREY_GOOSE:
+                gooseFrames = this.gooseGreyFrames;
+                break;
+            default:
+                gooseFrames = this.gooseCanadaFrames;
         }
 
         const goose = new Goose({
@@ -439,6 +422,14 @@ export class Game extends Component {
 
             cloudsLocators.forEach(locator => this.clouds.push(this.createCloud(locator)));
         }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
+    }
+
+    getPlayerIdCall = () => {
+        this.service.getPlayerId()
+            .then(
+                (result) => this.handleGetPalyerIdResult(result),
+                (error) => this.handleGetPlayerIdError(error)
+            );
     }
 
     getFixtureCall = () => {
@@ -640,8 +631,6 @@ export class Game extends Component {
             this.leaderboardComboPressed = true;
         } else if (event.keyCode === CONSTANTS.Y_KEYCODE && event.ctrlKey) { // y + CTRL: LB on
             this.leaderboardComboPressed = false;
-        } else if (event.keyCode === CONSTANTS.D_KEYCODE && event.ctrlKey) { // d + CTRL: multiple types toggle
-            this.setState((prevState) => ({ multipleTypes: !prevState.multipleTypes }));
         } else if (event.keyCode === CONSTANTS.T_KEYCODE && event.ctrlKey) { // t + CTRL: deadline/timeout
             this.setState({ playerId: '' });
             this.deadline = !this.deadline;
