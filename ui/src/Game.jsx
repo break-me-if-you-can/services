@@ -33,7 +33,7 @@ export class Game extends Component {
         const enginesStatus = Helper.createArray(CONSTANTS.ENGINES_COUNT, CONSTANTS.ENGINE_ALIVE_CLASSNAME);
         const portrait = window.innerHeight > window.innerWidth;
         const gameOver = false;
-        const leaderboardOk = true;
+        const leaderboardOk = false;
 
         this.state = { playerId, score, topScores, enginesStatus, portrait, gameOver, leaderboardOk };
 
@@ -98,6 +98,7 @@ export class Game extends Component {
             case StatusCode.DEADLINE_EXCEEDED:
             case StatusCode.UNAVAILABLE:
                 this.setState({
+                    leaderboardOk: true,
                     notification: CONSTANTS.DEADLINE_NOTIFICATION
                 });
                 break;
@@ -116,8 +117,9 @@ export class Game extends Component {
 
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
+        const leaderboardOk = true;
 
-        this.setState({ playerId });
+        this.setState({ playerId, leaderboardOk });
 
         this.loadAssets((loader, resources) => this.runGame(resources));
     }
@@ -751,8 +753,7 @@ export class Game extends Component {
 
         let stats;
 
-        if ((this.state.playerId && this.state.leaderboardOk) ||
-            this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
+        if (this.state.leaderboardOk || this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
             stats = (<div>
                 <div className={`leaderboard ${leaderboardBlinking}`}>
                     <div className="black">TOP 5</div>
