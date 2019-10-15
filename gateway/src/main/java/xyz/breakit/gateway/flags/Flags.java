@@ -19,4 +19,10 @@ public interface Flags {
      */
     boolean isRetryEnabled();
 
+    /**
+     * @return {@code true} if diverse geese are enabled, otherwise only canada geese type is used
+     * and all other geese types are ignored
+     */
+    boolean isDiverseGeeseEnabled();
+
 }
