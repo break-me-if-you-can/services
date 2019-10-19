@@ -632,20 +632,12 @@ export class Game extends Component {
                     (result) => this.setState({ playerId: result.getPlayerId() }),
                     (error) => this.handleGetPlayerIdError(error)
                 );
-        } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
+        } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey && !this.state.useStreamingPressed) { // s + CTRL: stream toggle
             if (this.statisticsTopPlayerScoreInterval) {
                 clearInterval(this.statisticsTopPlayerScoreInterval);
             }
-
-            if (!this.state.useStreamingPressed) {
-                this.setState({ useStreamingPressed: true });
-
-                this.subscribeToStream();
-            } else {
-                this.setState({ useStreamingPressed: false });
-
-                this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
-            }
+            this.setState({ useStreamingPressed: true });
+            this.subscribeToStream();
         }
     }
 
