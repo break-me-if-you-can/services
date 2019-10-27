@@ -1,0 +1,3 @@
+rootProject.name = 'playerid'
+
+includeBuild '../grpc-common'
