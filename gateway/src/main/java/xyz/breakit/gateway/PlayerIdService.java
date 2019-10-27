@@ -1,22 +1,59 @@
 package xyz.breakit.gateway;
 
+import io.grpc.Context;
+import io.grpc.Deadline;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import xyz.breakit.gateway.PlayerIdServiceGrpc.PlayerIdServiceStub;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Naive implementation of user id service.
- * Generates user ids based on a counter.
+ * Calls remote Player ID service implementation to generate player ID.
  */
-final class PlayerIdService extends PlayerIdServiceGrpc.PlayerIdServiceImplBase{
+final class PlayerIdService extends PlayerIdServiceGrpc.PlayerIdServiceImplBase {
 
-    private static final String USER_ID_PREFIX = "Pilot_";
-    private final AtomicLong idCounter = new AtomicLong();
+    private final Logger logger = LoggerFactory.getLogger(PlayerIdService.class);
+
+    private final PlayerIdServiceStub remoteClient;
+
+    PlayerIdService(PlayerIdServiceStub remoteClient) {
+        this.remoteClient = remoteClient;
+    }
 
     @Override
-    public void generatePlayerId(GeneratePlayerIdRequest request, StreamObserver<GeneratePlayerIdResponse> responseObserver) {
-        String userId = USER_ID_PREFIX + idCounter.incrementAndGet();
-        responseObserver.onNext(GeneratePlayerIdResponse.newBuilder().setPlayerId(userId).build());
-        responseObserver.onCompleted();
+    public void generatePlayerId(GeneratePlayerIdRequest request,
+                                 StreamObserver<GeneratePlayerIdResponse> responseObserver) {
+
+        getRemoteClient().generatePlayerId(request,
+                new StreamObserver<GeneratePlayerIdResponse>() {
+                    @Override
+                    public void onNext(GeneratePlayerIdResponse value) {
+                        responseObserver.onNext(value);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        responseObserver.onCompleted();
+                    }
+                });
+    }
+
+    private PlayerIdServiceStub getRemoteClient() {
+        PlayerIdServiceStub client = remoteClient;
+
+        Deadline deadline = Context.current().getDeadline();
+        logger.trace("Deadline {}.", deadline);
+        if (deadline != null) {
+            // adjust for network latency
+            client = client.withDeadline(deadline.offset(-200, TimeUnit.MILLISECONDS));
+        }
+        return client;
     }
 }
