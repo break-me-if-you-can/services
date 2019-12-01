@@ -8,6 +8,5 @@ public interface ServiceNames {
     String GATEWAY_SERVICE = "gateway";
     String GEESE_SERVICE = "geese";
     String CLOUDS_SERVICE = "clouds";
-    String LEADERBOARD_SERVICE = "leaderboard";
 
 }
