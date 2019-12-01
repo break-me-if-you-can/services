@@ -1,3 +1,4 @@
+import React, {h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 class AircraftSprite extends PIXI.extras.AnimatedSprite {
@@ -25,19 +26,31 @@ class AircraftSprite extends PIXI.extras.AnimatedSprite {
     }
 }
 export class Aircraft {
+
     constructor(props) {
-        this.x = props.x;
-        this.y = props.y;
+        this.x = props.x,
+        this.y = props.y,
+        
+        this.left = new AircraftSprite({
+            frames: props.framesObject.left,
+            x: this.x,
+            y: this.y,
+            ratio: props.ratio,
+        });
 
-        const x = this.x;
-        const y = this.y;
-        const ratio = props.ratio;
+        this.straight = new AircraftSprite({
+            frames: props.framesObject.straight,
+            x: this.x,
+            y: this.y,
+            ratio: props.ratio,
+        });
 
-        this.left = new AircraftSprite({ frames: props.framesObject.left, x, y, ratio });
-
-        this.straight = new AircraftSprite({ frames: props.framesObject.straight, x, y, ratio });
-
-        this.right = new AircraftSprite({ frames: props.framesObject.right, x, y, ratio });
+        this.right = new AircraftSprite({
+            frames: props.framesObject.right,
+            x: this.x,
+            y: this.y,
+            ratio: props.ratio,
+        });
     }
 
     setPosition(props) {
@@ -50,7 +63,7 @@ export class Aircraft {
 
     getPosition = () => ({
         x: this.x,
-        y: this.y
+        y: this.y,
     })
 
     removeFromStage(stage) {

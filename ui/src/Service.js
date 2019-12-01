@@ -1,70 +1,65 @@
-import { GetFixtureRequest, GeneratePlayerIdRequest, TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
+import {GetFixtureRequest, GeneratePlayerIdRequest,
+            TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
 
-import { FixtureServicePromiseClient, PlayerIdServicePromiseClient, LeaderboardServicePromiseClient } from '../generated/gateway_grpc_web_pb';
+import {FixtureServicePromiseClient, PlayerIdServicePromiseClient,
+           LeaderboardServicePromiseClient} from '../generated/gateway_grpc_web_pb';
 
-// import { FixtureServiceClient, PlayerIdServiceClient, LeaderboardServiceClient } from '../generated/gateway_grpc_web_pb';
+// showcase
+//import * as Clients from '../generated/gateway_grpc_web_pb';
+// Clients.
 
-// showcase Clients.
-// import * as Clients from '../generated/gateway_grpc_web_pb';
+import {FixtureServiceClient, PlayerIdServiceClient,
+        LeaderboardServiceClient} from '../generated/gateway_grpc_web_pb';
 
-import { CONSTANTS } from './Constants';
+import {CONSTANTS } from './Constants';
 
 export class Service {
+    constructor() {
+        this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+        this.playerIdServicePromiseClient = new PlayerIdServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+        this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+    }
+
     getFixture = () => {
-        const request = new GetFixtureRequest();
+        let request = new GetFixtureRequest();
 
         request.setLineWidth(CONSTANTS.FIELD_WIDTH);
         request.setLinesCount(CONSTANTS.LINES_COUNT);
         request.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
         request.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
 
-        const metadata = this.getMetadata();
-
-        return this.fixtureServicePromiseClient.getFixture(request, metadata);
+        return this.fixtureServicePromiseClient.getFixture(request, { deadline: this.getDeadline() });
     }
 
     getPlayerId = () => {
-        const request = new GeneratePlayerIdRequest();
+        let request = new GeneratePlayerIdRequest();
 
-        const metadata = this.getMetadata();
+        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
 
-        return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
+        return this.playerIdServicePromiseClient.generatePlayerId(request, { deadline });
     }
 
     getTopPlayerScore = () => {
-        const request = new TopScoresRequest();
-
+        let request = new TopScoresRequest();
         request.setSize();
 
-        const metadata = this.getMetadata();
+        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
 
-        return this.leaderboardServicePromiseClient.getTopScores(request, metadata);
+        return this.leaderboardServicePromiseClient.getTopScores(request, { deadline });
     }
 
-    updatePlayerScore = ({ playerId, score }) => {
-        const playerScore = new PlayerScore();
-
+    updatePlayerScore = ({playerId, score}) => {
+        let playerScore = new PlayerScore();
         playerScore.setPlayerId(playerId);
         playerScore.setScore(score);
 
-        const updateScoreRequest = new UpdateScoreRequest();
-
+        let updateScoreRequest = new UpdateScoreRequest();
         updateScoreRequest.setPlayerScore(playerScore);
 
-        const metadata = this.getMetadata();
+        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
 
-        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, metadata);
+        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, { deadline });
     }
 
-    constructor(withDeadline) {
-        this.withDeadline = withDeadline;
-
-        this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.playerIdServicePromiseClient = new PlayerIdServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-    }
-
-    getMetadata = () => (this.withDeadline ? { deadline: this.getDeadline() } : {});
-
-    getDeadline = (timeout = CONSTANTS.DEFAULT_TIMEOUT) => (new Date()).getTime() + timeout;
+    getDeadline = (timeout=CONSTANTS.DEFAULT_TIMEOUT) => (new Date()).getTime() + timeout;
 }
