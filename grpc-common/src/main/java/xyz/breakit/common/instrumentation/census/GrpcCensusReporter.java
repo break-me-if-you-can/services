@@ -8,7 +8,8 @@ import io.opencensus.stats.Stats;
 
 import java.io.IOException;
 
-import static io.opencensus.contrib.grpc.metrics.RpcViewConstants.*;
+import static io.opencensus.contrib.grpc.metrics.RpcViewConstants.RPC_SERVER_FINISHED_COUNT_CUMULATIVE_VIEW;
+import static io.opencensus.contrib.grpc.metrics.RpcViewConstants.RPC_SERVER_SERVER_LATENCY_VIEW;
 
 /**
  * Utility to integrate gRPC stats with census and report stats to Stackdriver.
@@ -23,9 +24,8 @@ public final class GrpcCensusReporter {
      */
     public static void registerAndExportViews(int zpagesPort) throws IOException {
 
-        Stats.getViewManager().registerView(GRPC_SERVER_SERVER_LATENCY_VIEW);
-        Stats.getViewManager().registerView(GRPC_SERVER_COMPLETED_RPC_VIEW);
-        Stats.getViewManager().registerView(RPC_CLIENT_ERROR_COUNT_MINUTE_VIEW);
+        Stats.getViewManager().registerView(RPC_SERVER_SERVER_LATENCY_VIEW);
+        Stats.getViewManager().registerView(RPC_SERVER_FINISHED_COUNT_CUMULATIVE_VIEW);
 
         String gcpProjectId = System.getenv().get("GCP_PROJECTID");
         StackdriverStatsExporter.createAndRegister(
