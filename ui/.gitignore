@@ -33,3 +33,7 @@ yarn-error.log*
 .idea/
 ui.iml
 
+.cache/
+.project
+.settings/
+
