@@ -107,6 +107,12 @@ message FixtureLine {
      */
     repeated clouds.CloudLocator cloud_locators = 2;
 
+    /*
+     * Array of geese types. For each goose in the geese_position array,
+     * there should be a corresponding goose type on the same position in geese_types array.
+     */
+    repeated geese.GooseType geese_types = 3;
+
 }
 
 
