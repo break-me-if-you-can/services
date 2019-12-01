@@ -25,8 +25,6 @@ export class Service {
 
         const metadata = this.getMetadata();
 
-        console.log('Player Id metdata: ', metadata);
-
         return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
     }
 
@@ -43,7 +41,6 @@ export class Service {
 
         request.setSize();
 
-        console.log('stream');
         return this.streamingLeaderboardServicePromiseClient.streamTopScores(request, this.getMetadata());
     }
 
