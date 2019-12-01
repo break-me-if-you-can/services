@@ -23,16 +23,16 @@ public final class HealthcheckService {
     private final Flags flags;
     private final HealthCheckServiceFutureStub geeseHealthcheck;
     private final HealthCheckServiceFutureStub cloudsHealthcheck;
-    private final HealthCheckServiceFutureStub leaderboardHealthcheck;
+    private final LeaderboardAdminClient lbAdminClient;
 
     public HealthcheckService(Flags flags,
                               HealthCheckServiceFutureStub geeseHealthcheck,
                               HealthCheckServiceFutureStub cloudsHealthcheck,
-                              HealthCheckServiceFutureStub leaderboardHealthcheck) {
+                              LeaderboardAdminClient lbAdminClient) {
         this.flags = flags;
         this.geeseHealthcheck = geeseHealthcheck;
         this.cloudsHealthcheck = cloudsHealthcheck;
-        this.leaderboardHealthcheck = leaderboardHealthcheck;
+        this.lbAdminClient = lbAdminClient;
     }
 
     public ListenableFuture<HealthCheckResponse> healthCheck() {
@@ -41,9 +41,9 @@ public final class HealthcheckService {
 
         ListenableFuture<HealthCheckResponse> geeseHealth = geeseHealthcheck.healthCheck(request);
         ListenableFuture<HealthCheckResponse> cloudsHealth = cloudsHealthcheck.healthCheck(request);
-        ListenableFuture<HealthCheckResponse> leaderboardHealth = leaderboardHealthcheck.healthCheck(request);
+        ListenableFuture<HealthCheckResponse> lbHealth = JdkFutureAdapters.listenInPoolThread(lbAdminClient.health());
 
-        return Futures.transform(Futures.successfulAsList(geeseHealth, cloudsHealth, leaderboardHealth),
+        return Futures.transform(Futures.successfulAsList(geeseHealth, cloudsHealth, lbHealth),
                 remoteServicesHealth -> {
                     ServiceHealthCheckStatus.Builder gatewayHealth = ServiceHealthCheckStatus.newBuilder()
                             .setServiceName(GATEWAY_SERVICE)

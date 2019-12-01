@@ -22,18 +22,15 @@ public class GatewayAdminService extends AdminServiceImplBase {
     private final SettableFlags flags;
     private final AdminServiceStub geeseAdmin;
     private final AdminServiceStub cloudsAdmin;
-    private final AdminServiceStub leaderboardAdmin;
     private final FailureInjectionService failureInjectionService;
 
     public GatewayAdminService(SettableFlags flags,
                                AdminServiceStub geeseAdmin,
                                AdminServiceStub cloudsAdmin,
-                               AdminServiceStub leaderboardAdmin,
                                FailureInjectionService failureInjectionService) {
         this.flags = flags;
         this.geeseAdmin = geeseAdmin;
         this.cloudsAdmin = cloudsAdmin;
-        this.leaderboardAdmin = leaderboardAdmin;
         this.failureInjectionService = failureInjectionService;
     }
 
@@ -55,8 +52,6 @@ public class GatewayAdminService extends AdminServiceImplBase {
             geeseAdmin.injectFailure(request, responseObserver);
         } else if (CLOUDS_SERVICE.equalsIgnoreCase(request.getServiceName())) {
             cloudsAdmin.injectFailure(request, responseObserver);
-        } else if (LEADERBOARD_SERVICE.equalsIgnoreCase(request.getServiceName())) {
-            leaderboardAdmin.injectFailure(request, responseObserver);
         } else if (GATEWAY_SERVICE.equalsIgnoreCase(request.getServiceName())) {
             failureInjectionService.injectFailure(request);
             responseObserver.onNext(InjectFailureResponse.newBuilder().build());

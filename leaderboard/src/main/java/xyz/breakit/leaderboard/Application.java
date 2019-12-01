@@ -5,7 +5,6 @@ import brave.grpc.GrpcTracing;
 import brave.sampler.Sampler;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptors;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -13,7 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import xyz.breakit.common.healthcheck.CommonHealthcheckService;
 import xyz.breakit.common.instrumentation.census.GrpcCensusReporter;
-import xyz.breakit.common.instrumentation.failure.AddLatencyServerInterceptor;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
@@ -45,14 +43,12 @@ public class Application {
 			InjectedFailureProvider failureProvider
 	) {
 
-		AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
-
 		return ServerBuilder.forPort(GRPC_SERVER_PORT)
-				.addService(ServerInterceptors.intercept(leaderboardService, latencyInterceptor))
+				.addService(leaderboardService)
 				.addService(ProtoReflectionService.newInstance())
 				.intercept(grpcTracing.newServerInterceptor())
-				.addService(new CommonHealthcheckService("leaderboard", failureProvider, failureProvider))
 				.addService(new FailureInjectionAdminService(new FailureInjectionService(failureProvider, failureProvider)))
+				.addService(new CommonHealthcheckService("gateway", failureProvider, failureProvider))
 				.build();
 	}
 

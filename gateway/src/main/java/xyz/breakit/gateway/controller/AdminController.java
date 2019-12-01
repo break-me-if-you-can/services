@@ -53,14 +53,13 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting predemo mode", e);
             throw new RuntimeException(e);
@@ -75,13 +74,12 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting demo_with_failures mode", e);
             throw new RuntimeException(e);
@@ -96,13 +94,12 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 3_demo_with_partial_degradation mode", e);
             throw new RuntimeException(e);
@@ -117,13 +114,12 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
             lbClient.enableRetriesWithNoBackoff();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 4_demo_with_retries mode", e);
             throw new RuntimeException(e);
@@ -137,13 +133,12 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 5_general_demo mode", e);
             throw new RuntimeException(e);
@@ -157,13 +152,12 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, true);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 6_total_geese_demo", e);
             throw new RuntimeException(e);
@@ -176,34 +170,14 @@ public class AdminController {
         flags.setPartialDegradationEnabled(false);
         flags.setRetryEnabled(false);
 
-        CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
+        CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, true);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 1, 10000000, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 7_demo_with_slow_generate_player_id mode", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    @GetMapping("/admin/set_mode/8_demo_with_slow_get_top_score")
-    public void demoWithSlowGetTopScore() {
-
-        flags.setPartialDegradationEnabled(false);
-        flags.setRetryEnabled(false);
-
-        CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
-
-        try {
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            LOG.error("Error while setting 8_demo_with_slow_get_top_score mode", e);
             throw new RuntimeException(e);
         }
     }
