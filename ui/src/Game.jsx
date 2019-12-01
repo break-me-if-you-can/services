@@ -83,7 +83,7 @@ export class Game extends Component {
         this.mainDiv.append(this.app.view);
         this.counter = 0;
 
-        this.getPlayerIdCall();
+        this.getPlayerIdCall(this.handleGetPalyerIdResultAndRunGame);
 
         this.focusDiv();
     }
@@ -101,6 +101,8 @@ export class Game extends Component {
     setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
 
     getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
+
+    handleLeaderboardError = () => this.setState({ leaderboardOk: false });
 
     handleError = (error, message = 'Error occured: ') => console.log(message, error);
 
@@ -125,13 +127,15 @@ export class Game extends Component {
         this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
     }
 
-    handleLeaderboardError = () => this.setState({ leaderboardOk: false });
-
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
         const leaderboardOk = true;
 
         this.setState({ playerId, leaderboardOk });
+    }
+
+    handleGetPalyerIdResultAndRunGame = (result) => {
+        this.handleGetPalyerIdResult(result);
 
         Helper.loadAssets(this.loader, (loader, resources) => this.runGame(resources));
     }
@@ -413,10 +417,10 @@ export class Game extends Component {
         }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
     }
 
-    getPlayerIdCall = () => {
+    getPlayerIdCall = (resolve) => {
         this.service.getPlayerId()
             .then(
-                (result) => this.handleGetPalyerIdResult(result),
+                (result) => resolve(result),
                 (error) => this.handleGetPlayerIdError(error)
             );
     }
@@ -627,11 +631,7 @@ export class Game extends Component {
 
             this.service = new Service(this.deadline);
             this.init();
-            this.service.getPlayerId()
-                .then(
-                    (result) => this.setState({ playerId: result.getPlayerId() }),
-                    (error) => this.handleGetPlayerIdError(error)
-                );
+            this.getPlayerIdCall(this.handleGetPalyerIdResult);
         } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey && !this.state.useStreamingPressed) { // s + CTRL: stream toggle
             if (this.statisticsTopPlayerScoreInterval) {
                 clearInterval(this.statisticsTopPlayerScoreInterval);
