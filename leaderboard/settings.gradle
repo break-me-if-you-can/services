@@ -1,1 +1,3 @@
 rootProject.name = 'leaderboard'
+includeBuild '../grpc-api'
+includeBuild '../grpc-common'
