@@ -11,6 +11,7 @@ import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -25,9 +26,18 @@ public class GeeseServer {
         Random random = new Random();
         InjectedFailureProvider failureProvider = new InjectedFailureProvider();
         AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
+
+        int maxGooseType = Arrays.stream(GooseType.values())
+                .filter(g -> !g.equals(GooseType.UNRECOGNIZED))
+                .mapToInt(GooseType::getNumber)
+                .max().orElse(0);
+
         GeeseService geeseService =
-                new GeeseService((min, max) -> min + random.nextInt(max - min + 1),
-                        random::nextInt, failureProvider);
+                new GeeseService(
+                        (min, max) -> min + random.nextInt(max - min + 1),
+                        random::nextInt,
+                        () -> GooseType.forNumber(random.nextInt(maxGooseType)+1),
+                        failureProvider);
 
         Server server = ServerBuilder.forPort(8090)
                 .addService(

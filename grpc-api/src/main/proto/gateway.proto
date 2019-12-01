@@ -6,7 +6,11 @@ option java_multiple_files = true;
 option java_package = "xyz.breakit.gateway";
 option java_outer_classname = "GatewayProto";
 
+import "geese_shared.proto";
+import "clouds_shared.proto";
+
 package gateway;
+
 
 /*
  * Unary service to request game fixture.
@@ -82,17 +86,21 @@ message FixtureResponse {
  */
 message FixtureLine {
     /*
-     * Array of geese. Numbers in the array represent vertical positions
-     * of geese. For example, [1, 3] array means there are geese in the first
-     * and third column of the line.
+     * Array of geese, complete with positions and types.
      */
-    repeated int32 goose_positions = 1;
+
+    repeated geese.GooseLocator goose_locators = 1;
     /*
-     * Array of clouds. Numbers in the array represent vertical positions
-     * of clouds. For example, [2, 4] array means there are clouds in the second
-     * and fourth column of the line.
+     * Array of clouds, complete with positions.
      */
-    repeated int32 cloud_positions = 2;
+    repeated clouds.CloudLocator cloud_locators = 2;
+
+    /*
+     * Array of geese types. For each goose in the geese_position array,
+     * there should be a corresponding goose type on the same position in geese_types array.
+     */
+    repeated geese.GooseType geese_types = 3;
+
 }
 
 /*

@@ -8,6 +8,8 @@ option java_outer_classname = "GeeseProto";
 
 package geese;
 
+import "geese_shared.proto";
+
 /*
  * Unary service to request goose positions.
  */
@@ -52,9 +54,8 @@ message GeeseResponse {
  */
 message GeeseLine {
     /*
-     * Array of geese. Numbers in the array represent vertical positions
-     * of geese. For example, [1, 10] array means there are geese in the first
-     * and tenth positions of the line.
+     * Geese locators (types and positions) for a given line
      */
-    repeated int32 geese_positions = 1;
+    repeated GooseLocator geese_locators = 1;
+
 }

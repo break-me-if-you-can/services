@@ -1,0 +1,21 @@
+// shared geese messages
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "xyz.breakit.clouds";
+option java_outer_classname = "CloudSharedProto";
+
+package clouds;
+
+/*
+ * Contains information about a clouds's position
+ */
+message CloudLocator {
+    /*
+     * Cloud position in a line. Number represent verticals position
+     * of a cloud. For example, 10 means there is a cloud in the
+     * tenth position of the line.
+     */
+    int32 cloud_position = 1;
+}
+

@@ -17,6 +17,7 @@ import xyz.breakit.geese.GetGeeseRequest;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
@@ -108,10 +109,10 @@ final class FixtureService extends FixtureServiceImplBase {
     private FixtureLine mergeLine(int index, @Nullable GeeseResponse geese, @Nullable CloudsResponse clouds) {
         FixtureLine.Builder builder = FixtureLine.newBuilder();
         if (geese != null) {
-            builder.addAllGoosePositions(geese.getLines(index).getGeesePositionsList());
+            builder.addAllGooseLocators(geese.getLines(index).getGeeseLocatorsList());
         }
         if (clouds != null) {
-            builder.addAllCloudPositions(clouds.getLines(index).getCloudPositionsList());
+            builder.addAllCloudLocators(clouds.getLines(index).getCloudLocatorsList());
         }
         return builder.build();
     }
