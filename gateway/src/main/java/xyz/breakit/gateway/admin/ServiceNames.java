@@ -9,6 +9,5 @@ public interface ServiceNames {
     String GEESE_SERVICE = "geese";
     String CLOUDS_SERVICE = "clouds";
     String LEADERBOARD_SERVICE = "leaderboard";
-    String PLAYER_ID_SERVICE = "playerid";
 
 }
