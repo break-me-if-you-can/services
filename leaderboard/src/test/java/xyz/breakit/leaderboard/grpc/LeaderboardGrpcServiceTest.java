@@ -21,7 +21,7 @@ public class LeaderboardGrpcServiceTest {
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
-    private LeaderboardService leaderboardService = new LeaderboardService(10);
+    private LeaderboardService leaderboardService = new LeaderboardService();
     private LeaderboardGrpcService leaderboardGrpcService = new LeaderboardGrpcService(leaderboardService);
 
     private LeaderboardServiceGrpc.LeaderboardServiceBlockingStub blockingGrpcClient;
@@ -53,7 +53,7 @@ public class LeaderboardGrpcServiceTest {
 
     @Test
     public void testTopScoresStream() {
-        Iterator<TopScoresResponse> topScores = blockingGrpcClient.getTopScoresStream(TopScoresRequest.newBuilder().setSize(3).build());
+        Iterator<TopScoresResponse> topScores = blockingGrpcClient.getTopScores(TopScoresRequest.newBuilder().setSize(3).build());
         assertThat(topScores.next()).isEqualTo(
                 TopScoresResponse.getDefaultInstance()
         );

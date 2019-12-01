@@ -3,20 +3,17 @@ package xyz.breakit.leaderboard.service;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Math.random;
 
@@ -24,23 +21,19 @@ import static java.lang.Math.random;
 public class LeaderboardService {
 
     private final static Logger LOG = LoggerFactory.getLogger(LeaderboardService.class);
-    private static final int MAX_HISTORY = 300;
+    public static final int MAX_HISTORY = 300;
 
     private final ConcurrentHashMap<String, Integer> scores = new ConcurrentHashMap<>();
 
     private final AtomicBoolean broken = new AtomicBoolean(false);
-    private final EmitterProcessor<Boolean> leaderboardUpdatesProcessor;
-    private final Flux<Boolean> leaderboardUpdatesFlux;
+    private final EmitterProcessor<Boolean> leaderboardUpdatesFlux;
 
-    public LeaderboardService(@Value("${leadeboard.getTopScores.sampleWindowInMs:1000}") int sampleWindowInMs) {
-        leaderboardUpdatesProcessor = EmitterProcessor.<Boolean>create(MAX_HISTORY);
-        leaderboardUpdatesFlux = sampleWindowInMs == 0 ?
-                leaderboardUpdatesProcessor
-                : leaderboardUpdatesProcessor.sample(Duration.ofMillis(sampleWindowInMs));
+    public LeaderboardService() {
+        leaderboardUpdatesFlux = EmitterProcessor.create(MAX_HISTORY);
     }
 
     public Flux<Boolean> getLeaderboardUpdatesFlux() {
-        return Flux.create(sink -> leaderboardUpdatesFlux.doOnNext(sink::next).subscribe());
+        return Flux.merge(leaderboardUpdatesFlux);
     }
 
     public void clear() {
@@ -50,7 +43,7 @@ public class LeaderboardService {
     public void recordScore(String name, int newScore) {
         delayIfBroken();
         scores.put(name, newScore);
-        leaderboardUpdatesProcessor.onNext(true);
+        leaderboardUpdatesFlux.onNext(true);
     }
 
     public boolean isBroken() {

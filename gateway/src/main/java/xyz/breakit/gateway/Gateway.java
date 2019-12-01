@@ -41,8 +41,6 @@ import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
-import xyz.breakit.leaderboard.LeaderboardServiceGrpc;
-import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -89,7 +87,6 @@ public class Gateway {
             FixtureService fixtureService,
             PlayerIdService playerIdService,
             LeaderboardService leaderboardService,
-            StreamingLeaderboardService streamingLeaderboardService,
             GatewayAdminService adminService,
             HealthcheckGrpcService healthcheckService,
             Limiter<GrpcServerRequestContext> limiter,
@@ -104,7 +101,6 @@ public class Gateway {
                 .addService(fixtureService)
                 .addService(ServerInterceptors.intercept(playerIdService, latencyInterceptor))
                 .addService(leaderboardService)
-                .addService(streamingLeaderboardService)
                 .addService(adminService)
                 .addService(healthcheckService)
                 .addService(ProtoReflectionService.newInstance())
@@ -221,24 +217,6 @@ public class Gateway {
         return HealthCheckServiceGrpc.newFutureStub(cloudsChannel);
     }
 
-    @Bean
-    public LeaderboardServiceStub leaderboardClient(
-            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
-        return LeaderboardServiceGrpc.newStub(leaderboardChannel);
-    }
-
-    @Bean("LeaderboardChannel")
-    public Channel leaderboardChannel(
-            @Value("${grpc.leaderboard.host:leaderboard}") String lbHost,
-            @Value("${grpc.leaderboard.port:8090}") int lbPort,
-            GrpcTracing grpcTracing) {
-        return ManagedChannelBuilder
-                .forAddress(lbHost, lbPort)
-                .intercept(grpcTracing.newClientInterceptor())
-                .usePlaintext()
-                .build();
-    }
-
     @Bean("GeeseChannel")
     public Channel geeseChannel(
             @Value("${grpc.geese.host:geese}") String geeseHost,
@@ -341,6 +319,5 @@ public class Gateway {
     public Flags flags() {
         return new SettableFlags();
     }
-
 
 }
