@@ -366,7 +366,7 @@ export class Game extends Component {
             );
     }
 
-    renderOnScreen = (line, index) => {
+    renderLine = (line, index) => {
         setTimeout(() => {
             const geeseLocators = line.getGooseLocatorsList();
 
@@ -382,9 +382,9 @@ export class Game extends Component {
         this.service.getFixture()
             .then(
                 (result) => {
-                    const geeseAndClouds = result.getLinesList();
+                    const lines = result.getLinesList();
 
-                    geeseAndClouds.forEach(this.renderOnScreen);
+                    lines.forEach(this.renderLine);
                 },
                 (error) => this.handleError(error)
             )
