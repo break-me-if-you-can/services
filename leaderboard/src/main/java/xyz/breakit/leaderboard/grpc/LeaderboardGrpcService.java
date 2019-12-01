@@ -20,7 +20,24 @@ public class LeaderboardGrpcService extends LeaderboardServiceGrpc.LeaderboardSe
     }
 
     @Override
-    public void getTopScores(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
+    public void getTopScoresStream(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
+        responseObserver.onNext(TopScoresResponse.newBuilder()
+                .addAllTopScores(topScores(request))
+                .build());
+
+        leaderboardService.getLeaderboardUpdatesFlux()
+                .map(updated -> topScores(request))
+                .doFinally(signalType -> responseObserver.onCompleted())
+                .subscribe(
+                        scores -> responseObserver.onNext(
+                                TopScoresResponse.newBuilder()
+                                        .addAllTopScores(scores)
+                                        .build())
+                );
+    }
+
+    @Override
+    public void getTopScoresOnce(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
         responseObserver.onNext(TopScoresResponse.newBuilder()
                 .addAllTopScores(topScores(request))
                 .build());

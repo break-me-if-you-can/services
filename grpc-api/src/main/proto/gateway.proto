@@ -8,6 +8,7 @@ option java_outer_classname = "GatewayProto";
 
 import "geese_shared.proto";
 import "clouds_shared.proto";
+import "leaderboard_shared.proto";
 
 package gateway;
 
@@ -23,8 +24,33 @@ service FixtureService {
 }
 
 /*
+ * Leaderboard, service to keep track of top players.
+ */
+service LeaderboardService {
+    /*
+     * Returns current top scores (up to a requested number).
+     */
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
+    /*
+     * Updates single player's score.
+     */
+    rpc UpdateScore (leaderboard.UpdateScoreRequest) returns (leaderboard.UpdateScoreResponse);
+}
+
+/*
+ * Streaming leaderboard service.
+ */
+service StreamingLeaderboardService {
+    /*
+     * Returns a stream of current top scores
+     */
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
+}
+
+
+/*
  * Service to generate player id.
- * Client should call this method to receive a unique player id.
+ * Client should call this method to recieve a uniqie player id.
  */
 service PlayerIdService {
     /*
@@ -34,7 +60,7 @@ service PlayerIdService {
 }
 
 /*
- * Request to receive next lines.
+ * Request to recieve next lines.
  */
 message GetFixtureRequest {
     /*
@@ -80,6 +106,7 @@ message FixtureLine {
      * Array of clouds, complete with positions.
      */
     repeated clouds.CloudLocator cloud_locators = 2;
+
 }
 
 
