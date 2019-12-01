@@ -7,10 +7,6 @@ import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
-import xyz.breakit.leaderboard.PlayerScore;
-import xyz.breakit.leaderboard.TopScoresRequest;
-import xyz.breakit.leaderboard.TopScoresResponse;
-import xyz.breakit.leaderboard.UpdateScoreRequest;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -62,7 +58,7 @@ public class GatewayClient {
                 .setPlayerScore(PlayerScore.newBuilder().setPlayerId("Trololo_100500").setScore(111111).build()).build());
 
         TopScoresRequest topScoresRequest = TopScoresRequest.newBuilder().setSize(3).build();
-        TopScoresResponse topScores = client.getTopScores(topScoresRequest).next();
+        TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
     }
 
