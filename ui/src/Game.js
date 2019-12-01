@@ -101,18 +101,14 @@ export class Game extends Component {
     this.counter = 0;
 
     this.playerIdInterval = setInterval(() => {
-      this.service.getPlayerId()
-        .then((result) => {
-          clearInterval(this.playerIdInterval);
-          this.setState({
-            playerId: result.getPlayerId(),
-          });
+      this.service.getPlayerId((result) => {
+        clearInterval(this.playerIdInterval);
+        this.setState({
+          playerId: result.getPlayerId(),
+        });
 
-          this.loadAssets((loader, resources) => { this.runGame(resources); });
-        },
-        (error) => console.log('then error player id', error)
-        )
-        .catch((error) => console.log('then error player id', error));
+        this.loadAssets((loader, resources) => { this.runGame(resources); });
+      });
     }, CONSTANTS.PLAYER_ID_INTERVAL);
 
     this.focusDiv();
@@ -305,6 +301,22 @@ export class Game extends Component {
     return cloud;
   }
 
+  fixtureCallback = (result) => {
+    let resultList = result.getLinesList();
+
+    if (resultList && resultList.length) {
+      resultList.forEach((line, index) => {
+          setTimeout(() => {
+            let geesePos = line.getGoosePositionsList();
+            geesePos.forEach(position => { this.geese.push(this.createGoose(position)); });
+
+            let cloudsPos = line.getCloudPositionsList();
+            cloudsPos.forEach(position => { this.clouds.push(this.createCloud(position)); });
+          }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
+      });
+    }
+  }
+
   removeGeese = () => {
     this.geese.forEach(item => item.removeFromStage(this.getStage()));
     this.geese = [];
@@ -324,17 +336,14 @@ export class Game extends Component {
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    let playerId = this.state.playerId;
-    let score = this.score;
-
     this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
-      this.service.updatePlayerScore({ playerId, score })
-        .then(
-          (result) => { },
-          (error) => console.log('then player score', error))
-        .catch(
-          (error) => console.log('then player score', error)
-        );
+      this.service.updatePlayerScore(
+        {
+          playerId: this.state.playerId,
+          score: this.score,
+        },
+        (result) => { }
+      );
     }, CONSTANTS.SCORE_INTERVAL);
 
     this.statisticsTopPlayerScoreInterval = setInterval(() => {
@@ -348,45 +357,24 @@ export class Game extends Component {
           leaderboardDown: true,
         });
       }
-      this.service.getTopPlayerScore()
-        .then((result) => {
-            this.leaderboardOk = true;
-            let topScores = result.getTopScoresList()
-            .map(playerScore => {
-              return {
-                id: playerScore.getPlayerId(), 
-                score: playerScore.getScore(),
-              }
-            });
+      this.service.getTopPlayerScore((result) => {
+        this.leaderboardOk = true;
+        let topScores = result.getTopScoresList()
+        .map(playerScore => {
+          return {
+            id: playerScore.getPlayerId(), 
+            score: playerScore.getScore(),
+          }
+        });
 
-            this.setState({
-              topScores: topScores,
-            });
-          },
-        (error) => console.log('then error getTopPlayer', error))
-        .catch((error) => console.log('catch error getTopPlayer', error));
+        this.setState({
+          topScores: topScores,
+        });
+      });
   
     }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
-    this.fixtureInterval = setInterval(
-        () => {this.service.getFixture()
-                  .then((result) => {
-                    let resultList = result.getLinesList();
-
-                    if (resultList && resultList.length) {
-                      resultList.forEach((line, index) => {
-                          setTimeout(() => {
-                            let geesePos = line.getGoosePositionsList();
-                            geesePos.forEach(position => { this.geese.push(this.createGoose(position)); });
-                
-                            let cloudsPos = line.getCloudPositionsList();
-                            cloudsPos.forEach(position => { this.clouds.push(this.createCloud(position)); });
-                          }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
-                      });
-                    }
-                  }, (error) => console.log('then getFixture error', error))
-                  .catch((error) => console.log('catch getFixture error', error))
-                  }, CONSTANTS.FIXTURE_INTERVAL);
+    this.fixtureInterval = setInterval(() => { this.service.getFixture(this.fixtureCallback) }, CONSTANTS.FIXTURE_INTERVAL)
   }
 
   updateEnginesStatus = () => {

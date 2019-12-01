@@ -15,4 +15,4 @@ GATEWAY_PROTO="gateway.proto"
 
 protoc -I="$PROTO_DIR" "$PROTO_DIR/$GATEWAY_PROTO" \
         --js_out=import_style=commonjs:"$GENERATED_DIR" \
-        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
+        --grpc-web_out=import_style=commonjs,mode=grpcweb:"$GENERATED_DIR"
