@@ -4,38 +4,69 @@ import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceImplBase;
-import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
+import xyz.breakit.gateway.clients.leaderboard.ImmutableLeaderboardEntry;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardClient;
+import xyz.breakit.gateway.clients.leaderboard.LeaderboardEntry;
+import xyz.breakit.leaderboard.PlayerScore;
 import xyz.breakit.leaderboard.TopScoresRequest;
 import xyz.breakit.leaderboard.TopScoresResponse;
 import xyz.breakit.leaderboard.UpdateScoreRequest;
 import xyz.breakit.leaderboard.UpdateScoreResponse;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 /**
  * Implementation of gateway leaderboard service.
+ * Currently returns predefined responses, but should make
+ * remote calls to leaderboard service instead.
  */
 @Service
 public class LeaderboardService extends LeaderboardServiceImplBase {
 
-    private static final int DEFAULT_SIZE = 5;
-    private final LeaderboardServiceStub leaderboardClient;
+    private final LeaderboardClient leaderboardClient;
 
     @Autowired
-    public LeaderboardService(LeaderboardServiceStub leaderboardClient) {
+    public LeaderboardService(LeaderboardClient leaderboardClient) {
         this.leaderboardClient = leaderboardClient;
     }
 
     @Override
     public void getTopScores(TopScoresRequest request,
                              StreamObserver<TopScoresResponse> responseObserver) {
-        if (request.getSize() == 0) {
-            request = TopScoresRequest.newBuilder().setSize(DEFAULT_SIZE).build();
-        }
-        leaderboardClient.getTopScoresOnce( request, responseObserver);
+        CompletableFuture<List<LeaderboardEntry>> top5 = leaderboardClient.top5();
+        top5.whenComplete((l, e) -> {
+            if (e != null) {
+                responseObserver.onError(e);
+            } else {
+                List<PlayerScore> playerScores = l.stream()
+                        .map(score -> PlayerScore.newBuilder().setPlayerId(score.name()).setScore(score.score()).build())
+                        .collect(Collectors.toList());
+
+                TopScoresResponse response = TopScoresResponse.newBuilder()
+                        .addAllTopScores(playerScores)
+                        .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+        });
     }
 
     @Override
     public void updateScore(UpdateScoreRequest request,
                             StreamObserver<UpdateScoreResponse> responseObserver) {
-        leaderboardClient.updateScore(request, responseObserver);
+
+        LeaderboardEntry entry = ImmutableLeaderboardEntry
+                .builder()
+                .name(request.getPlayerScore().getPlayerId())
+                .score(request.getPlayerScore().getScore())
+                .build();
+
+        leaderboardClient.updateScore(entry,
+                () -> responseObserver.onNext(UpdateScoreResponse.getDefaultInstance()),
+                responseObserver::onError,
+                responseObserver::onCompleted);
     }
 }
