@@ -32,7 +32,6 @@ import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor;
-import xyz.breakit.gateway.PlayerIdServiceGrpc.PlayerIdServiceStub;
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
@@ -142,8 +141,8 @@ public class Gateway {
     }
 
     @Bean
-    public PlayerIdService userIdService(PlayerIdServiceStub playerIdClient) {
-        return new PlayerIdService(playerIdClient);
+    public PlayerIdService userIdService() {
+        return new PlayerIdService();
     }
 
     @Bean
@@ -152,10 +151,8 @@ public class Gateway {
             @Qualifier("GeeseAdmin") AdminServiceStub geeseAdmin,
             @Qualifier("CloudsAdmin") AdminServiceStub cloudsAdmin,
             @Qualifier("LeadeboardAdmin") AdminServiceStub leaderboardAdmin,
-            @Qualifier("PlayerIdAdmin") AdminServiceStub playerIdAdmin,
             FailureInjectionService failureInjectionService) {
-        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin, leaderboardAdmin, playerIdAdmin,
-                failureInjectionService);
+        return new GatewayAdminService(flags, geeseAdmin, cloudsAdmin, leaderboardAdmin, failureInjectionService);
     }
 
     @Bean
@@ -163,10 +160,8 @@ public class Gateway {
             Flags flags,
             @Qualifier("GeeseHealthcheck") HealthCheckServiceFutureStub geeseHealthcheck,
             @Qualifier("CloudsHealthcheck") HealthCheckServiceFutureStub cloudsHealthcheck,
-            @Qualifier("LeaderboardHealthcheck") HealthCheckServiceFutureStub leaderboardHealthcheck,
-            @Qualifier("PlayerIdHealthcheck") HealthCheckServiceFutureStub playerIdHealthcheck) {
-        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, leaderboardHealthcheck,
-                playerIdHealthcheck);
+            @Qualifier("LeaderboardHealthcheck") HealthCheckServiceFutureStub leaderboardHealthcheck) {
+        return new HealthcheckService(flags, geeseHealthcheck, cloudsHealthcheck, leaderboardHealthcheck);
     }
 
     @Bean
@@ -316,33 +311,6 @@ public class Gateway {
     public HealthCheckServiceFutureStub geeseHealthcheckClient(
             @Qualifier("GeeseChannel") Channel geeseChannel) {
         return HealthCheckServiceGrpc.newFutureStub(geeseChannel);
-    }
-
-    @Bean("PlayerIdChannel")
-    public Channel playerIdChannel(
-            @Value("${grpc.playerid.host:playerid}") String playerIdHost,
-            @Value("${grpc.playerid.port:8110}") int playerIdPort,
-            GrpcTracing grpcTracing) {
-        return ManagedChannelBuilder
-                .forAddress(playerIdHost, playerIdPort)
-                .intercept(grpcTracing.newClientInterceptor())
-                .usePlaintext()
-                .build();
-    }
-
-    @Bean
-    public PlayerIdServiceStub playerIdClient(@Qualifier("PlayerIdChannel") Channel playerIdChannel) {
-        return PlayerIdServiceGrpc.newStub(playerIdChannel);
-    }
-
-    @Bean("PlayerIdHealthcheck")
-    public HealthCheckServiceFutureStub playerIdHealthcheck(@Qualifier("PlayerIdChannel") Channel playerIdChannel) {
-        return HealthCheckServiceGrpc.newFutureStub(playerIdChannel);
-    }
-
-    @Bean("PlayerIdAdmin")
-    public AdminServiceStub playerIdAdmin(@Qualifier("PlayerIdChannel") Channel playerIdChannel) {
-        return AdminServiceGrpc.newStub(playerIdChannel);
     }
 
     @Bean

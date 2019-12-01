@@ -54,7 +54,6 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> playerIdResult = injectLatencyInto(PLAYER_ID_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
 
         try {
@@ -62,7 +61,7 @@ public class AdminController {
             lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, playerIdResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting predemo mode", e);
             throw new RuntimeException(e);
@@ -89,27 +88,6 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/admin/set_mode/2.1_new_demo_with_slow_generate_player_id")
-    public void newDemoWithSlowGeneratePlayerId() {
-
-        flags.setDiverseGeeseEnabled(false);
-        flags.setPartialDegradationEnabled(false);
-        flags.setRetryEnabled(false);
-
-        CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> playerIdResult = injectLatencyInto(PLAYER_ID_SERVICE, 1, 10000000, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
-
-        try {
-            CompletableFuture.allOf(geeseResult, cloudsResult, playerIdResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            LOG.error("Error while setting 2.1_new_demo_with_slow_generate_player_id mode", e);
-            throw new RuntimeException(e);
-        }
-    }
-
     @GetMapping("/admin/set_mode/3_enable_diverse_geese")
     public void demoWithDiverseGeese() {
         flags.setDiverseGeeseEnabled(true);
@@ -120,10 +98,9 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0, 0, false);
         CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
-        CompletableFuture<Object> playerIdResult = injectLatencyInto(PLAYER_ID_SERVICE, 0.0, 0, false);
 
         try {
-            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, playerIdResult, lbResult).get(1, TimeUnit.SECONDS);
+            CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOG.error("Error while setting 3_enable_diverse_geese mode", e);
             throw new RuntimeException(e);

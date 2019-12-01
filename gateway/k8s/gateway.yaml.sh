@@ -32,10 +32,6 @@ spec:
               value: "leaderboard"
             - name: rest_leaderboard_port
               value: "8080"
-            - name: playerid_host
-              value: "playerid"
-            - name: playerid_port
-              value: "8110"
             - name: foobar
               value: "$(date +%s)"
             - name: ZIPKIN_SERVICE_HOST
