@@ -3,10 +3,10 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "xyz.breakit.game.leaderboard";
+option java_package = "xyz.breakit.leaderboard";
 option java_outer_classname = "leaderboardProto";
 
-package game;
+package leaderboard;
 
 /*
  * Leaderboard, service to keep track of top players.
@@ -15,11 +15,11 @@ service LeaderboardService {
     /*
      * Returns current top scores (up to a requested number).
      */
-    rpc GetTopScores (TopScoresRequest) returns (TopScoresResponse);
+    rpc GetTopScores (leaderboard.TopScoresRequest) returns (leaderboard.TopScoresResponse);
     /*
      * Updates single player's score.
      */
-    rpc UpdateScore (UpdateScoreRequest) returns (UpdateScoreResponse);
+    rpc UpdateScore (leaderboard.UpdateScoreRequest) returns (leaderboard.UpdateScoreResponse);
 }
 
 /*
@@ -29,7 +29,7 @@ service StreamingLeaderboardService {
     /*
      * Returns a stream of current top scores
      */
-    rpc StreamTopScores (TopScoresRequest) returns (stream TopScoresResponse);
+    rpc StreamTopScores (leaderboard.TopScoresRequest) returns (stream leaderboard.TopScoresResponse);
 }
 
 /*

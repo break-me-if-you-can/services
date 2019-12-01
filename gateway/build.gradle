@@ -92,7 +92,7 @@ apply plugin: 'application'
 
 startScripts.enabled = false
 
-def mainClass = "xyz.breakit.game.gateway.Gateway"
+def mainClass = "xyz.breakit.gateway.Gateway"
 
 bootJar {
     mainClassName = "${mainClass}"
@@ -101,17 +101,17 @@ bootJar {
 
 task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayClient'
+    main = 'xyz.breakit.gateway.GatewayClient'
 }
 
 task healthCheck(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayHealthcheckClient'
+    main = 'xyz.breakit.gateway.GatewayHealthcheckClient'
 }
 
 task injectFailure(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayAdminClient'
+    main = 'xyz.breakit.gateway.GatewayAdminClient'
 }
 
 def sysprops = System.getProperties()

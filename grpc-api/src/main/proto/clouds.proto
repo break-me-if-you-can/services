@@ -6,6 +6,8 @@ option java_multiple_files = true;
 option java_package = "xyz.breakit.clouds";
 option java_outer_classname = "CloudsProto";
 
+import "clouds_shared.proto";
+
 package clouds;
 
 /*
@@ -55,13 +57,4 @@ message CloudsLine {
      * Array of clouds in the given line.
      */
     repeated CloudLocator cloud_locators = 1;
-}
-
-message CloudLocator {
-    /*
-     * Cloud position in a line. Number represent verticals position
-     * of a cloud. For example, 10 means there is a cloud in the
-     * tenth position of the line.
-     */
-    int32 cloud_position = 1;
 }

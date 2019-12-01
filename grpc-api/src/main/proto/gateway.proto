@@ -3,13 +3,14 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "xyz.breakit.game.gateway";
+option java_package = "xyz.breakit.gateway";
 option java_outer_classname = "GatewayProto";
 
-import "geese.proto";
-import "clouds.proto";
+import "geese_shared.proto";
+import "clouds_shared.proto";
 
-package game;
+package gateway;
+
 
 /*
  * Unary service to request game fixture.
@@ -19,6 +20,17 @@ service FixtureService {
      * Return next lines of a game fixture.
      */
     rpc GetFixture (GetFixtureRequest) returns (FixtureResponse);
+}
+
+/*
+ * Service to generate player id.
+ * Client should call this method to receive a unique player id.
+ */
+service PlayerIdService {
+    /*
+     * Generates next Player id.
+     */
+    rpc GeneratePlayerId(GeneratePlayerIdRequest) returns (GeneratePlayerIdResponse);
 }
 
 /*
@@ -68,4 +80,18 @@ message FixtureLine {
      * Array of clouds, complete with positions.
      */
     repeated clouds.CloudLocator cloud_locators = 2;
+}
+
+
+/*
+ * Request for player id generation. Empty message.
+ */
+message GeneratePlayerIdRequest {
+}
+
+/*
+ * Response with a generated player id.
+ */
+message GeneratePlayerIdResponse {
+    string player_id = 1;
 }

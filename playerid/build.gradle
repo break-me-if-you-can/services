@@ -49,7 +49,7 @@ apply plugin: 'application'
 
 startScripts.enabled = false
 
-def mainClassName = "xyz.breakit.game.playerid.PlayerIdServer"
+def mainClassName = "xyz.breakit.playerid.PlayerIdServer"
 
 jar {
     manifest {
