@@ -52,6 +52,7 @@ export class Game extends Component {
     this.statisticsUpdatePlayerScoreInterval = null;
     this.statisticsTopPlayerScoreInterval = null;
     this.fixtureInterval = null;
+    this.playerIdInterval = null;
     this.leaderboardComboPressed = false;
 
     var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
@@ -98,22 +99,20 @@ export class Game extends Component {
     this.mainDiv.append(this.app.view);
     this.counter = 0;
 
+    this.playerIdInterval = setInterval(() => {
       this.service.getPlayerId()
         .then((result) => {
+          clearInterval(this.playerIdInterval);
           this.setState({
             playerId: result.getPlayerId(),
           });
 
           this.loadAssets((loader, resources) => { this.runGame(resources); });
         },
-        (error) => {
-          this.setState({
-            playerId: 'Timeout :) :) :)',
-          });
-          console.log('then error player id', error)
-        }
+        (error) => console.log('then error player id', error)
         )
         .catch((error) => console.log('then error player id', error));
+    }, CONSTANTS.PLAYER_ID_INTERVAL);
 
     this.focusDiv();
   }
@@ -319,20 +318,19 @@ export class Game extends Component {
     this.clearIntervals();
 
     this.scoreInterval = setInterval( () => {
-
       this.setState({
         score: this.score,
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
-      let playerId = this.state.playerId;
-      let score = this.score;
+    let playerId = this.state.playerId;
+    let score = this.score;
 
+    this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
       this.service.updatePlayerScore({ playerId, score })
         .then(
           (result) => { },
-          (error) => console.log('then player score error', error))
+          (error) => console.log('then player score', error))
         .catch(
           (error) => console.log('then player score', error)
         );
@@ -370,9 +368,7 @@ export class Game extends Component {
     }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
     this.fixtureInterval = setInterval(
-        () => {
-          
-          this.service.getFixture()
+        () => {this.service.getFixture()
                   .then((result) => {
                     let resultList = result.getLinesList();
 
@@ -389,10 +385,7 @@ export class Game extends Component {
                     }
                   }, (error) => console.log('then getFixture error', error))
                   .catch((error) => console.log('catch getFixture error', error))
-                  }
-                  
-                  
-                  , CONSTANTS.FIXTURE_INTERVAL);
+                  }, CONSTANTS.FIXTURE_INTERVAL);
   }
 
   updateEnginesStatus = () => {
@@ -662,30 +655,6 @@ export class Game extends Component {
       }
     }
 
-    let stats;
-    if (this.state.playerId) {
-      stats = (<div>
-        <div className={"leaderboard " + leaderboardBlinking}>
-          <div className="black">TOP 5</div>
-          <div>{ topScoresList }</div>
-        </div>
-        <div className="status">
-          <h3>ENGINES</h3>
-          <div> { enginesStatusList } </div>
-        </div>
-        <div className="profile">
-          <p className="black">{ this.state.playerId } <br/> score</p>
-          <p>{ this.state.score }</p>
-        </div>
-      </div>);
-    } else {
-      stats = (
-        <div className="stats-spinner">
-          <Messages.Spinner />
-        </div>
-      );
-    }
-
     let leaderboardBlinking = '';
     if (this.leaderboardComboPressed && this.state.leaderboardDown) {
       leaderboardBlinking = 'blinking'
@@ -696,21 +665,18 @@ export class Game extends Component {
         { message}
         <div className={ "game" + portraitClass }>
           <div className="left stats">
-            {stats}
-            {/* !this.state.userLoaded && <Messages.Spinner />
-            this.state.userLoaded && 
-              <div className={"leaderboard " + leaderboardBlinking}>
-                <div className="black">TOP 5</div>
-                <div>{ topScoresList }</div>
-              </div>
-              <div className="status">
-                <h3>ENGINES</h3>
+            <div className={"leaderboard " + leaderboardBlinking}>
+              <div className="black">TOP 5</div>
+              <div>{ topScoresList }</div>
+            </div>
+            <div className="status">
+              <h3>ENGINES</h3>
                 <div> { enginesStatusList } </div>
-              </div>
-              <div className="profile">
-                <p className="black">{ this.state.playerId } <br/> score</p>
-                <p>{ this.state.score }</p>
-              </div> */}
+            </div>
+            <div className="profile">
+              <p className="black">{ this.state.playerId } <br/> score</p>
+              <p>{ this.state.score }</p>
+            </div>
           </div>
           <div className="right field" ref={this.gameRefCallback}
               onKeyDown={(e) => this.onKeyDownHandler(e) }
