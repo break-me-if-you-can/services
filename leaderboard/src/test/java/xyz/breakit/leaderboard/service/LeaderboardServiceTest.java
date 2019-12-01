@@ -12,7 +12,7 @@ import xyz.breakit.leaderboard.service.LeaderboardService;
 import static org.junit.Assert.*;
 
 public class LeaderboardServiceTest {
-    private LeaderboardService leaderboardService = new LeaderboardService();
+    private LeaderboardService leaderboardService = new LeaderboardService(0);
 
     @Test(timeout = 1000L)
     public void testLeaderboardUpdatesFlux() {

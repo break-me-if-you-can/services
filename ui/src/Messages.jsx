@@ -21,10 +21,18 @@ export function GameOver(props) {
     </div>);
 }
 
+export function Notification(props) {
+    return (
+        <div className="notification_container">
+            <div className="notification_content">{props.message}</div>
+        </div>
+    );
+}
+
 export function Portrait() {
     return (<div className="message portrait"></div>);
 }
 
 export function Spinner() {
-    return (<div className="message spinner"></div>);
+    return (<div className="spinner"></div>);
 }

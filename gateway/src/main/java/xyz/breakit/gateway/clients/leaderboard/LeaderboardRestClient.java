@@ -20,9 +20,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Consumer;
 
 @Service
-public class LeaderboardClient {
+public class LeaderboardRestClient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LeaderboardRestClient.class);
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
 
@@ -40,9 +40,9 @@ public class LeaderboardClient {
     private RetryPolicy currentRetryPolicy;
 
     @Autowired
-    public LeaderboardClient(
-            @Value("${rest.leaderboard.host}") String leaderboardHost,
-            @Value("${rest.leaderboard.port}") int leaderboardPort,
+    public LeaderboardRestClient(
+            @Value("${rest.leaderboard.host:leaderboard}") String leaderboardHost,
+            @Value("${rest.leaderboard.port:8080}") int leaderboardPort,
             @Qualifier("tracingWebClient") WebClient webClientTemplate
     ) {
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;

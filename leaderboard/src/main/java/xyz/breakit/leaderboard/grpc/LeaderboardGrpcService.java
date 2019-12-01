@@ -3,8 +3,6 @@ package xyz.breakit.leaderboard.grpc;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 import xyz.breakit.leaderboard.*;
 import xyz.breakit.leaderboard.service.LeaderboardService;
 
@@ -22,21 +20,29 @@ public class LeaderboardGrpcService extends LeaderboardServiceGrpc.LeaderboardSe
     }
 
     @Override
-    public void getTopScores(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
+    public void getTopScoresStream(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
         responseObserver.onNext(TopScoresResponse.newBuilder()
                 .addAllTopScores(topScores(request))
                 .build());
 
         leaderboardService.getLeaderboardUpdatesFlux()
-                .log()
                 .map(updated -> topScores(request))
-                .doOnNext(scores -> responseObserver.onNext(
-                        TopScoresResponse.newBuilder()
-                                .addAllTopScores(scores)
-                                .build()))
                 .doFinally(signalType -> responseObserver.onCompleted())
-                .subscribe();
+                .subscribe(
+                        scores -> responseObserver.onNext(
+                                TopScoresResponse.newBuilder()
+                                        .addAllTopScores(scores)
+                                        .build())
+                );
+    }
 
+    @Override
+    public void getTopScoresOnce(TopScoresRequest request, StreamObserver<TopScoresResponse> responseObserver) {
+        responseObserver.onNext(TopScoresResponse.newBuilder()
+                .addAllTopScores(topScores(request))
+                .build());
+
+        responseObserver.onCompleted();
     }
 
     private List<PlayerScore> topScores(TopScoresRequest request) {
