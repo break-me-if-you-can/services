@@ -11,6 +11,7 @@ import com.netflix.concurrency.limits.grpc.server.GrpcServerLimiterBuilder;
 import com.netflix.concurrency.limits.grpc.server.GrpcServerRequestContext;
 import com.netflix.concurrency.limits.limit.Gradient2Limit;
 import io.grpc.*;
+import io.grpc.protobuf.services.ProtoReflectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,7 +93,7 @@ public class Gateway {
             ForceNewTraceServerInterceptor forceNewTraceServerInterceptor,
             FailureInjectionService failureInjectionService,
             InjectedFailureProvider failureProvider
-            ) {
+    ) {
 
         AddLatencyServerInterceptor latencyInterceptor = new AddLatencyServerInterceptor(failureProvider);
 
@@ -102,6 +103,7 @@ public class Gateway {
                 .addService(leaderboardService)
                 .addService(adminService)
                 .addService(healthcheckService)
+                .addService(ProtoReflectionService.newInstance())
                 .intercept(grpcTracing.newServerInterceptor())
                 .intercept(forceNewTraceServerInterceptor)
                 .addService(new FailureInjectionAdminService(new FailureInjectionService(failureProvider, failureProvider)))
