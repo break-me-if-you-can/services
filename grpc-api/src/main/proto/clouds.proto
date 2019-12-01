@@ -52,16 +52,9 @@ message CloudsResponse {
  */
 message CloudsLine {
     /*
-     * Array of clouds in the given line.
+     * Array of clouds. Numbers in the array represent vertical positions
+     * of clouds. For example, [2, 14] array means there are clouds in the second
+     * and fourteens column of the line.
      */
-    repeated CloudLocator cloud_locators = 1;
-}
-
-message CloudLocator {
-    /*
-     * Cloud position in a line. Number represent verticals position
-     * of a cloud. For example, 10 means there is a cloud in the
-     * tenth position of the line.
-     */
-    int32 cloud_position = 1;
+    repeated int32 cloud_positions = 1;
 }

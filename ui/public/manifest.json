@@ -1,0 +1,16 @@
+{
+  "short_name": "Cloud Native Geese 234",
+  "name": "Break Me If You Can Demo App",
+  "icons": [
+    {
+      "src": "./favicon.ico",
+      "sizes": "152x186",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation":  "landscape",
+  "theme_color": "#512da8",
+  "background_color": "#0000ff"
+}

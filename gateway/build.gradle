@@ -27,8 +27,8 @@ apply plugin: 'io.spring.dependency-management'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def grpcVersion = '1.23.0'
-def protobufVersion = '3.9.0'
+def grpcVersion = '1.16.1'
+def protobufVersion = '3.5.1'
 
 repositories {
     jcenter()
@@ -61,13 +61,12 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
 
     compile group: 'net.jodah', name: 'failsafe', version: '1.1.0'
-    compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.3.6'
+    compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.1.4'
 
-    compile "com.google.api.grpc:proto-google-common-protos:1.16.0"
+    compile "com.google.api.grpc:proto-google-common-protos:1.12.0"
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-services:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"
     compile "javax.annotation:javax.annotation-api:1.2"
 
@@ -78,7 +77,7 @@ dependencies {
     compile "xyz.breakit:grpc-api"
     compile "xyz.breakit:grpc-common"
 
-    runtimeOnly "io.opencensus:opencensus-impl:0.24.0"
+    runtimeOnly "io.opencensus:opencensus-impl:0.12.3"
 
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
@@ -92,7 +91,7 @@ apply plugin: 'application'
 
 startScripts.enabled = false
 
-def mainClass = "xyz.breakit.game.gateway.Gateway"
+def mainClass = "xyz.breakit.gateway.Gateway"
 
 bootJar {
     mainClassName = "${mainClass}"
@@ -101,17 +100,17 @@ bootJar {
 
 task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayClient'
+    main = 'xyz.breakit.gateway.GatewayClient'
 }
 
 task healthCheck(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayHealthcheckClient'
+    main = 'xyz.breakit.gateway.GatewayHealthcheckClient'
 }
 
 task injectFailure(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.game.gateway.GatewayAdminClient'
+    main = 'xyz.breakit.gateway.GatewayAdminClient'
 }
 
 def sysprops = System.getProperties()

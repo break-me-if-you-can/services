@@ -1,76 +1,105 @@
-import { GetFixtureRequest } from '../generated/gateway_pb';
+const grpc = {};
+grpc.web = require('grpc-web');
 
-import { TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/leaderboard_pb';
-
-import { GeneratePlayerIdRequest } from '../generated/playerid_pb';
-
-import { FixtureServicePromiseClient } from '../generated/gateway_grpc_web_pb';
-
-import { LeaderboardServicePromiseClient, StreamingLeaderboardServicePromiseClient } from '../generated/leaderboard_grpc_web_pb';
-
-import { PlayerIdServicePromiseClient } from '../generated/playerid_grpc_web_pb';
-
+import * as Requests from '../generated/gateway_pb';
+import * as Clients from '../generated/gateway_grpc_web_pb';
 import { CONSTANTS } from './Constants';
 
 export class Service {
-    getFixture = () => {
-        const request = new GetFixtureRequest();
+  
+    constructor(props) {
+      this.fixtureServiceClient = new Clients.FixtureServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.playerIdServiceClient = new Clients.PlayerIdServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.leaderboardServiceClient = new Clients.LeaderboardServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+    }
+  
+    getFixture = (callback) => {
+        let getFixtureRequest = new Requests.GetFixtureRequest();
+            getFixtureRequest.setLineWidth(CONSTANTS.FIELD_WIDTH);
+            getFixtureRequest.setLinesCount(CONSTANTS.LINES_COUNT);
+            getFixtureRequest.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
+            getFixtureRequest.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
 
-        request.setLineWidth(CONSTANTS.FIELD_WIDTH);
-        request.setLinesCount(CONSTANTS.LINES_COUNT);
-        request.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
-        request.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        return this.fixtureServicePromiseClient.getFixture(request, this.getMetadata());
+        call = this.fixtureServiceClient
+            .getFixture(getFixtureRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+            );
     }
 
-    getPlayerId = () => {
-        const request = new GeneratePlayerIdRequest();
+    getPlayerId = (callback) => {
+        let generatePlayerIdRequest = new Requests.GeneratePlayerIdRequest();
 
-        const metadata = this.getMetadata();
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
+        call = this.playerIdServiceClient
+            .generatePlayerId(generatePlayerIdRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
 
-    getTopPlayerScore = () => {
-        const request = new TopScoresRequest();
+    getTopPlayerScore = (callback) => {
+        let topScoresRequest = new Requests.TopScoresRequest();
+        topScoresRequest.setSize();
 
-        request.setSize(5);
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        return this.leaderboardServicePromiseClient.getTopScores(request, this.getMetadata());
+        call = this.leaderboardServiceClient
+            .getTopScores(topScoresRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
 
-    openTopScoreStream = () => {
-        const request = new TopScoresRequest();
-
-        request.setSize(5);
-
-        return this.streamingLeaderboardServicePromiseClient.streamTopScores(request, this.getMetadata());
-    }
-
-    updatePlayerScore = ({ playerId, score }) => {
-        const playerScore = new PlayerScore();
-
-        playerScore.setPlayerId(playerId);
-        playerScore.setScore(score);
-
-        const updateScoreRequest = new UpdateScoreRequest();
-
+    updatePlayerScore = (data, callback) => {
+        let playerScore = new Requests.PlayerScore();
+        playerScore.setPlayerId(data.playerId);
+        playerScore.setScore(data.score);
+        
+        let updateScoreRequest = new Requests.UpdateScoreRequest();
         updateScoreRequest.setPlayerScore(playerScore);
 
-        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, this.getMetadata());
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
+
+        call = this.leaderboardServiceClient
+            .updateScore(updateScoreRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
-
-    constructor(withDeadline) {
-        this.withDeadline = withDeadline;
-
-        this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.playerIdServicePromiseClient = new PlayerIdServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.streamingLeaderboardServicePromiseClient = new StreamingLeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-    }
-
-    getMetadata = () => (this.withDeadline ? { deadline: this.getDeadline() } : {});
-
-    getDeadline = (timeout = CONSTANTS.DEFAULT_TIMEOUT) => (new Date()).getTime() + timeout;
 }

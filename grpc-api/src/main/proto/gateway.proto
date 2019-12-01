@@ -3,13 +3,10 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "xyz.breakit.game.gateway";
+option java_package = "xyz.breakit.gateway";
 option java_outer_classname = "GatewayProto";
 
-import "geese.proto";
-import "clouds.proto";
-
-package game;
+package gateway;
 
 /*
  * Unary service to request game fixture.
@@ -22,7 +19,32 @@ service FixtureService {
 }
 
 /*
- * Request to receive next lines.
+ * Leaderbaord, service to keep track of top players.
+ */
+service LeaderboardService {
+    /*
+     * Returns current top scores (up to a requested number).
+     */
+    rpc GetTopScores (TopScoresRequest) returns (TopScoresResponse);
+    /*
+     * Updates single player's score.
+     */
+    rpc UpdateScore (UpdateScoreRequest) returns (UpdateScoreResponse);
+}
+
+/*
+ * Service to generate player id.
+ * Client should call this method to recieve a uniqie player id.
+ */
+service PlayerIdService {
+    /*
+     * Generates next Player id.
+     */
+    rpc GeneratePlayerId(GeneratePlayerIdRequest) returns (GeneratePlayerIdResponse);
+}
+
+/*
+ * Request to recieve next lines.
  */
 message GetFixtureRequest {
     /*
@@ -60,12 +82,79 @@ message FixtureResponse {
  */
 message FixtureLine {
     /*
-     * Array of geese, complete with positions and types.
+     * Array of geese. Numbers in the array represent vertical positions
+     * of geese. For example, [1, 3] array means there are geese in the first
+     * and third column of the line.
      */
-
-    repeated geese.GooseLocator goose_locators = 1;
+    repeated int32 goose_positions = 1;
     /*
-     * Array of clouds, complete with positions.
+     * Array of clouds. Numbers in the array represent vertical positions
+     * of clouds. For example, [2, 4] array means there are clouds in the second
+     * and fourth column of the line.
      */
-    repeated clouds.CloudLocator cloud_locators = 2;
+    repeated int32 cloud_positions = 2;
+}
+
+/*
+ * Contains single player's score.
+ */
+message PlayerScore {
+    /*
+     * Player's unique id.
+     */
+    string player_id = 1;
+    /*
+     * Current player's score.
+     */
+    int32 score = 2;
+}
+
+/*
+ * Request to request current top scores.
+ */
+message TopScoresRequest {
+    /*
+     * Max number of scores to return.
+     */
+    int32 size = 1;
+}
+
+/*
+ * Contains current top scores.
+ */
+message TopScoresResponse {
+    /*
+     * List of top scores.
+     * Position in this list represents player'sc position in the leaderboard.
+     */
+    repeated PlayerScore top_scores = 1;
+}
+
+/*
+ * Request to update player's score.
+ */
+message UpdateScoreRequest {
+    /*
+     * Contains player's unique id and new score.
+     */
+    PlayerScore player_score = 1;
+}
+
+/*
+ * Response message, currently empty.
+ */
+message UpdateScoreResponse {
+}
+
+/*
+ * Request for player id generation. Empty message.
+ */
+message GeneratePlayerIdRequest {
+}
+
+/*
+ * Response with a generated player id.
+ */
+message GeneratePlayerIdResponse {
+    string player_id = 1;
 }
