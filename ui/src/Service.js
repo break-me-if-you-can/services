@@ -32,6 +32,7 @@ export class Service {
     getPlayerId = () => {
         let request = new GeneratePlayerIdRequest();
 
+        const date = new Date();
         const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
 
         return this.playerIdServicePromiseClient.generatePlayerId(request, { deadline });
@@ -41,6 +42,7 @@ export class Service {
         let request = new TopScoresRequest();
         request.setSize();
 
+        const date = new Date();
         const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
 
         return this.leaderboardServicePromiseClient.getTopScores(request, { deadline });
