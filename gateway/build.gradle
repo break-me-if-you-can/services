@@ -67,7 +67,6 @@ dependencies {
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-services:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"
     compile "javax.annotation:javax.annotation-api:1.2"
 
