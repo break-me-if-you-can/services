@@ -59,7 +59,7 @@ public class AdminController {
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
-            lbAdminClient.initStrangeLeaderboard().get(1, TimeUnit.SECONDS);
+            lbAdminClient.clear().get(1, TimeUnit.SECONDS);
             lbClient.disableRetries();
 
             CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, playerIdResult, lbResult).get(1, TimeUnit.SECONDS);
