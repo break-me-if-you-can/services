@@ -1,6 +1,3 @@
-import { IMAGES } from './Assets';
-
-
 export function mobileAndTabletcheck() {
     let check = false;
 
@@ -15,19 +12,4 @@ export function mobileAndTabletcheck() {
 
 export function createArray(count, object) {
     return new Array(count).fill(object);
-}
-
-export function loadAssets(loader, onAssetsLoaded) {
-    loader
-        .add('gooseBlackSpriteSheet', IMAGES.GOOSE_BLACK_SPRITESHEET)
-        .add('gooseCanadaSpriteSheet', IMAGES.GOOSE_CANADA_SPRITESHEET)
-        .add('gooseGreySpriteSheet', IMAGES.GOOSE_GREY_SPRITESHEET)
-        .add('gooseWhiteSpriteSheet', IMAGES.GOOSE_WHITE_SPRITESHEET)
-        .add('explosionSpriteSheet', IMAGES.EXPLOSION_SPRITESHEET)
-        .add('aircraftTurnLeftSpriteSheet', IMAGES.AIRCRAFT_LEFT_TURN_SPRITESHEET)
-        .add('aircraftTurnRightSpriteSheet', IMAGES.AIRCRAFT_RIGHT_TURN_SPRITESHEET)
-        .add('cloudTexture', IMAGES.CLOUD)
-        .add('waterTexture', IMAGES.WATER)
-        .add('banksTexture', IMAGES.BANKS)
-        .load(onAssetsLoaded);
 }

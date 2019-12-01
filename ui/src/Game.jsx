@@ -9,18 +9,17 @@ import { Explosion } from './gameobjects/Explosion';
 import { ParallaxTexture } from './gameobjects/ParallaxTexture';
 
 import { CONSTANTS } from './Constants';
+import { IMAGES } from './Assets';
 import { StatusCode } from 'grpc-web';
 
 import { Portrait, Spinner, GameOver, Notification } from './Messages';
 import * as Helper from './helper';
 import { GooseType } from '../generated/geese_shared_pb';
 
+
 export class Game extends Component {
     constructor(props) {
         super(props);
-
-        PIXI.utils.skipHello();
-
         const width = CONSTANTS.FIELD_WIDTH;
         const height = CONSTANTS.FIELD_HEIGHT;
         const transparent = false;
@@ -30,11 +29,11 @@ export class Game extends Component {
 
         const playerId = '';
         const score = 0;
-        const topScores = [];
+        const topScores = Helper.createArray(CONSTANTS.TOP_SCORES_COUNT, { playerId, score });
         const enginesStatus = Helper.createArray(CONSTANTS.ENGINES_COUNT, CONSTANTS.ENGINE_ALIVE_CLASSNAME);
         const portrait = window.innerHeight > window.innerWidth;
         const gameOver = false;
-        const leaderboardOk = false;
+        const leaderboardOk = true;
 
         this.state = { playerId, score, topScores, enginesStatus, portrait, gameOver, leaderboardOk };
 
@@ -70,20 +69,11 @@ export class Game extends Component {
 
         this.setState({
             score: this.score,
-            enginesStatus: Helper.createArray(CONSTANTS.ENGINES_COUNT, CONSTANTS.ENGINE_ALIVE_CLASSNAME),
+            enginesStatus: new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME),
             gameOver: false,
+            multipleTypes: true,
             useStreamingPressed: false
         });
-
-        this.focusDiv();
-    }
-
-    gameRefCallback = (element) => {
-        this.mainDiv = element;
-        this.mainDiv.append(this.app.view);
-        this.counter = 0;
-
-        this.getPlayerIdCall();
 
         this.focusDiv();
     }
@@ -109,7 +99,6 @@ export class Game extends Component {
             case StatusCode.DEADLINE_EXCEEDED:
             case StatusCode.UNAVAILABLE:
                 this.setState({
-                    leaderboardOk: true,
                     notification: CONSTANTS.DEADLINE_NOTIFICATION
                 });
                 break;
@@ -117,23 +106,50 @@ export class Game extends Component {
                 this.handleError(error);
         }
 
-        this.getTopPlayerScoreCall();
-
         if (this.statisticsTopPlayerScoreInterval) {
             clearInterval(this.statisticsTopPlayerScoreInterval);
         }
         this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
+
     }
 
     handleLeaderboardError = () => this.setState({ leaderboardOk: false });
 
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
-        const leaderboardOk = true;
 
-        this.setState({ playerId, leaderboardOk });
+        this.setState({ playerId });
 
-        Helper.loadAssets(this.loader, (loader, resources) => this.runGame(resources));
+        this.loadAssets((loader, resources) => this.runGame(resources));
+    }
+
+    loadAssets = (onAssetsLoaded) => {
+        this.loader
+            .add('gooseBlackSpriteSheet', IMAGES.GOOSE_BLACK_SPRITESHEET)
+            .add('gooseCanadaSpriteSheet', IMAGES.GOOSE_CANADA_SPRITESHEET)
+            .add('gooseGreySpriteSheet', IMAGES.GOOSE_GREY_SPRITESHEET)
+            .add('gooseWhiteSpriteSheet', IMAGES.GOOSE_WHITE_SPRITESHEET)
+            .add('explosionSpriteSheet', IMAGES.EXPLOSION_SPRITESHEET)
+            .add('aircraftTurnLeftSpriteSheet', IMAGES.AIRCRAFT_LEFT_TURN_SPRITESHEET)
+            .add('aircraftTurnRightSpriteSheet', IMAGES.AIRCRAFT_RIGHT_TURN_SPRITESHEET)
+            .add('cloudTexture', IMAGES.CLOUD)
+            .add('waterTexture', IMAGES.WATER)
+            .add('banksTexture', IMAGES.BANKS)
+            .load(onAssetsLoaded);
+    }
+
+    gameRefCallback = (element) => {
+        this.mainDiv = element;
+        this.mainDiv.append(this.app.view);
+        this.counter = 0;
+
+        this.service.getPlayerId()
+            .then(
+                (result) => this.handleGetPalyerIdResult(result),
+                (error) => this.handleGetPlayerIdError(error)
+            );
+
+        this.focusDiv();
     }
 
     runGame = (resources) => {
@@ -181,7 +197,15 @@ export class Game extends Component {
         this.gooseBlackFrames = getGooseFrames(resources.gooseBlackSpriteSheet);
         this.gooseCanadaFrames = getGooseFrames(resources.gooseCanadaSpriteSheet);
         this.gooseWhiteFrames = getGooseFrames(resources.gooseWhiteSpriteSheet);
-        this.gooseGreyFrames = getGooseFrames(resources.gooseGreySpriteSheet);
+
+
+        this.gooseGreyFrames = [];
+        this.gooseGreyFrames.push(
+            new PIXI.Texture(
+                resources.gooseGreySpriteSheet.texture,
+                new PIXI.Rectangle(0, 0, 62, 110)
+            )
+        );
 
         this.explosionFrames = [];
         for (let i = 0; i < CONSTANTS.EXPLOSION_FRAMES_COUNT; i++) {
@@ -257,7 +281,7 @@ export class Game extends Component {
                 }
 
                 if (Math.abs(goose.y - position.y) < CONSTANTS.AIRCRAFT_HEIGHT / 2 && Math.abs(goose.x - position.x) < CONSTANTS.AIRCRAFT_WIDTH / 2) {
-                    if (goose.type === GooseType.GOOSE_TYPE_GREY_GOOSE) {
+                    if (goose.type === GooseType.GOOSE_TYPE_GREY_GOOSE && this.collisionsCounter > 0) {
                         this.collisionsCounter = CONSTANTS.ENGINES_COUNT;
                     } else {
                         this.collisionsCounter++;
@@ -300,18 +324,22 @@ export class Game extends Component {
     createGoose(locator) {
         let gooseFrames;
 
-        switch (locator.getGooseType()) {
-            case GooseType.GOOSE_TYPE_BLACK_GOOSE:
-                gooseFrames = this.gooseBlackFrames;
-                break;
-            case GooseType.GOOSE_TYPE_WHITE_GOOSE:
-                gooseFrames = this.gooseWhiteFrames;
-                break;
-            case GooseType.GOOSE_TYPE_GREY_GOOSE:
-                gooseFrames = this.gooseGreyFrames;
-                break;
-            default:
-                gooseFrames = this.gooseCanadaFrames;
+        if (this.state.multipleTypes) {
+            switch (locator.getGooseType()) {
+                case GooseType.GOOSE_TYPE_BLACK_GOOSE:
+                    gooseFrames = this.gooseBlackFrames;
+                    break;
+                case GooseType.GOOSE_TYPE_WHITE_GOOSE:
+                    gooseFrames = this.gooseWhiteFrames;
+                    break;
+                case GooseType.GOOSE_TYPE_GREY_GOOSE:
+                    gooseFrames = this.gooseGreyFrames;
+                    break;
+                default:
+                    gooseFrames = this.gooseCanadaFrames;
+            }
+        } else {
+            gooseFrames = this.gooseCanadaFrames;
         }
 
         const goose = new Goose({
@@ -392,7 +420,7 @@ export class Game extends Component {
             });
 
         this.setState({
-            topScores,
+            topScores: topScores,
             leaderboardOk: true
         });
     }
@@ -411,14 +439,6 @@ export class Game extends Component {
 
             cloudsLocators.forEach(locator => this.clouds.push(this.createCloud(locator)));
         }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
-    }
-
-    getPlayerIdCall = () => {
-        this.service.getPlayerId()
-            .then(
-                (result) => this.handleGetPalyerIdResult(result),
-                (error) => this.handleGetPlayerIdError(error)
-            );
     }
 
     getFixtureCall = () => {
@@ -446,17 +466,13 @@ export class Game extends Component {
     runIntervals = () => {
         this.clearIntervals();
 
-        if (this.state.playerId) {
-            this.scoreInterval = setInterval(() => this.setState({ score: this.score }), CONSTANTS.SCORE_INTERVAL);
+        this.scoreInterval = setInterval(() => this.setState({ score: this.score }), CONSTANTS.SCORE_INTERVAL);
 
-            this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
+        this.statisticsUpdatePlayerScoreInterval = setInterval(this.updatePlayerScoreCall.bind(this), CONSTANTS.SCORE_INTERVAL);
 
-            if (!this.state.useStreamingPressed) {
-                this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
-            }
+        this.statisticsTopPlayerScoreInterval = setInterval(this.getTopPlayerScoreCall.bind(this), CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
-            this.fixtureInterval = setInterval(this.getFixtureCall.bind(this), CONSTANTS.FIXTURE_INTERVAL);
-        }
+        this.fixtureInterval = setInterval(this.getFixtureCall.bind(this), CONSTANTS.FIXTURE_INTERVAL);
     }
 
     updateEnginesStatus = () => {
@@ -581,7 +597,9 @@ export class Game extends Component {
         }
     }
 
-    onOrientationChangedHandler = () => this.checkOrientation();
+    onOrientationChangedHandler = () => {
+        this.checkOrientation();
+    }
 
     checkOrientation() {
         const isLandscape = window.innerHeight < window.innerWidth;
@@ -622,7 +640,10 @@ export class Game extends Component {
             this.leaderboardComboPressed = true;
         } else if (event.keyCode === CONSTANTS.Y_KEYCODE && event.ctrlKey) { // y + CTRL: LB on
             this.leaderboardComboPressed = false;
+        } else if (event.keyCode === CONSTANTS.D_KEYCODE && event.ctrlKey) { // d + CTRL: multiple types toggle
+            this.setState((prevState) => ({ multipleTypes: !prevState.multipleTypes }));
         } else if (event.keyCode === CONSTANTS.T_KEYCODE && event.ctrlKey) { // t + CTRL: deadline/timeout
+            this.setState({ playerId: '' });
             this.deadline = !this.deadline;
 
             this.service = new Service(this.deadline);
@@ -632,12 +653,12 @@ export class Game extends Component {
                     (result) => this.setState({ playerId: result.getPlayerId() }),
                     (error) => this.handleGetPlayerIdError(error)
                 );
-        } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey && !this.state.useStreamingPressed) { // s + CTRL: stream toggle
-            if (this.statisticsTopPlayerScoreInterval) {
-                clearInterval(this.statisticsTopPlayerScoreInterval);
+        } else if (event.keyCode === CONSTANTS.S_KEYCODE && event.ctrlKey) { // s + CTRL: stream toggle
+            if (!this.state.useStreamingPressed) {
+                this.setState({ useStreamingPressed: true });
+
+                this.subscribeToStream();
             }
-            this.setState({ useStreamingPressed: true });
-            this.subscribeToStream();
         }
     }
 
@@ -647,10 +668,8 @@ export class Game extends Component {
 
     onLeftArrowTouchEnd = () => {
         clearInterval(this.leftArrowIntervalId);
-        if (this.aircraft) {
-            this.aircraft.removeFromStage(this.getStage());
-            this.aircraft.showStraight(this.getStage());
-        }
+        this.aircraft.removeFromStage(this.getStage());
+        this.aircraft.showStraight(this.getStage());
     }
 
     onRightArrowTouchStart = () => {
@@ -659,17 +678,13 @@ export class Game extends Component {
 
     onRightArrowTouchEnd = () => {
         clearInterval(this.rightArrowIntervalId);
-        if (this.aircraft) {
-            this.aircraft.removeFromStage(this.getStage());
-            this.aircraft.showStraight(this.getStage());
-        }
+        this.aircraft.removeFromStage(this.getStage());
+        this.aircraft.showStraight(this.getStage());
     }
 
     onKeyUpHandler = () => {
-        if (this.aircraft) {
-            this.aircraft.removeFromStage(this.getStage());
-            this.aircraft.showStraight(this.getStage());
-        }
+        this.aircraft.removeFromStage(this.getStage());
+        this.aircraft.showStraight(this.getStage());
     }
 
     startAgain = () => {
@@ -747,7 +762,8 @@ export class Game extends Component {
 
         let stats;
 
-        if (this.state.leaderboardOk) { // } this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
+        if ((this.state.playerId && this.state.leaderboardOk) ||
+            this.state.notification === CONSTANTS.DEADLINE_NOTIFICATION) {
             stats = (<div>
                 <div className={`leaderboard ${leaderboardBlinking}`}>
                     <div className="black">TOP 5</div>
