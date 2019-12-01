@@ -4,6 +4,7 @@ import Router from 'preact-router';
 
 render(
     <Router>
-        <App path="/"/>
+        <App path="/:param"/>
+        <App default/>
     </Router>,
     document.getElementById('root'));
