@@ -2,8 +2,9 @@ package xyz.breakit.leaderboard.rest;
 
 
 import com.netflix.concurrency.limits.limit.FixedLimit;
-import com.netflix.concurrency.limits.limiter.SimpleLimiter;
+import com.netflix.concurrency.limits.limiter.DefaultLimiter;
 import com.netflix.concurrency.limits.servlet.ConcurrencyLimitServletFilter;
+import com.netflix.concurrency.limits.strategy.SimpleStrategy;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -14,9 +15,11 @@ public class LimiterFilter implements Filter {
 
     private boolean enabled = false;
     private Filter limitingFilter = new ConcurrencyLimitServletFilter(
-            new SimpleLimiter.Builder()
+            DefaultLimiter.newBuilder()
                     .limit(FixedLimit.of(10))
-                    .build());
+                    .minWindowTime(1000, TimeUnit.MILLISECONDS)
+                    .maxWindowTime(1000, TimeUnit.MILLISECONDS)
+                    .build(new SimpleStrategy<>()));
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -39,10 +42,13 @@ public class LimiterFilter implements Filter {
 
     public void enable(int limit) {
         enabled = true;
-        limitingFilter =  new ConcurrencyLimitServletFilter(
-                new SimpleLimiter.Builder()
+        limitingFilter = new ConcurrencyLimitServletFilter(
+                DefaultLimiter.newBuilder()
                         .limit(FixedLimit.of(limit))
-                        .build());
+                        .minWindowTime(1000, TimeUnit.MILLISECONDS)
+                        .maxWindowTime(1000, TimeUnit.MILLISECONDS)
+                        .build(new SimpleStrategy<>()));
+
     }
 
     public void disable() {
