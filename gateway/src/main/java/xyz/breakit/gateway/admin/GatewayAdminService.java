@@ -9,10 +9,10 @@ import xyz.breakit.admin.InjectFailureRequest;
 import xyz.breakit.admin.InjectFailureResponse;
 import xyz.breakit.admin.PartialDegradationRequest;
 import xyz.breakit.admin.PartialDegradationResponse;
-import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.gateway.flags.SettableFlags;
 
-import static xyz.breakit.gateway.admin.ServiceNames.*;
+import static xyz.breakit.gateway.admin.ServiceNames.CLOUDS_SERVICE;
+import static xyz.breakit.gateway.admin.ServiceNames.GEESE_SERVICE;
 
 /**
  * Implements gateway admin service.
@@ -22,16 +22,13 @@ public class GatewayAdminService extends AdminServiceImplBase {
     private final SettableFlags flags;
     private final AdminServiceStub geeseAdmin;
     private final AdminServiceStub cloudsAdmin;
-    private final FailureInjectionService failureInjectionService;
 
     public GatewayAdminService(SettableFlags flags,
                                AdminServiceStub geeseAdmin,
-                               AdminServiceStub cloudsAdmin,
-                               FailureInjectionService failureInjectionService) {
+                               AdminServiceStub cloudsAdmin) {
         this.flags = flags;
         this.geeseAdmin = geeseAdmin;
         this.cloudsAdmin = cloudsAdmin;
-        this.failureInjectionService = failureInjectionService;
     }
 
     @Override
@@ -52,10 +49,6 @@ public class GatewayAdminService extends AdminServiceImplBase {
             geeseAdmin.injectFailure(request, responseObserver);
         } else if (CLOUDS_SERVICE.equalsIgnoreCase(request.getServiceName())) {
             cloudsAdmin.injectFailure(request, responseObserver);
-        } else if (GATEWAY_SERVICE.equalsIgnoreCase(request.getServiceName())) {
-            failureInjectionService.injectFailure(request);
-            responseObserver.onNext(InjectFailureResponse.newBuilder().build());
-            responseObserver.onCompleted();
         } else {
             StatusRuntimeException invalidArgumentException =
                     Status.INVALID_ARGUMENT
