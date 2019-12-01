@@ -1,16 +1,10 @@
+const grpc = {};
+grpc.web = require('grpc-web');
+
 import {GetFixtureRequest, GeneratePlayerIdRequest,
             TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
-
 import {FixtureServicePromiseClient, PlayerIdServicePromiseClient,
-           LeaderboardServicePromiseClient} from '../generated/gateway_grpc_web_pb';
-
-// showcase
-//import * as Clients from '../generated/gateway_grpc_web_pb';
-// Clients.
-
-import {FixtureServiceClient, PlayerIdServiceClient,
-        LeaderboardServiceClient} from '../generated/gateway_grpc_web_pb';
-
+            LeaderboardServicePromiseClient} from '../generated/gateway_grpc_web_pb';
 import {CONSTANTS } from './Constants';
 
 export class Service {
@@ -20,6 +14,8 @@ export class Service {
         this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
     }
 
+    getDeadline = (timeout) => (new Date()).getTime() + timeout;
+
     getFixture = () => {
         let request = new GetFixtureRequest();
 
@@ -28,7 +24,9 @@ export class Service {
         request.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
         request.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
 
-        return this.fixtureServicePromiseClient.getFixture(request, { deadline: this.getDeadline() });
+        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
+
+        return this.fixtureServicePromiseClient.getFixture(request, { deadline });
     }
 
     getPlayerId = () => {
@@ -60,6 +58,4 @@ export class Service {
 
         return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, { deadline });
     }
-
-    getDeadline = (timeout=CONSTANTS.DEFAULT_TIMEOUT) => (new Date()).getTime() + timeout;
 }

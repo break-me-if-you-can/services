@@ -24,7 +24,3 @@ export function GameOver(props) {
 export function Portrait(props) {
   return (<div className="message portrait"></div>);
 }
-
-export function Spinner(props) {
-  return (<div className="message spinner"></div>);
-}
