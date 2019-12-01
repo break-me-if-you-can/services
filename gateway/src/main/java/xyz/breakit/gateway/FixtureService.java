@@ -10,9 +10,8 @@ import xyz.breakit.clouds.CloudsServiceGrpc.CloudsServiceFutureStub;
 import xyz.breakit.clouds.GetCloudsRequest;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceImplBase;
 import xyz.breakit.gateway.flags.Flags;
-import xyz.breakit.geese.GeeseResponse;
+import xyz.breakit.geese.*;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
-import xyz.breakit.geese.GetGeeseRequest;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -58,6 +57,9 @@ final class FixtureService extends FixtureServiceImplBase {
                     public void onSuccess(@Nullable List<GeneratedMessageV3> responses) {
 
                         GeeseResponse geese = (GeeseResponse) responses.get(0);
+                        if (! flags.isDiverseGeeseEnabled()) {
+                            geese = convertToCanadaGeeseOnly(geese);
+                        }
                         CloudsResponse clouds = (CloudsResponse) responses.get(1);
 
                         responseObserver.onNext(merge(geese, clouds, request.getLinesCount()));
@@ -70,6 +72,19 @@ final class FixtureService extends FixtureServiceImplBase {
                     }
                 },
                 directExecutor());
+    }
+
+    private GeeseResponse convertToCanadaGeeseOnly(GeeseResponse geese) {
+        List<GeeseLine> canadaGeeseLines = geese.getLinesList().stream()
+                .map(line -> line.getGeeseLocatorsList().stream()
+                        .map(goose -> GooseLocator.newBuilder(goose).setGooseType(GooseType.GOOSE_TYPE_CANADA_GOOSE).build())
+                        .collect(Collectors.toList()))
+                .map(line -> GeeseLine.newBuilder().addAllGeeseLocators(line).build())
+                .collect(Collectors.toList());
+        geese = GeeseResponse.newBuilder()
+                .addAllLines(canadaGeeseLines)
+                .build();
+        return geese;
     }
 
     private ListenableFuture<List<GeneratedMessageV3>> combine(ListenableFuture<GeeseResponse> geeseFuture, ListenableFuture<CloudsResponse> cloudsFuture) {

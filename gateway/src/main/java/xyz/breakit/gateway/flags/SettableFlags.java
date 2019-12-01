@@ -10,6 +10,8 @@ public final class SettableFlags implements Flags {
 
     private volatile boolean partialDegradationEnabled;
     private volatile boolean retryEnabled;
+    private volatile boolean diverseGeeseEnabled;
+
 
     @Override
     public boolean isPartialDegradationEnabled() {
@@ -27,5 +29,14 @@ public final class SettableFlags implements Flags {
 
     public void setRetryEnabled(boolean retryEnabled) {
         this.retryEnabled = retryEnabled;
+    }
+
+    @Override
+    public boolean isDiverseGeeseEnabled() {
+        return diverseGeeseEnabled;
+    }
+
+    public void setDiverseGeeseEnabled(boolean diverseGeeseEnabled) {
+        this.diverseGeeseEnabled = diverseGeeseEnabled;
     }
 }
