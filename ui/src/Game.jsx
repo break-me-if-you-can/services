@@ -109,7 +109,6 @@ export class Game extends Component {
     handleGetPlayerIdError = (error) => {
         switch (error.code) {
             case StatusCode.DEADLINE_EXCEEDED:
-            case StatusCode.UNAVAILABLE:
                 this.setState({
                     leaderboardOk: true,
                     notification: CONSTANTS.DEADLINE_NOTIFICATION
