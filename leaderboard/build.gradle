@@ -1,15 +1,11 @@
 buildscript {
     ext {
-        springBootVersion = '2.1.8.RELEASE'
+        springBootVersion = '2.0.4.RELEASE'
     }
     repositories {
-        maven {
-            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-        }
         jcenter()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
@@ -18,31 +14,11 @@ plugins {
     id "net.ltgt.apt" version "0.18"
 }
 
-def grpcVersion = '1.16.1'
-def protobufVersion = '3.5.1'
-
-
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-apply plugin: 'com.google.protobuf'
-
-repositories {
-    maven {
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-    }
-    jcenter()
-    repositories {
-        maven {
-            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-        }
-        jcenter()
-    }
-
-}
-
 
 group = 'xyz.breakit'
 version = '0.0.1-SNAPSHOT'
@@ -54,22 +30,11 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.1.4.RELEASE'
+        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.1.RELEASE'
     }
 }
 
 dependencies {
-    compile "com.google.api.grpc:proto-google-common-protos:1.12.0"
-    compile "io.grpc:grpc-alts:${grpcVersion}"
-    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
-    compile "io.grpc:grpc-netty:${grpcVersion}"
-    compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-stub:${grpcVersion}"
-    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
-    compile "xyz.breakit:grpc-api"
-    compile "xyz.breakit:grpc-common"
-    compile 'io.projectreactor:reactor-core:3.3.0.RELEASE'
-
     compileOnly "org.immutables:value:2.7.1:annotations"
     annotationProcessor "org.immutables:value:2.7.1"
 
@@ -94,7 +59,6 @@ dependencies {
     testCompile 'net.bytebuddy:byte-buddy:1.9.+'
     testCompile 'net.bytebuddy:byte-buddy-agent:1.9.+'
     testCompile 'xmlunit:xmlunit:1.6'
-    testCompile "io.grpc:grpc-testing:${grpcVersion}"
 }
 
 bootJar {

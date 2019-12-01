@@ -4,16 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.EmitterProcessor;
-import reactor.core.publisher.Flux;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.Math.random;
 
@@ -21,20 +17,9 @@ import static java.lang.Math.random;
 public class LeaderboardService {
 
     private final static Logger LOG = LoggerFactory.getLogger(LeaderboardService.class);
-    public static final int MAX_HISTORY = 300;
 
-    private final ConcurrentHashMap<String, Integer> scores = new ConcurrentHashMap<>();
-
+    private final ConcurrentMap<String, Integer> scores = new ConcurrentHashMap<>();
     private final AtomicBoolean broken = new AtomicBoolean(false);
-    private final EmitterProcessor<Boolean> leaderboardUpdatesFlux;
-
-    public LeaderboardService() {
-        leaderboardUpdatesFlux = EmitterProcessor.create(MAX_HISTORY);
-    }
-
-    public Flux<Boolean> getLeaderboardUpdatesFlux() {
-        return Flux.merge(leaderboardUpdatesFlux);
-    }
 
     public void clear() {
         scores.clear();
@@ -43,7 +28,6 @@ public class LeaderboardService {
     public void recordScore(String name, int newScore) {
         delayIfBroken();
         scores.put(name, newScore);
-        leaderboardUpdatesFlux.onNext(true);
     }
 
     public boolean isBroken() {
