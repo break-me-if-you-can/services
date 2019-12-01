@@ -1,10 +1,11 @@
 import { GetFixtureRequest, GeneratePlayerIdRequest } from '../generated/gateway_pb';
 
-import { TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/leaderboard_pb';
+import { TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/leaderboard_shared_pb';
 
-import { FixtureServicePromiseClient, PlayerIdServicePromiseClient } from '../generated/gateway_grpc_web_pb';
-
-import { LeaderboardServicePromiseClient, StreamingLeaderboardServicePromiseClient } from '../generated/leaderboard_grpc_web_pb';
+import {
+    FixtureServicePromiseClient, PlayerIdServicePromiseClient,
+    LeaderboardServicePromiseClient, StreamingLeaderboardServiceClient
+} from '../generated/gateway_grpc_web_pb';
 
 import { CONSTANTS } from './Constants';
 
@@ -23,11 +24,7 @@ export class Service {
     getPlayerId = () => {
         const request = new GeneratePlayerIdRequest();
 
-        const metadata = this.getMetadata();
-
-        console.log('Player Id metdata: ', metadata);
-
-        return this.playerIdServicePromiseClient.generatePlayerId(request, metadata);
+        return this.playerIdServicePromiseClient.generatePlayerId(request, this.getMetadata());
     }
 
     getTopPlayerScore = () => {
@@ -38,13 +35,21 @@ export class Service {
         return this.leaderboardServicePromiseClient.getTopScores(request, this.getMetadata());
     }
 
-    openTopScoreStream = () => {
+    subscribeOnTopScoreStream = (handler) => {
         const request = new TopScoresRequest();
 
         request.setSize();
 
-        console.log('stream');
-        return this.streamingLeaderboardServicePromiseClient.streamTopScores(request, this.getMetadata());
+        var stream = this.streamingLeaderboardServiceClient.getTopScores(request, this.getMetadata());
+
+        stream.on('data', (data) => {
+            console.log('On data: ', data);
+            handler(data);
+        });
+
+        stream.on('status', (status) => console.log('On Status: ', status));
+
+        stream.on('end', (end) => console.log('Signal end: ', end));
     }
 
     updatePlayerScore = ({ playerId, score }) => {
@@ -66,7 +71,8 @@ export class Service {
         this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
         this.playerIdServicePromiseClient = new PlayerIdServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
         this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.streamingLeaderboardServicePromiseClient = new StreamingLeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+
+        this.streamingLeaderboardServiceClient = new StreamingLeaderboardServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
     }
 
     getMetadata = () => (this.withDeadline ? { deadline: this.getDeadline() } : {});
