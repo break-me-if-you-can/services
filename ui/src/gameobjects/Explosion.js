@@ -1,6 +1,8 @@
+import React, {h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 export class Explosion extends PIXI.extras.AnimatedSprite {
+
     constructor(props) {
         super(props.frames);
         this.anchor.set(0.5);
@@ -12,7 +14,7 @@ export class Explosion extends PIXI.extras.AnimatedSprite {
     }
 
     playOnce(stage) {
-        this.onComplete = () => this.removeFromStage(stage);
+        this.onComplete = () => { this.removeFromStage(stage) };
         this.addToStage(stage);
     }
 
@@ -24,4 +26,5 @@ export class Explosion extends PIXI.extras.AnimatedSprite {
     removeFromStage(stage) {
         stage.removeChild(this);
     }
+
 }

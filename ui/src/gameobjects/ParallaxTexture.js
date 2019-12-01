@@ -1,6 +1,8 @@
+import React, {h, render, Component } from 'preact';
 import * as PIXI from 'pixi.js';
 
 export class ParallaxTexture extends PIXI.extras.TilingSprite {
+
     constructor(props) {
         super(props.image.texture, props.width, props.height);
         this.anchor.set(0, 0);
@@ -9,6 +11,7 @@ export class ParallaxTexture extends PIXI.extras.TilingSprite {
         this.tilePosition.x = 0;
         this.tilePosition.y = 0;
         this.scale.set(props.ratio);
+        //console.log(props.ratio);
     }
 
     addToStage(stage) {
@@ -18,4 +21,5 @@ export class ParallaxTexture extends PIXI.extras.TilingSprite {
     removeFromStage(stage) {
         stage.removeChild(this);
     }
+
 }

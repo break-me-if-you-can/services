@@ -1,10 +1,6 @@
-import { h, render } from 'preact';
+import React, { h, render } from 'preact';
 import { App } from './App';
-import Router from 'preact-router';
 
-render(
-    <Router>
-        <App path="/:param"/>
-        <App default/>
-    </Router>,
-    document.getElementById('root'));
+console.log(`Demo is in ${process.env.NODE_ENV} mode.`);
+
+render(<App />, document.getElementById('root'));
