@@ -100,7 +100,7 @@ dependencies {
 }
 
 bootJar {
-    mainClassName = 'xyz.breakit.game.leaderboard.Application'
+    mainClassName = 'xyz.breakit.leaderboard.Application'
     version = ''
 }
 
