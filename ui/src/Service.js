@@ -1,14 +1,10 @@
-import { GetFixtureRequest } from '../generated/gateway_pb';
+import { GetFixtureRequest, GeneratePlayerIdRequest } from '../generated/gateway_pb';
 
 import { TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/leaderboard_pb';
 
-import { GeneratePlayerIdRequest } from '../generated/playerid_pb';
-
-import { FixtureServicePromiseClient } from '../generated/gateway_grpc_web_pb';
+import { FixtureServicePromiseClient, PlayerIdServicePromiseClient } from '../generated/gateway_grpc_web_pb';
 
 import { LeaderboardServicePromiseClient, StreamingLeaderboardServicePromiseClient } from '../generated/leaderboard_grpc_web_pb';
-
-import { PlayerIdServicePromiseClient } from '../generated/playerid_grpc_web_pb';
 
 import { CONSTANTS } from './Constants';
 
@@ -35,7 +31,7 @@ export class Service {
     getTopPlayerScore = () => {
         const request = new TopScoresRequest();
 
-        request.setSize(5);
+        request.setSize();
 
         return this.leaderboardServicePromiseClient.getTopScores(request, this.getMetadata());
     }
@@ -43,7 +39,7 @@ export class Service {
     openTopScoreStream = () => {
         const request = new TopScoresRequest();
 
-        request.setSize(5);
+        request.setSize();
 
         return this.streamingLeaderboardServicePromiseClient.streamTopScores(request, this.getMetadata());
     }

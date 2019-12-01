@@ -12,27 +12,22 @@ mkdir "$GENERATED_DIR"
 # Generate files
 PROTO_DIR="./grpc-api/src/main/proto"
 GATEWAY_PROTO="gateway.proto"
+CLOUDS_SHARED_PROTO="clouds_shared.proto"
+GEESE_SHARED_PROTO="geese_shared.proto"
 LEADERBOARD_PROTO="leaderboard.proto"
-GEESE_PROTO="geese.proto"
-CLOUDS_PROTO="clouds.proto"
-PLAYERID_PROTO="playerid.proto"
 
 protoc -I="$PROTO_DIR" "$PROTO_DIR/$GATEWAY_PROTO" \
         --js_out=import_style=commonjs:"$GENERATED_DIR" \
         --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
 
+protoc -I="$PROTO_DIR" "$PROTO_DIR/$CLOUDS_SHARED_PROTO" \
+        --js_out=import_style=commonjs:"$GENERATED_DIR" \
+        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
+
+protoc -I="$PROTO_DIR" "$PROTO_DIR/$GEESE_SHARED_PROTO" \
+        --js_out=import_style=commonjs:"$GENERATED_DIR" \
+        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
+
 protoc -I="$PROTO_DIR" "$PROTO_DIR/$LEADERBOARD_PROTO" \
-        --js_out=import_style=commonjs:"$GENERATED_DIR" \
-        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
-
-protoc -I="$PROTO_DIR" "$PROTO_DIR/$GEESE_PROTO" \
-        --js_out=import_style=commonjs:"$GENERATED_DIR" \
-        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
-
-protoc -I="$PROTO_DIR" "$PROTO_DIR/$CLOUDS_PROTO" \
-        --js_out=import_style=commonjs:"$GENERATED_DIR" \
-        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"
-
-protoc -I="$PROTO_DIR" "$PROTO_DIR/$PLAYERID_PROTO" \
         --js_out=import_style=commonjs:"$GENERATED_DIR" \
         --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"$GENERATED_DIR"

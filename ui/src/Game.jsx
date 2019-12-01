@@ -13,7 +13,7 @@ import { StatusCode } from 'grpc-web';
 
 import { Portrait, Spinner, GameOver, Notification } from './Messages';
 import * as Helper from './helper';
-import { GooseType } from '../generated/geese_pb';
+import { GooseType } from '../generated/geese_shared_pb';
 
 export class Game extends Component {
     constructor(props) {
