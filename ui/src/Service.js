@@ -1,63 +1,105 @@
 const grpc = {};
 grpc.web = require('grpc-web');
 
-import {GetFixtureRequest, GeneratePlayerIdRequest,
-            TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
-import {FixtureServicePromiseClient, PlayerIdServicePromiseClient,
-            LeaderboardServicePromiseClient} from '../generated/gateway_grpc_web_pb';
-import {CONSTANTS } from './Constants';
+import * as Requests from '../generated/gateway_pb';
+import * as Clients from '../generated/gateway_grpc_web_pb';
+import { CONSTANTS } from './Constants';
 
 export class Service {
-    constructor() {
-        this.fixtureServicePromiseClient = new FixtureServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.playerIdServicePromiseClient = new PlayerIdServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
-        this.leaderboardServicePromiseClient = new LeaderboardServicePromiseClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+  
+    constructor(props) {
+      this.fixtureServiceClient = new Clients.FixtureServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.playerIdServiceClient = new Clients.PlayerIdServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+      this.leaderboardServiceClient = new Clients.LeaderboardServiceClient(CONSTANTS.GATEWAY_SERVICE_HOST);
+    }
+  
+    getFixture = (callback) => {
+        let getFixtureRequest = new Requests.GetFixtureRequest();
+            getFixtureRequest.setLineWidth(CONSTANTS.FIELD_WIDTH);
+            getFixtureRequest.setLinesCount(CONSTANTS.LINES_COUNT);
+            getFixtureRequest.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
+            getFixtureRequest.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
+
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
+
+        call = this.fixtureServiceClient
+            .getFixture(getFixtureRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+            );
     }
 
-    getDeadline = (timeout) => (new Date()).getTime() + timeout;
+    getPlayerId = (callback) => {
+        let generatePlayerIdRequest = new Requests.GeneratePlayerIdRequest();
 
-    getFixture = () => {
-        let request = new GetFixtureRequest();
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        request.setLineWidth(CONSTANTS.FIELD_WIDTH);
-        request.setLinesCount(CONSTANTS.LINES_COUNT);
-        request.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
-        request.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
+        call = this.playerIdServiceClient
+            .generatePlayerId(generatePlayerIdRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
 
-        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
-
-        return this.fixtureServicePromiseClient.getFixture(request, { deadline });
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
 
-    getPlayerId = () => {
-        let request = new GeneratePlayerIdRequest();
+    getTopPlayerScore = (callback) => {
+        let topScoresRequest = new Requests.TopScoresRequest();
+        topScoresRequest.setSize();
 
-        const date = new Date();
-        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        return this.playerIdServicePromiseClient.generatePlayerId(request, { deadline });
+        call = this.leaderboardServiceClient
+            .getTopScores(topScoresRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
 
-    getTopPlayerScore = () => {
-        let request = new TopScoresRequest();
-        request.setSize();
-
-        const date = new Date();
-        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
-
-        return this.leaderboardServicePromiseClient.getTopScores(request, { deadline });
-    }
-
-    updatePlayerScore = ({playerId, score}) => {
-        let playerScore = new PlayerScore();
-        playerScore.setPlayerId(playerId);
-        playerScore.setScore(score);
-
-        let updateScoreRequest = new UpdateScoreRequest();
+    updatePlayerScore = (data, callback) => {
+        let playerScore = new Requests.PlayerScore();
+        playerScore.setPlayerId(data.playerId);
+        playerScore.setScore(data.score);
+        
+        let updateScoreRequest = new Requests.UpdateScoreRequest();
         updateScoreRequest.setPlayerScore(playerScore);
 
-        const deadline = this.getDeadline(CONSTANTS.DEFAULT_TIMEOUT);
+        let call = null;
+        let requestCancelTimeout = setTimeout(function() { if (call) { call.cancel() } }, CONSTANTS.CANCEL_TIMEOUT);
 
-        return this.leaderboardServicePromiseClient.updateScore(updateScoreRequest, { deadline });
+        call = this.leaderboardServiceClient
+            .updateScore(updateScoreRequest, { },
+                function(err, response) {
+                    clearTimeout(requestCancelTimeout);
+
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        callback(response);
+                    }
+                }
+        );
     }
 }
