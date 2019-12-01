@@ -35,7 +35,6 @@ import xyz.breakit.common.instrumentation.tracing.ForceNewTraceServerInterceptor
 import xyz.breakit.gateway.admin.GatewayAdminService;
 import xyz.breakit.gateway.admin.HealthcheckGrpcService;
 import xyz.breakit.gateway.admin.HealthcheckService;
-import xyz.breakit.gateway.clients.leaderboard.LeaderboardAdminClient;
 import xyz.breakit.gateway.flags.Flags;
 import xyz.breakit.gateway.flags.SettableFlags;
 import xyz.breakit.gateway.interceptors.FixtureMetricsReportingInterceptor;
@@ -43,6 +42,8 @@ import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceFutureStub;
 import xyz.breakit.leaderboard.LeaderboardServiceGrpc;
 import xyz.breakit.leaderboard.LeaderboardServiceGrpc.LeaderboardServiceStub;
+import xyz.breakit.leaderboard.StreamingLeaderboardServiceGrpc;
+import xyz.breakit.leaderboard.StreamingLeaderboardServiceGrpc.StreamingLeaderboardServiceStub;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -239,6 +240,13 @@ public class Gateway {
             @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
         return LeaderboardServiceGrpc.newStub(leaderboardChannel);
     }
+
+    @Bean
+    public StreamingLeaderboardServiceStub streamingLeaderboardClient(
+            @Qualifier("LeaderboardChannel") Channel leaderboardChannel) {
+        return StreamingLeaderboardServiceGrpc.newStub(leaderboardChannel);
+    }
+
 
     @Bean("LeaderboardChannel")
     public Channel leaderboardChannel(

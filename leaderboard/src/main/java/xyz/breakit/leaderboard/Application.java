@@ -18,6 +18,7 @@ import xyz.breakit.common.instrumentation.failure.FailureInjectionAdminService;
 import xyz.breakit.common.instrumentation.failure.FailureInjectionService;
 import xyz.breakit.common.instrumentation.failure.InjectedFailureProvider;
 import xyz.breakit.leaderboard.grpc.LeaderboardGrpcService;
+import xyz.breakit.leaderboard.grpc.StreamingLeaderboardGrpcService;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -42,6 +43,7 @@ public class Application {
 			Tracing tracing,
 			GrpcTracing grpcTracing,
 			LeaderboardGrpcService leaderboardService,
+			StreamingLeaderboardGrpcService streamingLeaderboardService,
 			InjectedFailureProvider failureProvider
 	) {
 
@@ -49,6 +51,7 @@ public class Application {
 
 		return ServerBuilder.forPort(GRPC_SERVER_PORT)
 				.addService(ServerInterceptors.intercept(leaderboardService, latencyInterceptor))
+				.addService(streamingLeaderboardService)
 				.addService(ProtoReflectionService.newInstance())
 				.intercept(grpcTracing.newServerInterceptor())
 				.addService(new CommonHealthcheckService("leaderboard", failureProvider, failureProvider))
