@@ -53,7 +53,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
@@ -75,7 +75,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -96,7 +96,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -117,7 +117,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 1, 700, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
@@ -137,7 +137,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
@@ -157,7 +157,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, true);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 0.0, 0, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
@@ -179,7 +179,7 @@ public class AdminController {
         CompletableFuture<Object> geeseResult = injectLatencyInto(GEESE_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> cloudsResult = injectLatencyInto(CLOUDS_SERVICE, 0.0, 0, false);
         CompletableFuture<Object> gwResult = injectLatencyInto(GATEWAY_SERVICE, 1, 10000000, false);
-        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 0, 0, false);
+        CompletableFuture<Object> lbResult = injectLatencyInto(LEADERBOARD_SERVICE, 1, 1500, false);
 
         try {
             CompletableFuture.allOf(geeseResult, cloudsResult, gwResult, lbResult).get(1, TimeUnit.SECONDS);
