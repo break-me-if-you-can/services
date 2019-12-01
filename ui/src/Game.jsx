@@ -88,6 +88,17 @@ export class Game extends Component {
 
     handleError = (error, message = 'Error occured: ') => console.log(message, error);
 
+    handleGetPlayerIdError = (error) => {
+        switch (error.code) {
+            case CONSTANTS.TIMEOUT_ERROR_CODE:
+                alert('Check your internet connection');
+                break;
+            default:
+        }
+        this.handleError(error);
+    }
+
+
     handleGetPalyerIdResult = (result) => {
         const playerId = result.getPlayerId();
 
@@ -116,10 +127,10 @@ export class Game extends Component {
         this.service.getPlayerId()
             .then(
                 (result) => this.handleGetPalyerIdResult(result),
-                (error) => this.handleError(error)
+                (error) => this.handleGetPlayerIdError(error)
             )
             .catch(
-                (error) => this.handleError(error)
+                (error) => this.handleGetPlayerIdError(error)
             );
 
         this.focusDiv();
