@@ -1,8 +1,11 @@
-import { GetFixtureRequest, GeneratePlayerIdRequest, TopScoresRequest, 
-    PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
+import { GetFixtureRequest, GeneratePlayerIdRequest, TopScoresRequest, PlayerScore, UpdateScoreRequest } from '../generated/gateway_pb';
 
-import { FixtureServicePromiseClient, PlayerIdServicePromiseClient, 
-    LeaderboardServicePromiseClient } from '../generated/gateway_grpc_web_pb';
+import { FixtureServicePromiseClient, PlayerIdServicePromiseClient, LeaderboardServicePromiseClient } from '../generated/gateway_grpc_web_pb';
+
+// import { FixtureServiceClient, PlayerIdServiceClient, LeaderboardServiceClient } from '../generated/gateway_grpc_web_pb';
+
+// showcase Clients.
+// import * as Clients from '../generated/gateway_grpc_web_pb';
 
 import { CONSTANTS } from './Constants';
 
@@ -15,7 +18,9 @@ export class Service {
         request.setGooseWidth(CONSTANTS.GOOSE_WIDTH);
         request.setCloudWidth(CONSTANTS.CLOUD_WIDTH);
 
-        return this.fixtureServicePromiseClient.getFixture(request, this.getMetadata());
+        const metadata = this.getMetadata();
+
+        return this.fixtureServicePromiseClient.getFixture(request, metadata);
     }
 
     getPlayerId = () => {
