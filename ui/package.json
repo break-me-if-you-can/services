@@ -11,38 +11,51 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.2.2",
+    "@babel/core": "^7.0.0-0",
     "@babel/node": "^7.6.0",
-    "@babel/plugin-proposal-class-properties": "7.1.0",
-    "@babel/plugin-proposal-decorators": "^7.1.6",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-decorators": "^7.6.0",
     "@babel/plugin-transform-object-assign": "7.0.0",
     "@babel/plugin-transform-react-constant-elements": "^7.2.0",
     "@babel/plugin-transform-react-inline-elements": "^7.2.0",
-    "@babel/plugin-transform-react-jsx": "7.3.0",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
     "@babel/plugin-transform-runtime": "7.0.0",
-    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-env": "^7.6.2",
     "@babel/preset-react": "7.0.0",
     "@babel/register": "^7.0.0",
-    "babel-eslint": "^10.0.1",
+    "babel-eslint": "^10.0.3",
     "babel-plugin-transform-react-class-to-function": "^1.2.2",
     "babel-plugin-transform-react-jsx": "7.0.0-beta.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "brfs": "^1.4.1",
+    "cssnano": "^4.1.10",
     "debug": "^4.0.1",
-    "eslint": "^5.16.0"
+    "eslint": "^6.4.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-standard": "^4.0.1",
+    "prettier": "1.18.2",
+    "query-string": "^6.8.3"
   },
   "dependencies": {
     "express": "^4.13.1",
     "google-protobuf": "^3.6.1",
     "grpc-web": "1.0.6",
+    "node-sass": "^4.12.0",
     "pixi.js": "^4.8.2",
     "preact": "^8.5.2",
-    "preact-compat": "^3.19.0"
+    "preact-compat": "^3.19.0",
+    "preact-router": "^2.6.1",
+    "serve": "11.2.0"
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "watch": "parcel public/index.html --open --port 3001",
+    "watch": "parcel public/index.html --port 3001",
     "start": "yarn clean && yarn watch",
-    "build": "parcel build dist/index.html --public-url ./"
+    "build": "parcel build public/index.html --public-url ./",
+    "serve:build": "cd dist/ && serve -l 3001 ./"
   }
 }
