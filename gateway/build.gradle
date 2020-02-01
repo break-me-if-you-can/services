@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def grpcVersion = '1.23.0'
+def grpcVersion = '1.25.0'
 def protobufVersion = '3.9.0'
 
 repositories {
