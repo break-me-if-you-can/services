@@ -6,9 +6,11 @@ buildscript {
         maven {
             url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
         }
+        jcenter()
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
     }
 }
 
@@ -20,8 +22,8 @@ repositories {
     mavenLocal()
 }
 
-def grpcVersion = '1.16.1'
-def protobufVersion = '3.5.1'
+def grpcVersion = '1.25.0'
+def protobufVersion = '3.9.0'
 
 dependencies {
     compile "com.google.api.grpc:proto-google-common-protos:1.12.0"
@@ -42,21 +44,16 @@ dependencies {
 }
 
 apply plugin: 'idea'
-
 apply plugin: 'application'
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
 
-startScripts.enabled = false
+mainClassName = 'xyz.breakit.clouds.CloudsServer'
 
-def mainClassName = "xyz.breakit.clouds.CloudsServer"
-
-jar {
-    manifest {
-        attributes "Main-Class": "${mainClassName}"
-    }
-
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+shadowJar {
+    mergeServiceFiles()
 }
+
+build.dependsOn 'shadowJar'
 
 apply from: '../common/common.gradle'
