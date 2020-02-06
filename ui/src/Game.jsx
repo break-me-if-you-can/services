@@ -15,7 +15,7 @@ import { IMAGES } from './Assets';
 import * as Messages from './Messages';
 
 export class Game extends Component {
-  
+
   constructor(props) {
     super(props);
     this.service = new Service();
@@ -45,7 +45,7 @@ export class Game extends Component {
       portrait: window.innerHeight > window.innerWidth,
       gameOver: false,
     }
-    
+
     this.collisionsCounter = 0;
     this.statisticsInterval = null;
     this.scoreInterval = null;
@@ -128,17 +128,17 @@ export class Game extends Component {
         .add('banksTexture', IMAGES.BANKS)
       .load(onAssetsLoaded);
 
-    this.loader.onProgress.add((e) => { 
-      //console.log('Assets Loading Progress', e); 
+    this.loader.onProgress.add((e) => {
+      //console.log('Assets Loading Progress', e);
     });
-    this.loader.onError.add((e) => { 
-      //console.log('Assets Loading Error: ', e); 
+    this.loader.onError.add((e) => {
+      //console.log('Assets Loading Error: ', e);
     });
-    this.loader.onLoad.add((e) => { 
-      //console.log('Asset Loaded: ', e); 
+    this.loader.onLoad.add((e) => {
+      //console.log('Asset Loaded: ', e);
     });
-    this.loader.onComplete.add((e) => { 
-      //console.log('Assets Loading Completed', e); 
+    this.loader.onComplete.add((e) => {
+      //console.log('Assets Loading Completed', e);
     });
   }
 
@@ -154,7 +154,7 @@ export class Game extends Component {
       horizontalOffset: CONSTANTS.WATER_HORIZONTAL_OFFSET,
       ratio: 1,
     });
-    
+
     let banks = new ParallaxTexture({
       image: resources.banksTexture,
       width: CONSTANTS.FIELD_WIDTH,
@@ -224,7 +224,7 @@ export class Game extends Component {
       y: -2 * CONSTANTS.AIRCRAFT_HEIGHT,
       ratio: this.ratio,
     });
-    setTimeout( () => { 
+    setTimeout( () => {
       let position = {
         x: CONSTANTS.FIELD_WIDTH / 2,
         y: this.setAircraftVerticalPosition(),
@@ -262,9 +262,9 @@ export class Game extends Component {
         }
         return newGeese;
       }, []);
-      
+
       this.geese = tempGeese;
-      
+
       let tempClouds = this.clouds.reduce((newClouds, cloud ) => {
         cloud.y += CONSTANTS.CLOUD_VELOCITY;
 
@@ -275,7 +275,7 @@ export class Game extends Component {
         }
         return newClouds;
       }, []);
-    
+
       this.clouds = tempClouds;
     });
   }
@@ -323,10 +323,12 @@ export class Game extends Component {
       });
     }, CONSTANTS.SCORE_INTERVAL);
 
-    let playerId = this.state.playerId;
-    let score = this.score;
 
     this.statisticsUpdatePlayerScoreInterval = setInterval(() => {
+
+        let playerId = this.state.playerId;
+        let score = this.score;
+
       this.service.updatePlayerScore({ playerId, score })
         .then(
           (result) => { },
@@ -353,7 +355,7 @@ export class Game extends Component {
             let topScores = result.getTopScoresList()
             .map(playerScore => {
               return {
-                id: playerScore.getPlayerId(), 
+                id: playerScore.getPlayerId(),
                 score: playerScore.getScore(),
               }
             });
@@ -364,7 +366,7 @@ export class Game extends Component {
           },
         (error) => console.log('then error getTopPlayer', error))
         .catch((error) => console.log('catch error getTopPlayer', error));
-  
+
     }, CONSTANTS.TOP_PLAYER_SCORE_INTERVAL);
 
     this.fixtureInterval = setInterval(
@@ -377,7 +379,7 @@ export class Game extends Component {
                           setTimeout(() => {
                             let geesePos = line.getGoosePositionsList();
                             geesePos.forEach(position => { this.geese.push(this.createGoose(position)); });
-                
+
                             let cloudsPos = line.getCloudPositionsList();
                             cloudsPos.forEach(position => { this.clouds.push(this.createCloud(position)); });
                           }, index * CONSTANTS.INTERVAL_BETWEEN_LINES);
@@ -390,7 +392,7 @@ export class Game extends Component {
 
   updateEnginesStatus = () => {
     this.collisionsCounter++;
-    
+
     let enginesStatus = (new Array(CONSTANTS.ENGINES_COUNT).fill(CONSTANTS.ENGINE_ALIVE_CLASSNAME)).map(
       (obj, i) => (i < this.collisionsCounter? CONSTANTS.ENGINE_DEAD_CLASSNAME: CONSTANTS.ENGINE_ALIVE_CLASSNAME)
     );
@@ -398,7 +400,7 @@ export class Game extends Component {
     this.setState({
       enginesStatus: enginesStatus,
     });
-    
+
     this.checkGameOver();
   }
 
@@ -474,7 +476,7 @@ export class Game extends Component {
 
       if (Math.abs(betaNorm) < CONSTANTS.EPSILON) {
         this.aircraft.showStraight(this.getStage());
-      } 
+      }
       else if (turn > 0) {
         let delta = turn;
         if (position.x > Math.floor(CONSTANTS.AIRCRAFT_WIDTH / 2 + turn)) {
@@ -521,7 +523,7 @@ export class Game extends Component {
   onOrientationChangedHandler = (e) => {
     this.checkOrientation();
   }
-  
+
   checkOrientation() {
     let isLandscape = window.innerHeight < window.innerWidth;
     this.setState({
@@ -597,12 +599,20 @@ export class Game extends Component {
     this.app.ticker.start();
   }
 
+  preventDefault = (e) => e.preventDefault()
+
   componentDidMount() {
     window.addEventListener("blur", this.onBlurHandler);
     window.addEventListener("focus", this.onFocusHandler);
     window.addEventListener("resize", this.updateDimensions);
     window.addEventListener("orientationchange", this.onOrientationChangedHandler, false);
-    
+    window.addEventListener("touchstart", this.preventDefault);
+    window.addEventListener("touchend", this.preventDefault);
+    document.body.addEventListener("touchstart", this.preventDefault);
+    document.body.addEventListener("touchcancel", this.preventDefault);
+    document.body.addEventListener("touchmove", this.preventDefault);
+    document.body.addEventListener("touchend", this.preventDefault);
+
     if (window.DeviceOrientationEvent) {
       window.addEventListener("deviceorientation", this.onDeviceOrientationHandler, true);
     } else if (window.DeviceMotionEvent) {
@@ -617,7 +627,13 @@ export class Game extends Component {
     window.removeEventListener("focus", this.onFocusHandler);
     window.removeEventListener("resize", this.updateDimensions);
     window.removeEventListener('orientationchange', this.onOrientationChangedHandler, false);
-  
+    window.removeEventListener("touchstart", this.preventDefault);
+    window.removeEventListener("touchend", this.preventDefault);
+    document.body.removeEventListener("touchstart", this.preventDefault);
+    document.body.removeEventListener("touchcancel", this.preventDefault);
+    document.body.removeEventListener("touchmove", this.preventDefault);
+    document.body.removeEventListener("touchend", this.preventDefault);
+
     if (window.DeviceOrientationEvent) {
       window.removeEventListener("deviceorientation", this.onDeviceOrientationHandler, true);
     } else if (window.DeviceMotionEvent) {
