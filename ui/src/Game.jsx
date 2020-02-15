@@ -457,9 +457,11 @@ export class Game extends Component {
   }
 
   onFocusHandler = (event) => {
-    this.runIntervals();
-    this.focusDiv();
-    this.app.ticker.start();
+    if (!this.state.gameOver) {
+        this.runIntervals();
+        this.focusDiv();
+        this.app.ticker.start();
+    }
   }
 
   onDeviceOrientationHandler = (event) => {
@@ -649,7 +651,7 @@ export class Game extends Component {
 
     let message = '';
     if (this.state.gameOver) {
-      message = (<Messages.GameOver onClick={ (e) => this.startAgain(e) } />);
+        message = (<Messages.GameOver playAgain={(e) => this.startAgain(e)} />);
     }
 
     let portraitClass = '';
