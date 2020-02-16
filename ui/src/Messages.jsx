@@ -13,7 +13,7 @@ export function GameOver(props) {
                     <div className="goose_gameover"></div>
                     <div className="goose_gameover"></div>
                   </div>
-                  <div className="play_again" onClick={ props.onClick }>
+                  <div className="play_again" onClick={ props.playAgain } onTouchStart={ props.playAgain }>
                     <p><a href="#">play again</a></p>
                   </div>
                 </div>
