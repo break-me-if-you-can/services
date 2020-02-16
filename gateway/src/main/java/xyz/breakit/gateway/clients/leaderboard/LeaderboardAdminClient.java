@@ -30,7 +30,7 @@ public class LeaderboardAdminClient {
     public LeaderboardAdminClient(
             @Value("${rest.leaderboard.host}") String leaderboardHost,
             @Value("${rest.leaderboard.port}") int leaderboardPort,
-            @Qualifier("tracingWebClient") WebClient webClientTemplate
+            WebClient webClientTemplate
     ) {
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
@@ -81,7 +81,7 @@ public class LeaderboardAdminClient {
                 .uri("/admin/rateLimit/" + limit)
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
@@ -94,7 +94,7 @@ public class LeaderboardAdminClient {
                 .uri("/admin/disableRateLimit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
@@ -108,7 +108,7 @@ public class LeaderboardAdminClient {
                 .uri("/admin/break")
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
@@ -121,7 +121,7 @@ public class LeaderboardAdminClient {
                 .uri("/admin/unbreak")
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
@@ -133,7 +133,7 @@ public class LeaderboardAdminClient {
                 .uri("/admin/clear")
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
                 .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
