@@ -83,8 +83,7 @@ public class Gateway {
             LeaderboardService leaderboardService,
             GatewayAdminService adminService,
             HealthcheckGrpcService healthcheckService,
-            Limiter<GrpcServerRequestContext> limiter,
-            ForceNewTraceServerInterceptor forceNewTraceServerInterceptor) {
+            Limiter<GrpcServerRequestContext> limiter) {
 
         return ServerBuilder.forPort(SERVER_PORT)
                 .addService(fixtureService)
@@ -93,14 +92,8 @@ public class Gateway {
                 .addService(adminService)
                 .addService(healthcheckService)
                 .intercept(grpcTracing.newServerInterceptor())
-                .intercept(forceNewTraceServerInterceptor)
                 //.intercept(ConcurrencyLimitServerInterceptor.newBuilder(limiter).build())
                 .build();
-    }
-
-    @Bean
-    public ForceNewTraceServerInterceptor forceNewTraceServerInterceptor() {
-        return new ForceNewTraceServerInterceptor();
     }
 
     @Bean
@@ -247,16 +240,6 @@ public class Gateway {
     }
 
     @Bean
-    public GrpcTracing grpcTracing(Tracing tracing) {
-        return GrpcTracing.create(tracing);
-    }
-
-    @Bean
-    public HttpTracing httpTracing(Tracing tracing) {
-        return HttpTracing.create(tracing);
-    }
-
-    @Bean
     public Limiter<GrpcClientRequestContext> grpcClientLimiter() {
         return new GrpcClientLimiterBuilder()
                 .limit(Gradient2Limit.newBuilder().initialLimit(1000).build())
@@ -272,23 +255,18 @@ public class Gateway {
     }
 
     @Bean
-    public Tracing tracing(Sampler sampler) {
-        String zipkinHost = System.getenv().getOrDefault("ZIPKIN_SERVICE_HOST", "zipkin");
-        int zipkinPort = Integer.valueOf(System.getenv().getOrDefault("ZIPKIN_SERVICE_PORT", "9411"));
-
-        URLConnectionSender sender = URLConnectionSender.newBuilder()
-                .endpoint(String.format("http://%s:%s/api/v2/spans", zipkinHost, zipkinPort))
-                .build();
-
-        return Tracing.newBuilder()
-                .sampler(sampler)
-                .spanReporter(AsyncReporter.create(sender))
-                .build();
+    public Sampler defaultSampler() {
+        return Sampler.ALWAYS_SAMPLE;
     }
 
     @Bean
-    public Sampler defaultSampler() {
-        return Sampler.ALWAYS_SAMPLE;
+    public GrpcTracing grpcTracing(Tracing tracing) {
+        return GrpcTracing.create(tracing);
+    }
+
+    @Bean
+    public HttpTracing httpTracing(Tracing tracing) {
+        return HttpTracing.create(tracing);
     }
 
     @Bean

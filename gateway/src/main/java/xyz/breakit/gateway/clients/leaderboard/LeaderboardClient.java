@@ -4,9 +4,10 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class LeaderboardClient {
     private static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+    private static final ParameterizedTypeReference<List<LeaderboardEntry>> LEADERBOARD_LIST_TYPE = new ParameterizedTypeReference<List<LeaderboardEntry>>() {};
 
     private final static RetryPolicy RETRY_POLICY_WITH_NO_BACKOFF = new RetryPolicy()
             .retryOn(Throwable.class)
@@ -34,21 +36,27 @@ public class LeaderboardClient {
             .retryOn(Throwable.class)
             .withMaxRetries(0);
 
-
     private final String leaderboardUrl;
     private final WebClient httpClient;
+    private final BeanFactory beanFactory;
+
     private RetryPolicy currentRetryPolicy;
+
 
     @Autowired
     public LeaderboardClient(
             @Value("${rest.leaderboard.host}") String leaderboardHost,
             @Value("${rest.leaderboard.port}") int leaderboardPort,
-            @Qualifier("tracingWebClient") WebClient webClientTemplate
+            WebClient webClientTemplate,
+            BeanFactory beanFactory
     ) {
+        this.beanFactory = beanFactory;
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
-        httpClient = webClientTemplate.mutate().baseUrl(leaderboardUrl).build();
+        httpClient = webClientTemplate.mutate()
+                .baseUrl(leaderboardUrl)
+                .build();
         currentRetryPolicy = NO_RETRY_POLICY;
     }
 
@@ -64,9 +72,18 @@ public class LeaderboardClient {
     public CompletableFuture<List<LeaderboardEntry>> top5() {
         return Failsafe
                 .with(currentRetryPolicy)
-                .with(EXECUTOR)
+                .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
                 .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
                 .future(() -> top5Request().toFuture());
+    }
+
+    private Mono<List<LeaderboardEntry>> top5Request() {
+        return httpClient
+                .get()
+                .uri("/top/5")
+                .exchange()
+                .timeout(Duration.ofMillis(500))
+                .flatMap(cr -> cr.bodyToMono(LEADERBOARD_LIST_TYPE));
     }
 
     public void updateScore(LeaderboardEntry newScore,
@@ -83,14 +100,6 @@ public class LeaderboardClient {
                 .subscribe(resp -> onMessage.run(), onError, onComplete);
     }
 
-    private Mono<List<LeaderboardEntry>> top5Request() {
-        return httpClient
-                .get()
-                .uri("/top/5")
-                .exchange()
-                .timeout(Duration.ofMillis(500))
-                .flatMap(cr -> cr.bodyToMono(new ParameterizedTypeReference<List<LeaderboardEntry>>() {
-                }));
-    }
+
 
 }

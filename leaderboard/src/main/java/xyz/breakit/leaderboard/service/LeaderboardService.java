@@ -26,7 +26,6 @@ public class LeaderboardService {
     }
 
     public void recordScore(String name, int newScore) {
-        delayIfBroken();
         int existingScore = scores.getOrDefault(name, 0);
         scores.put(name, Math.max(newScore, existingScore));
     }
