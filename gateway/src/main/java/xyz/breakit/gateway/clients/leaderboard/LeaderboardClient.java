@@ -74,10 +74,7 @@ public class LeaderboardClient {
                 .with(currentRetryPolicy)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
                 .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
-                .futureAsync((ex) -> top5Request()
-                        .toFuture()
-                        .whenComplete(ex::complete)
-                );
+                .future(() -> top5Request().toFuture());
     }
 
     private Mono<List<LeaderboardEntry>> top5Request() {
