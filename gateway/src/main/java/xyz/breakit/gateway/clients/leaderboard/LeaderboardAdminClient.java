@@ -83,7 +83,6 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -96,7 +95,6 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -110,7 +108,6 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then()
                 .toFuture();
     }
@@ -123,7 +120,6 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
     }
 
@@ -135,7 +131,6 @@ public class LeaderboardAdminClient {
                 .exchange()
                 .timeout(Duration.ofMillis(1000))
                 .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(String.class))
                 .then().toFuture();
     }
 
