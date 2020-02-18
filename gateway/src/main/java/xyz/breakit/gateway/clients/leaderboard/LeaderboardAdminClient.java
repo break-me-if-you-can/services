@@ -42,10 +42,9 @@ public class LeaderboardAdminClient {
         return httpClient
                 .get()
                 .uri("/admin/health")
-                .exchange()
-                .timeout(Duration.ofMillis(500))
-                .doOnNext(this::checkStatusCode)
-                .flatMap(cr -> cr.bodyToMono(Health.class))
+                .retrieve()
+                .bodyToMono(Health.class)
+                .timeout(Duration.ofMillis(1000))
                 .map(this::toServiceHealthCheckStatus)
                 .map(status ->
                         HealthCheckResponse.newBuilder().addServiceHealthStatus(status).build())
@@ -80,10 +79,10 @@ public class LeaderboardAdminClient {
                 .post()
                 .uri("/admin/rateLimit/" + limit)
                 .contentType(MediaType.APPLICATION_JSON)
-                .exchange()
+                .retrieve()
+                .bodyToMono(String.class)
                 .timeout(Duration.ofMillis(1000))
-                .doOnNext(this::checkStatusCode)
-                .then()
+                .map(s -> (Void) null)
                 .toFuture();
     }
 
@@ -92,10 +91,9 @@ public class LeaderboardAdminClient {
                 .post()
                 .uri("/admin/disableRateLimit")
                 .contentType(MediaType.APPLICATION_JSON)
-                .exchange()
-                .timeout(Duration.ofMillis(1000))
-                .doOnNext(this::checkStatusCode)
-                .then()
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(s -> (Void) null)
                 .toFuture();
     }
 
@@ -105,10 +103,9 @@ public class LeaderboardAdminClient {
                 .post()
                 .uri("/admin/break")
                 .contentType(MediaType.APPLICATION_JSON)
-                .exchange()
-                .timeout(Duration.ofMillis(1000))
-                .doOnNext(this::checkStatusCode)
-                .then()
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(s -> (Void) null)
                 .toFuture();
     }
 
@@ -117,10 +114,10 @@ public class LeaderboardAdminClient {
                 .post()
                 .uri("/admin/unbreak")
                 .contentType(MediaType.APPLICATION_JSON)
-                .exchange()
-                .timeout(Duration.ofMillis(1000))
-                .doOnNext(this::checkStatusCode)
-                .then().toFuture();
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(s -> (Void) null)
+                .toFuture();
     }
 
     public CompletableFuture<Void> clear() {
@@ -128,17 +125,10 @@ public class LeaderboardAdminClient {
                 .post()
                 .uri("/admin/clear")
                 .contentType(MediaType.APPLICATION_JSON)
-                .exchange()
-                .timeout(Duration.ofMillis(1000))
-                .doOnNext(this::checkStatusCode)
-                .then().toFuture();
-    }
-
-
-    private void checkStatusCode(ClientResponse cr) {
-        if (cr.statusCode().value() != 200) {
-            throw new RuntimeException("Got HTTP code of " + cr.statusCode().value());
-        }
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(s -> (Void) null)
+                .toFuture();
     }
 
 }

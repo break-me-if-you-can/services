@@ -81,9 +81,9 @@ public class LeaderboardClient {
         return httpClient
                 .get()
                 .uri("/top/5")
-                .exchange()
-                .timeout(Duration.ofMillis(500))
-                .flatMap(cr -> cr.bodyToMono(LEADERBOARD_LIST_TYPE));
+                .retrieve()
+                .bodyToMono(LEADERBOARD_LIST_TYPE)
+                .timeout(Duration.ofMillis(500));
     }
 
     public void updateScore(LeaderboardEntry newScore,
@@ -94,8 +94,9 @@ public class LeaderboardClient {
                 .post()
                 .uri("/scores/")
                 .contentType(MediaType.APPLICATION_JSON)
-                .syncBody(newScore)
-                .exchange()
+                .bodyValue(newScore)
+                .retrieve()
+                .bodyToMono(String.class)
                 .timeout(Duration.ofMillis(500))
                 .subscribe(resp -> onMessage.run(), onError, onComplete);
     }
