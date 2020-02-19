@@ -52,8 +52,8 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
         try {
-            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
-            lbAdminClient.clear().get(1, TimeUnit.SECONDS);
+            lbAdminClient.unbreakService().get();
+            lbAdminClient.clear().get();
             lbClient.disableRetries();
 
             CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
@@ -72,7 +72,7 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
-            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.breakService().get();
             lbClient.disableRetries();
 
             CompletableFuture.allOf(geeseResult, cloudsResult)
@@ -92,7 +92,7 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
-            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.breakService().get();
             lbClient.disableRetries();
 
             CompletableFuture.allOf(geeseResult, cloudsResult)
@@ -112,7 +112,7 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 1, 700, false);
 
         try {
-            lbAdminClient.breakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.breakService().get();
             lbClient.enableRetriesWithNoBackoff();
 
             CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
@@ -130,9 +130,8 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
         try {
-            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.unbreakService().get();
             lbClient.disableRetries();
-
 
             CompletableFuture.allOf(geeseResult, cloudsResult).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -149,7 +148,7 @@ public class AdminController {
         CompletableFuture<Object> cloudsResult = injectLatencyInto("clouds", 0.0, 0, false);
 
         try {
-            lbAdminClient.unbreakService().get(1, TimeUnit.SECONDS);
+            lbAdminClient.unbreakService().get();
             lbClient.disableRetries();
 
 
