@@ -30,29 +30,33 @@ public class AdminController {
     }
 
     @PostMapping(value = "/clear")
-    public void clear() {
+    public String clear() {
         leaderboardService.clear();
+        return "OK";
     }
 
     @PostMapping(value = "/break")
-    public void breakService() {
+    public String breakService() {
         leaderboardService.breakService();
+        return "OK";
     }
 
     @PostMapping(value = "/unbreak")
-    public void unbreak() {
+    public String unbreak() {
         leaderboardService.unbreak();
+        return "OK";
     }
 
     @PostMapping(value = "/rateLimit/{n}")
-    public void rateLimit(@PathVariable("n") int n) {
+    public String rateLimit(@PathVariable("n") int n) {
         limiterFilter.enable(n);
+        return "OK";
     }
 
     @PostMapping(value = "/disableRateLimit")
-    public void disableRateLimit() {
+    public String disableRateLimit() {
         limiterFilter.disable();
+        return "OK";
     }
-
 
 }

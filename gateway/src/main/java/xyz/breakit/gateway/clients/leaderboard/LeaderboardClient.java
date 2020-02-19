@@ -1,5 +1,6 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
+import io.netty.channel.ChannelOption;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
@@ -10,9 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
 import java.util.List;
@@ -54,9 +57,14 @@ public class LeaderboardClient {
         this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
+        HttpClient nettyHttpClient = HttpClient
+                .create()
+                .tcpConfiguration(client -> client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000));
+
         httpClient = webClientTemplate.mutate()
-                .baseUrl(leaderboardUrl)
-                .build();
+                .clientConnector(new ReactorClientHttpConnector(nettyHttpClient))
+                .baseUrl(leaderboardUrl).build();
+
         currentRetryPolicy = NO_RETRY_POLICY;
     }
 
