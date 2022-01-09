@@ -1,8 +1,8 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
 import com.google.protobuf.util.Durations;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -24,11 +24,10 @@ public class LeaderboardAdminClient {
     private static final Logger LOG = LoggerFactory.getLogger(LeaderboardAdminClient.class);
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
-    private final static RetryPolicy NO_RETRY_POLICY = new RetryPolicy()
-            .retryOn(Throwable.class)
-            .withMaxRetries(0);
+    private final static RetryPolicy<Object> NO_RETRY_POLICY = RetryPolicy.builder()
+            .withMaxRetries(0)
+            .build();
 
-    private final String leaderboardUrl;
     private final WebClient httpClient;
     private final BeanFactory beanFactory;
 
@@ -40,7 +39,7 @@ public class LeaderboardAdminClient {
             WebClient webClientTemplate,
             BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
-        this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
+        String leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
         httpClient = webClientTemplate.mutate()
@@ -51,7 +50,7 @@ public class LeaderboardAdminClient {
         return Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
-                .future(() ->
+                .get(() ->
                         httpClient
                                 .get()
                                 .uri("/admin/health")
@@ -94,7 +93,7 @@ public class LeaderboardAdminClient {
         return Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
-                .future(() ->
+                .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/break")
@@ -109,7 +108,7 @@ public class LeaderboardAdminClient {
         return Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
-                .future(() ->
+                .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/unbreak")
@@ -124,7 +123,7 @@ public class LeaderboardAdminClient {
         return Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
-                .future(() ->
+                .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/clear")

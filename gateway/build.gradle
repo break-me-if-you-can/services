@@ -1,92 +1,79 @@
 buildscript {
     ext {
-        springBootVersion = '2.2.4.RELEASE'
+        springBootVersion = '2.6.2'
     }
     repositories {
-        jcenter()
-        maven {
-            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-        }
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 
     }
 }
 
-plugins {
-    id "net.ltgt.apt" version "0.18"
-}
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.17
+targetCompatibility = 1.17
 
-def grpcVersion = '1.25.0'
-def protobufVersion = '3.9.0'
+def grpcVersion = '1.43.0'
+def protobufVersion = '3.19.2'
 
 repositories {
-    jcenter()
-    maven {
-        url 'https://repo.spring.io/libs-snapshot'
-    }
-    maven {
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-    }
+    mavenCentral()
 }
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.2.1.RELEASE'
+        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:3.1.0'
     }
 }
 
 dependencies {
-    compileOnly "org.immutables:value:2.7.1:annotations"
-    annotationProcessor "org.immutables:value:2.7.1"
+    annotationProcessor "org.immutables:value:2.8.2"
+    implementation "org.immutables:value:2.8.2"
 
-    compile 'org.springframework.boot:spring-boot-starter-webflux'
-    compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
+    implementation 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
 
-    compile 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
-    compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
 
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.+'
 
-    compile group: 'net.jodah', name: 'failsafe', version: '1.1.0'
-    compile group: 'com.netflix.concurrency-limits', name: 'concurrency-limits-grpc', version: '0.3.6'
+    implementation 'dev.failsafe:failsafe:3.1.0'
+    implementation 'com.netflix.concurrency-limits:concurrency-limits-grpc:0.3.6'
 
-    compile "com.google.api.grpc:proto-google-common-protos:1.16.0"
-    compile "io.grpc:grpc-alts:${grpcVersion}"
-    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
-    compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-stub:${grpcVersion}"
-    compile "javax.annotation:javax.annotation-api:1.2"
+    implementation "com.google.api.grpc:proto-google-common-protos:2.7.1"
+    implementation "io.grpc:grpc-alts:${grpcVersion}"
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "javax.annotation:javax.annotation-api:1.2"
 
-    compile 'io.zipkin.brave:brave-instrumentation-grpc:5.3.3'
-    compile 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.7.7'
+    implementation 'io.zipkin.brave:brave-instrumentation-grpc:5.13.7'
+    implementation 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.16.3'
 
-    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
-    compile "xyz.breakit:grpc-api"
-    compile "xyz.breakit:grpc-common"
+    implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    implementation "xyz.breakit:grpc-api"
+    implementation "xyz.breakit:grpc-common"
 
-    runtimeOnly "io.opencensus:opencensus-impl:0.24.0"
+    runtimeOnly "io.opencensus:opencensus-impl:0.30.0"
 
-    testCompile "io.grpc:grpc-testing:${grpcVersion}"
-    testCompile "junit:junit:4.12"
-    testCompile "org.mockito:mockito-core:1.9.5"
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "io.grpc:grpc-testing:${grpcVersion}"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:4.2.0"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 apply plugin: 'idea'
-
 apply plugin: 'application'
 
 startScripts.enabled = false
@@ -100,27 +87,18 @@ bootJar {
 
 task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.gateway.GatewayClient'
+    mainClass = 'xyz.breakit.gateway.GatewayClient'
 }
 
 task healthCheck(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.gateway.GatewayHealthcheckClient'
+    mainClass = 'xyz.breakit.gateway.GatewayHealthcheckClient'
 }
 
 task injectFailure(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'xyz.breakit.gateway.GatewayAdminClient'
+    mainClass = 'xyz.breakit.gateway.GatewayAdminClient'
 }
 
 def sysprops = System.getProperties()
-if (sysprops['idea.platform.prefix'] != null) {
-    sourceSets {
-        main {
-            java {
-                srcDir "build/generated/source/apt/main"
-            }
-        }
-    }
-}
 apply from: '../common/common.gradle'
