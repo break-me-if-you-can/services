@@ -1,4 +1,4 @@
-FROM java:8
+FROM java:17
 WORKDIR /
 ADD build/libs/leaderboard.jar leaderboard.jar
 EXPOSE 8080 8090

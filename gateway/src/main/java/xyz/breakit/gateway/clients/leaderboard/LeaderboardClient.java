@@ -1,8 +1,8 @@
 package xyz.breakit.gateway.clients.leaderboard;
 
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import io.netty.channel.ChannelOption;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -29,21 +29,20 @@ public class LeaderboardClient {
     private static final Logger LOG = LoggerFactory.getLogger(LeaderboardClient.class);
 
     private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
-    private static final ParameterizedTypeReference<List<LeaderboardEntry>> LEADERBOARD_LIST_TYPE = new ParameterizedTypeReference<List<LeaderboardEntry>>() {};
+    private static final ParameterizedTypeReference<List<LeaderboardEntry>> LEADERBOARD_LIST_TYPE = new ParameterizedTypeReference<>() {};
 
-    private final static RetryPolicy RETRY_POLICY_WITH_NO_BACKOFF = new RetryPolicy()
-            .retryOn(Throwable.class)
-            .withMaxRetries(5);
+    private final static RetryPolicy<CompletableFuture<List<LeaderboardEntry>>> RETRY_POLICY_WITH_NO_BACKOFF = RetryPolicy.<CompletableFuture<List<LeaderboardEntry>>>builder()
+            .withMaxRetries(5)
+            .build();
 
-    private final static RetryPolicy NO_RETRY_POLICY = new RetryPolicy()
-            .retryOn(Throwable.class)
-            .withMaxRetries(0);
+    private final static RetryPolicy<CompletableFuture<List<LeaderboardEntry>>> NO_RETRY_POLICY = RetryPolicy.<CompletableFuture<List<LeaderboardEntry>>>builder()
+            .withMaxRetries(0)
+            .build();
 
-    private final String leaderboardUrl;
     private final WebClient httpClient;
     private final BeanFactory beanFactory;
 
-    private RetryPolicy currentRetryPolicy;
+    private RetryPolicy<CompletableFuture<List<LeaderboardEntry>>> currentRetryPolicy;
 
 
     @Autowired
@@ -54,12 +53,12 @@ public class LeaderboardClient {
             BeanFactory beanFactory
     ) {
         this.beanFactory = beanFactory;
-        this.leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
+        String leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
         HttpClient nettyHttpClient = HttpClient
                 .create()
-                .tcpConfiguration(client -> client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000));
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
 
         httpClient = webClientTemplate.mutate()
                 .clientConnector(new ReactorClientHttpConnector(nettyHttpClient))
@@ -81,8 +80,8 @@ public class LeaderboardClient {
         return Failsafe
                 .with(currentRetryPolicy)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
-                .onFailedAttempt(t -> LOG.error("Error fetching top 5", t))
-                .future(() -> top5Request().toFuture());
+                .onFailure(e -> LOG.error("Error fetching top 5", e.getFailure()))
+                .get(() -> top5Request().toFuture());
     }
 
     private Mono<List<LeaderboardEntry>> top5Request() {

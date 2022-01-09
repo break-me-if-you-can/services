@@ -1,4 +1,4 @@
-FROM java:8
+FROM java:17
 WORKDIR /
 ADD build/libs/clouds-all.jar clouds.jar
 EXPOSE 8100

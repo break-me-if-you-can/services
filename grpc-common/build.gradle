@@ -5,41 +5,36 @@ group "xyz.breakit"
 
 buildscript {
     repositories {
-        maven {
-            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-        }
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
     }
 }
 
 repositories {
-    maven {
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-    }
-    jcenter()
+    mavenCentral()
     mavenLocal()
 }
 
-def grpcVersion = '1.25.0'
-def protobufVersion = '3.9.0'
-def opencensusVersion = '0.24.0'
+def grpcVersion = '1.43.0'
+def protobufVersion = '3.19.2'
+def opencensusVersion = '0.30.0'
 
 dependencies {
-    compile "xyz.breakit:grpc-api"
-    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
-    compile "com.google.api.grpc:proto-google-common-protos:${opencensusVersion}"
-    compile "io.opencensus:opencensus-contrib-zpages:${opencensusVersion}"
-    compile "io.opencensus:opencensus-contrib-grpc-metrics:${opencensusVersion}"
-    compile "io.opencensus:opencensus-exporter-stats-stackdriver:${opencensusVersion}"
-    compile "io.opencensus:opencensus-exporter-trace-stackdriver:${opencensusVersion}"
+    implementation "xyz.breakit:grpc-api"
+    implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    implementation 'com.google.api.grpc:proto-google-common-protos:2.7.1'
+    implementation "io.opencensus:opencensus-contrib-zpages:${opencensusVersion}"
+    implementation "io.opencensus:opencensus-contrib-grpc-metrics:${opencensusVersion}"
+    implementation "io.opencensus:opencensus-exporter-stats-stackdriver:${opencensusVersion}"
+    implementation "io.opencensus:opencensus-exporter-trace-stackdriver:${opencensusVersion}"
 
-    runtimeOnly "io.opencensus:opencensus-impl:0.24.0"
+    runtimeOnly "io.opencensus:opencensus-impl:${opencensusVersion}"
 
-    testCompile "io.grpc:grpc-testing:${grpcVersion}"
-    testCompile "junit:junit:4.12"
-    testCompile "org.mockito:mockito-core:1.9.5"
+    testImplementation "io.grpc:grpc-testing:${grpcVersion}"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:4.2.0"
 }
 
 apply plugin: 'idea'
