@@ -1,17 +1,13 @@
 buildscript {
     ext {
-        springBootVersion = '2.0.4.RELEASE'
+        springBootVersion = '2.6.2'
     }
     repositories {
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
-}
-
-plugins {
-    id "net.ltgt.apt" version "0.18"
 }
 
 apply plugin: 'idea'
@@ -22,66 +18,51 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'xyz.breakit'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.8
+sourceCompatibility = 1.17
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:2.0.1.RELEASE'
+        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:3.1.0'
     }
 }
 
 dependencies {
-    compileOnly "org.immutables:value:2.7.1:annotations"
-    annotationProcessor "org.immutables:value:2.7.1"
+    annotationProcessor "org.immutables:value:2.8.2"
+    implementation "org.immutables:value:2.8.2"
 
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.+'
 
-    compile('org.springframework.boot:spring-boot-starter-web')
-    compile 'com.google.guava:guava:23.0'
-    compile 'javax.validation:validation-api:2.0.1.Final'
-    compile 'com.netflix.concurrency-limits:concurrency-limits-servlet:0.0.49'
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation 'com.google.guava:guava:23.0'
+    implementation 'javax.validation:validation-api:2.0.1.Final'
+    implementation 'com.netflix.concurrency-limits:concurrency-limits-servlet:0.0.49'
 
-    compile 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
-    compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
-    compile 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.1.3'
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.16.3'
 
 
-    testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile('io.projectreactor:reactor-test')
-    testCompile 'junit:junit:4.12'
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('io.projectreactor:reactor-test')
+    testImplementation 'junit:junit:4.12'
 
-    testCompile 'org.assertj:assertj-core:3.5.+'
-    testCompile 'org.mockito:mockito-core:2.+'
-    testCompile 'net.bytebuddy:byte-buddy:1.9.+'
-    testCompile 'net.bytebuddy:byte-buddy-agent:1.9.+'
-    testCompile 'xmlunit:xmlunit:1.6'
+    testImplementation 'org.assertj:assertj-core:3.+'
+    testImplementation 'org.mockito:mockito-core:4.+'
+//    testImplementation 'net.bytebuddy:byte-buddy:1.9.+'
+//    testImplementation 'net.bytebuddy:byte-buddy-agent:1.9.+'
+    testImplementation 'xmlunit:xmlunit:1.6'
+}
+
+springBoot {
+    mainClass = 'xyz.breakit.leaderboard.Application'
 }
 
 bootJar {
-    mainClassName = 'xyz.breakit.leaderboard.Application'
-    version = ''
+    archiveFileName = 'leaderboard'
 }
 
 apply from: '../common/common.gradle'
-
-idea.module {
-    outputDir = file('idea-build')
-    testOutputDir = file('idea-test-build')
-    generatedSourceDirs += file('build/generated/source/apt/main')
-
-}
-
-def sysprops = System.getProperties()
-if (sysprops['idea.platform.prefix'] != null) {
-    sourceSets {
-        main {
-            java {
-                srcDir "build/generated/source/apt/main"
-            }
-        }
-    }
-}

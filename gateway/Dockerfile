@@ -1,4 +1,4 @@
-FROM java:8
+FROM java:17
 WORKDIR /
 ADD build/libs/gateway.jar gateway.jar
 EXPOSE 8080
