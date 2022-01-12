@@ -1,11 +1,14 @@
 #!/bin/bash
 cat <<YAML
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gateway
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
   template:
     metadata:
       labels:
@@ -13,7 +16,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: gcr.io/$GCP_PROJECT/gateway:latest
+          image: eu.gcr.io/$GCP_PROJECT/gateway:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
