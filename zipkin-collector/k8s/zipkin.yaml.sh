@@ -1,11 +1,14 @@
 #!/bin/bash
 cat <<YAML
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: zipkin
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: zipkin
   template:
     metadata:
       labels:
@@ -13,7 +16,7 @@ spec:
     spec:
       containers:
         - name: zipkin
-          image: gcr.io/stackdriver-trace-docker/zipkin-collector
+          image: openzipkin/zipkin-gcp
           imagePullPolicy: Always
           ports:
             - containerPort: 9411

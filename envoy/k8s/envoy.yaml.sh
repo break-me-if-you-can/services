@@ -1,11 +1,14 @@
 #!/bin/bash
 cat <<YAML
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: envoy
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: envoy
   template:
     metadata:
       labels:
@@ -13,7 +16,7 @@ spec:
     spec:
       containers:
         - name: envoy
-          image: gcr.io/$GCP_PROJECT/envoy:latest
+          image: eu.gcr.io/$GCP_PROJECT/envoy:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

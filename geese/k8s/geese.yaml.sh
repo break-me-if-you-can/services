@@ -1,11 +1,14 @@
 #!/bin/bash
 cat <<YAML
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: geese
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: geese
   template:
     metadata:
       labels:
@@ -13,7 +16,7 @@ spec:
     spec:
       containers:
         - name: geese
-          image: gcr.io/$GCP_PROJECT/geese:latest
+          image: eu.gcr.io/$GCP_PROJECT/geese:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8090

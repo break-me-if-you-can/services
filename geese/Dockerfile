@@ -1,4 +1,4 @@
-FROM java:17
+FROM openjdk:17-oracle
 WORKDIR /
 ADD build/libs/geese-all.jar geese.jar
 EXPOSE 8090
