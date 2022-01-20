@@ -19,6 +19,12 @@ export class Game extends Component {
   constructor(props) {
     super(props);
     this.service = new Service();
+     // Use the native window resolution as the default resolution
+     // will support high-density displays when rendering
+     PIXI.settings.RESOLUTION = window.devicePixelRatio;
+
+     // Disable interpolation when scaling, will make texture be pixelated
+     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.loader = new PIXI.loaders.Loader();
 
     this.app = new PIXI.Application(
@@ -28,6 +34,14 @@ export class Game extends Component {
         transparent:false,
       }
     );
+
+//     let height = Math.min(window.innerHeight, window.innerWidth);
+//     height = height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
+//
+//     let width = Math.max(window.innerHeight, window.innerWidth);
+//     width = width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
+
+    this.app.stage.scale.set(393/850)//CONSTANTS.FIELD_WIDTH/CONSTANTS.FIELD_HEIGHT)
 
     this.mainDiv = null;
     this.counter = 0;
@@ -90,7 +104,12 @@ export class Game extends Component {
     return height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
   }
 
-  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
+  getWidth = () => {
+    let width = Math.max(window.innerHeight, window.innerWidth);
+    return width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
+  }
+
+  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - 2 * CONSTANTS.AIRCRAFT_HEIGHT; //this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
 
   getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
@@ -152,14 +171,14 @@ export class Game extends Component {
       width: CONSTANTS.WATER_WIDTH,
       height: CONSTANTS.WATER_HEIGHT,
       horizontalOffset: CONSTANTS.WATER_HORIZONTAL_OFFSET,
-      ratio: 1,
+      ratio: this.ratio,
     });
 
     let banks = new ParallaxTexture({
       image: resources.banksTexture,
       width: CONSTANTS.FIELD_WIDTH,
       height: CONSTANTS.FIELD_HEIGHT,
-      ratio: 1,
+      ratio: this.ratio,
     });
 
     water.addToStage(this.getStage());
@@ -231,7 +250,9 @@ export class Game extends Component {
       };
       this.aircraft.setPosition(position);
       this.aircraft.showStraight(this.getStage());
-    }, 100);
+
+      console.log('Height: ', this.getHeight(), window.innerWidth, window.innerHeight )
+    }, 200);
 
     this.runIntervals();
 
