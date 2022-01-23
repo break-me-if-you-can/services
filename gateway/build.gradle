@@ -1,6 +1,6 @@
-buildscript {
+uildscript {
     ext {
-        springBootVersion = '2.6.2'
+        springBootVersion = '2.5.9'
     }
     repositories {
         mavenCentral()
@@ -8,6 +8,7 @@ buildscript {
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
 
     }
 }
@@ -16,7 +17,6 @@ apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-
 
 sourceCompatibility = 1.17
 targetCompatibility = 1.17
@@ -30,7 +30,8 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:3.1.0'
+        mavenBom 'com.google.cloud:spring-cloud-gcp-dependencies:3.0.0'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2020.0.4'
     }
 }
 
@@ -45,8 +46,11 @@ dependencies {
 
     implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
     implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-trace'
+
 
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.+'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.+'
 
     implementation 'dev.failsafe:failsafe:3.1.0'
     implementation 'com.netflix.concurrency-limits:concurrency-limits-grpc:0.3.6'

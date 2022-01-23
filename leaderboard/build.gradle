@@ -1,12 +1,13 @@
 buildscript {
     ext {
-        springBootVersion = '2.6.2'
+        springBootVersion = '2.5.9'
     }
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
     }
 }
 
@@ -26,7 +27,8 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-sleuth:3.1.0'
+        mavenBom 'com.google.cloud:spring-cloud-gcp-dependencies:3.0.0'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2020.0.4'
     }
 }
 
@@ -35,6 +37,7 @@ dependencies {
     implementation "org.immutables:value:2.8.2"
 
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.+'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.+'
 
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation 'com.google.guava:guava:23.0'
@@ -43,6 +46,8 @@ dependencies {
 
     implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
     implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-trace'
+
     implementation 'io.zipkin.reporter2:zipkin-sender-urlconnection:2.16.3'
     implementation 'org.apache.logging.log4j:log4j-api:2.17.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
@@ -53,8 +58,6 @@ dependencies {
 
     testImplementation 'org.assertj:assertj-core:3.+'
     testImplementation 'org.mockito:mockito-core:4.+'
-//    testImplementation 'net.bytebuddy:byte-buddy:1.9.+'
-//    testImplementation 'net.bytebuddy:byte-buddy-agent:1.9.+'
     testImplementation 'xmlunit:xmlunit:1.6'
 }
 

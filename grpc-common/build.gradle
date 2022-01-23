@@ -17,7 +17,7 @@ repositories {
     mavenLocal()
 }
 
-def grpcVersion = '1.43.0'
+def grpcVersion = '1.30.1'
 def protobufVersion = '3.19.2'
 def opencensusVersion = '0.30.0'
 
@@ -31,6 +31,10 @@ dependencies {
     implementation "io.opencensus:opencensus-exporter-trace-stackdriver:${opencensusVersion}"
 
     runtimeOnly "io.opencensus:opencensus-impl:${opencensusVersion}"
+
+    implementation 'io.grpc:grpc-netty-shaded:1.30.1'
+    implementation 'io.grpc:grpc-protobuf:1.30.1'
+    implementation 'io.grpc:grpc-stub:1.30.1'
 
     testImplementation "io.grpc:grpc-testing:${grpcVersion}"
     testImplementation "junit:junit:4.12"

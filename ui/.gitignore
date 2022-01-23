@@ -37,3 +37,6 @@ ui.iml
 .project
 .settings/
 
+
+.parcel-cache/
+build/
