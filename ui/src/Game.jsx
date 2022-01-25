@@ -19,12 +19,6 @@ export class Game extends Component {
   constructor(props) {
     super(props);
     this.service = new Service();
-     // Use the native window resolution as the default resolution
-     // will support high-density displays when rendering
-     PIXI.settings.RESOLUTION = window.devicePixelRatio;
-
-     // Disable interpolation when scaling, will make texture be pixelated
-     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.loader = new PIXI.loaders.Loader();
 
     this.app = new PIXI.Application(
@@ -32,17 +26,12 @@ export class Game extends Component {
         width:  CONSTANTS.FIELD_WIDTH,
         height: CONSTANTS.FIELD_HEIGHT,
         transparent:false,
+        resolution: window.devicePixelRatio || 1,
+        resizeTo: window
       }
     );
 
-//     let height = Math.min(window.innerHeight, window.innerWidth);
-//     height = height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
-//
-//     let width = Math.max(window.innerHeight, window.innerWidth);
-//     width = width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
-
-    this.app.stage.scale.set(393/850)//CONSTANTS.FIELD_WIDTH/CONSTANTS.FIELD_HEIGHT)
-
+    this.app.stage.scale.set(CONSTANTS.FIELD_WIDTH/CONSTANTS.FIELD_HEIGHT)
     this.mainDiv = null;
     this.counter = 0;
 
@@ -100,8 +89,9 @@ export class Game extends Component {
   focusDiv = () => { this.mainDiv.focus() }
 
   getHeight = () => {
-    let height = Math.min(window.innerHeight, window.innerWidth);
-    return height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
+    return (this.app.view.parentNode.clientHeight < CONSTANTS.FIELD_HEIGHT ?
+      this.app.view.parentNode.clientHeight :
+      CONSTANTS.FIELD_HEIGHT * 0.85);
   }
 
   getWidth = () => {
@@ -109,7 +99,7 @@ export class Game extends Component {
     return width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
   }
 
-  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - 2 * CONSTANTS.AIRCRAFT_HEIGHT; //this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
+  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - CONSTANTS.AIRCRAFT_HEIGHT;
 
   getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
@@ -164,7 +154,7 @@ export class Game extends Component {
   runGame = (resources) => {
     this.width = Math.max(window.innerWidth, window.innerHeight);
     let availableWidth = this.width;
-    this.ratio = availableWidth < CONSTANTS.FIELD_WIDTH? availableWidth / CONSTANTS.FIELD_WIDTH : 1;
+    this.ratio = 1;
 
     let water = new ParallaxTexture({
       image: resources.waterTexture,
@@ -250,8 +240,6 @@ export class Game extends Component {
       };
       this.aircraft.setPosition(position);
       this.aircraft.showStraight(this.getStage());
-
-      console.log('Height: ', this.getHeight(), window.innerWidth, window.innerHeight )
     }, 200);
 
     this.runIntervals();

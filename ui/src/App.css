@@ -172,9 +172,6 @@ body, html {
 }
 
 .app .game > .right {
-  display: table-cell;
-  max-width: 767px;
-  max-height: 1;
   outline: none;
 }
 
@@ -183,12 +180,6 @@ body, html {
   display: table-cell;
   overflow: hidden;
   width: 30%;
-  /*background: url("../assets/interface_bg.png") no-repeat center center fixed;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-  color: rgb(255,235,132);*/
   vertical-align: top;
   text-align: center;
   padding-top: 15px;
