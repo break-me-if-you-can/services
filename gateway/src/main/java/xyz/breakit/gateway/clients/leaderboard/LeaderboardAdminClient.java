@@ -12,6 +12,7 @@ import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecu
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import xyz.breakit.admin.*;
 
 import java.time.Duration;
@@ -100,7 +101,7 @@ public class LeaderboardAdminClient {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000))
+                                .timeout(Duration.ofMillis(1000), Mono.just(""))
                                 .toFuture());
     }
 
@@ -115,7 +116,7 @@ public class LeaderboardAdminClient {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000))
+                                .timeout(Duration.ofMillis(1000), Mono.just(""))
                                 .toFuture());
     }
 
@@ -130,7 +131,7 @@ public class LeaderboardAdminClient {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000))
+                                .timeout(Duration.ofMillis(1000), Mono.just(""))
                                 .toFuture());
     }
 

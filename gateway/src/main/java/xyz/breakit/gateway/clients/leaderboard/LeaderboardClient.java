@@ -104,7 +104,7 @@ public class LeaderboardClient {
                 .bodyValue(newScore)
                 .retrieve()
                 .bodyToMono(String.class)
-                .timeout(Duration.ofMillis(500))
+                .timeout(Duration.ofMillis(500), Mono.just(""))
                 .subscribe(resp -> onMessage.run(), onError, onComplete);
     }
 
