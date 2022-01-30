@@ -69,17 +69,11 @@ body, html {
   left: 0;
   border-right: 50px solid rgba(144, 164, 174, .7);
 }
-/* .app .container .arrow.left:hover {
-  border-right: 50px solid rgba(255, 82, 82, .7);
-} */
 
 .app .container .arrow.right {
   right: 0;
   border-left: 50px solid rgba(144, 164, 174, .7);
 }
-/* .app .container .arrow.right:hover {
-  border-left: 50px solid rgba(255, 82, 82, .7);
-} */
 
 @keyframes FONT-SIZE-ANIMATION {
   0%   { font-size: 15pt; }
@@ -172,8 +166,6 @@ body, html {
 }
 
 .app .game > .right {
-  display: table-cell;
-  max-width: 767px;
   max-height: 1;
   outline: none;
 }
@@ -183,12 +175,6 @@ body, html {
   display: table-cell;
   overflow: hidden;
   width: 30%;
-  /*background: url("../assets/interface_bg.png") no-repeat center center fixed;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-  color: rgb(255,235,132);*/
   vertical-align: top;
   text-align: center;
   padding-top: 15px;
