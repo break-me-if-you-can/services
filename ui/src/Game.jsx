@@ -19,30 +19,19 @@ export class Game extends Component {
   constructor(props) {
     super(props);
     this.service = new Service();
-     // Use the native window resolution as the default resolution
-     // will support high-density displays when rendering
-     PIXI.settings.RESOLUTION = window.devicePixelRatio;
-
-     // Disable interpolation when scaling, will make texture be pixelated
-     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.RESOLUTION = window.devicePixelRatio;
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.loader = new PIXI.loaders.Loader();
 
     this.app = new PIXI.Application(
       {
         width:  CONSTANTS.FIELD_WIDTH,
         height: CONSTANTS.FIELD_HEIGHT,
-        transparent:false,
+        transparent: false,
       }
     );
 
-//     let height = Math.min(window.innerHeight, window.innerWidth);
-//     height = height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
-//
-//     let width = Math.max(window.innerHeight, window.innerWidth);
-//     width = width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
-
-    this.app.stage.scale.set(393/850)//CONSTANTS.FIELD_WIDTH/CONSTANTS.FIELD_HEIGHT)
-
+    this.app.stage.scale.set(0.85 * CONSTANTS.FIELD_WIDTH/CONSTANTS.FIELD_HEIGHT)
     this.mainDiv = null;
     this.counter = 0;
 
@@ -84,6 +73,11 @@ export class Game extends Component {
     return check;
   };
 
+  isTablet = () => {
+    var check = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(navigator.userAgent.toLowerCase())
+    return check;
+  }
+
   init = () => {
     this.collisionsCounter = 0;
     this.score = 0;
@@ -99,17 +93,14 @@ export class Game extends Component {
 
   focusDiv = () => { this.mainDiv.focus() }
 
-  getHeight = () => {
-    let height = Math.min(window.innerHeight, window.innerWidth);
-    return height < CONSTANTS.FIELD_HEIGHT? height: CONSTANTS.FIELD_HEIGHT;
-  }
+  getHeight = () => CONSTANTS.FIELD_HEIGHT
 
-  getWidth = () => {
-    let width = Math.max(window.innerHeight, window.innerWidth);
-    return width < CONSTANTS.FIELD_WIDTH? width: CONSTANTS.FIELD_WIDTH;
-  }
+  getWidth = () => CONSTANTS.FIELD_WIDTH
 
-  setAircraftVerticalPosition = () => this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - 2 * CONSTANTS.AIRCRAFT_HEIGHT; //this.aircraftFactor * CONSTANTS.AIRCRAFT_HEIGHT;
+  setAircraftVerticalPosition = () => {
+    const factor = !this.isTablet() && this.mobileAndTabletcheck() ? 0.7 : 1
+    return factor * (this.getHeight() - CONSTANTS.AIRCRAFT_OFFSET - 2 * CONSTANTS.AIRCRAFT_HEIGHT)
+  }
 
   getVerticalCutOff = () => this.getHeight() + CONSTANTS.CUT_OFF_OFFSET;
 
@@ -250,8 +241,6 @@ export class Game extends Component {
       };
       this.aircraft.setPosition(position);
       this.aircraft.showStraight(this.getStage());
-
-      console.log('Height: ', this.getHeight(), window.innerWidth, window.innerHeight )
     }, 200);
 
     this.runIntervals();
@@ -353,9 +342,9 @@ export class Game extends Component {
       this.service.updatePlayerScore({ playerId, score })
         .then(
           (result) => { },
-          (error) => console.log('then player score', error))
+          (error) => { } ) //player score', error))
         .catch(
-          (error) => console.log('then player score', error)
+          (error) => { } // console.log('then player score', error)
         );
     }, CONSTANTS.SCORE_INTERVAL);
 
