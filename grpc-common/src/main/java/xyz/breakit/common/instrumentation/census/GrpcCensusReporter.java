@@ -23,9 +23,11 @@ public final class GrpcCensusReporter {
      */
     public static void registerAndExportViews(int zpagesPort) throws IOException {
 
+        Stats.getViewManager().registerView(GRPC_SERVER_STARTED_RPC_VIEW);
         Stats.getViewManager().registerView(GRPC_SERVER_SERVER_LATENCY_VIEW);
         Stats.getViewManager().registerView(GRPC_SERVER_COMPLETED_RPC_VIEW);
         Stats.getViewManager().registerView(GRPC_CLIENT_SERVER_LATENCY_VIEW);
+        Stats.getViewManager().registerView(GRPC_CLIENT_STARTED_RPC_VIEW);
         Stats.getViewManager().registerView(GRPC_CLIENT_COMPLETED_RPC_VIEW);
         Stats.getViewManager().registerView(RPC_CLIENT_ERROR_COUNT_MINUTE_VIEW);
 
