@@ -144,6 +144,7 @@ message UpdateScoreRequest {
  * Response message, currently empty.
  */
 message UpdateScoreResponse {
+    string message = 1;
 }
 
 /*

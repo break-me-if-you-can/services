@@ -60,7 +60,7 @@ public class LeaderboardService extends LeaderboardServiceImplBase {
                 .build();
 
         leaderboardClient.updateScore(entry,
-                () -> responseObserver.onNext(UpdateScoreResponse.getDefaultInstance()),
+                () -> responseObserver.onNext(UpdateScoreResponse.newBuilder().setMessage("OK").build()),
                 responseObserver::onError,
                 responseObserver::onCompleted);
     }
