@@ -10,14 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -90,7 +93,7 @@ public class LeaderboardClient {
                 .uri("/top/5")
                 .retrieve()
                 .bodyToMono(LEADERBOARD_LIST_TYPE)
-                .timeout(Duration.ofMillis(500));
+                .timeout(Duration.ofMillis(500), Mono.just(Collections.emptyList()));
     }
 
     public void updateScore(LeaderboardEntry newScore,
@@ -103,9 +106,19 @@ public class LeaderboardClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(newScore)
                 .retrieve()
-                .bodyToMono(String.class)
+                .toBodilessEntity()
+                .map(v -> "")
                 .timeout(Duration.ofMillis(500), Mono.just(""))
-                .subscribe(resp -> onMessage.run(), onError, onComplete);
+                .subscribe(resp -> {
+                            onMessage.run();
+                            onComplete.run();
+                        },
+                        error -> {
+                            LOG.error("error while storing the score", error);
+                            onError.accept(error);
+                            onComplete.run();
+                        }
+                );
     }
 
 
