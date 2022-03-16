@@ -40,6 +40,11 @@ final class GeeseService extends GeeseServiceImplBase {
     public void getGeese(GetGeeseRequest request,
                          StreamObserver<GeeseResponse> responseObserver) {
 
+        try {
+            Thread.sleep(5000L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         GeeseResponse.Builder response = GeeseResponse.newBuilder();
         int gooseWidth = Integer.max(request.getGooseWidth(), DEFAULT_GOOSE_WIDTH);
         IntStream.range(0, request.getLinesCount())

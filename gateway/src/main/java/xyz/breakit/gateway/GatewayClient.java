@@ -5,14 +5,18 @@ import brave.grpc.GrpcTracing;
 import brave.sampler.Sampler;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.NameResolverRegistry;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
+import xyz.breakit.gateway.grpc.MultiAddressNameResolverProvider;
 import xyz.breakit.geese.GeeseResponse;
 import xyz.breakit.geese.GeeseServiceGrpc;
 import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceBlockingStub;
 import xyz.breakit.geese.GetGeeseRequest;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
+
+import java.net.InetSocketAddress;
 
 /**
  * Client to call gateway service.
@@ -21,8 +25,15 @@ public class GatewayClient {
 
     public static void main(String[] args) throws InterruptedException {
         String host = "127.0.0.1";
+
+        NameResolverRegistry.getDefaultRegistry()
+                .register(new MultiAddressNameResolverProvider(
+                        new InetSocketAddress("localhost", 8090),
+                        new InetSocketAddress("localhost", 8091)
+                ));
         Channel channel = ManagedChannelBuilder
-                .forAddress(host, 8090)
+                .forTarget("multi://localhost")
+                //.forAddress(host, 8090)
                 .usePlaintext()
                 //.intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
@@ -70,16 +81,20 @@ public class GatewayClient {
     private static void callGeeseService(Channel channel) throws InterruptedException {
         GeeseServiceBlockingStub client = GeeseServiceGrpc.newBlockingStub(channel);
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
             GetGeeseRequest geeseRequest = GetGeeseRequest.newBuilder()
-                    .setLinesCount(100)
+                    .setLinesCount(1)
                     .setLineWidth(100)
                     .setGooseWidth(10)
                     .build();
 
-            GeeseResponse geese = client.getGeese(geeseRequest);
-            System.out.println("GeeseResponse: " + geese);
-            Thread.sleep(500);
+            try {
+                GeeseResponse geese = client.getGeese(geeseRequest);
+                System.out.println("GeeseResponse: " + geese);
+            } catch (Exception ex) {
+                ex.printStackTrace(System.err);
+            }
+            Thread.sleep(1000);
         }
     }
 

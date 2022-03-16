@@ -39,7 +39,13 @@ public class GeeseServer {
 
         GrpcCensusReporter.registerAndExportViews(ZPAGES_PORT);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                server.shutdown().awaitTermination();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }));
         server.awaitTermination();
     }
 
