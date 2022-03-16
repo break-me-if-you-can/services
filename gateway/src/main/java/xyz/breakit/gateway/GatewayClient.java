@@ -7,6 +7,10 @@ import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import xyz.breakit.gateway.FixtureServiceGrpc.FixtureServiceBlockingStub;
 import xyz.breakit.gateway.LeaderboardServiceGrpc.LeaderboardServiceBlockingStub;
+import xyz.breakit.geese.GeeseResponse;
+import xyz.breakit.geese.GeeseServiceGrpc;
+import xyz.breakit.geese.GeeseServiceGrpc.GeeseServiceBlockingStub;
+import xyz.breakit.geese.GetGeeseRequest;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
@@ -15,17 +19,18 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
  */
 public class GatewayClient {
 
-    public static void main(String[] args) {
-        String host = "35.233.196.238";
+    public static void main(String[] args) throws InterruptedException {
+        String host = "127.0.0.1";
         Channel channel = ManagedChannelBuilder
-                .forAddress(host, 80)
+                .forAddress(host, 8090)
                 .usePlaintext()
-                .intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
+                //.intercept(grpcTracing(Sampler.ALWAYS_SAMPLE).newClientInterceptor())
                 .build();
 
-        callUserIdService(channel);
-        callFixtureService(channel);
-        callLeaderboardService(channel);
+        callGeeseService(channel);
+        //callUserIdService(channel);
+        //callFixtureService(channel);
+        //callLeaderboardService(channel);
     }
 
     private static void callUserIdService(Channel channel) {
@@ -60,6 +65,22 @@ public class GatewayClient {
         TopScoresRequest topScoresRequest = TopScoresRequest.newBuilder().setSize(3).build();
         TopScoresResponse topScores = client.getTopScores(topScoresRequest);
         System.out.println("TopScoresResponse: " + topScores);
+    }
+
+    private static void callGeeseService(Channel channel) throws InterruptedException {
+        GeeseServiceBlockingStub client = GeeseServiceGrpc.newBlockingStub(channel);
+
+        for (int i = 0; i < 50; i++) {
+            GetGeeseRequest geeseRequest = GetGeeseRequest.newBuilder()
+                    .setLinesCount(100)
+                    .setLineWidth(100)
+                    .setGooseWidth(10)
+                    .build();
+
+            GeeseResponse geese = client.getGeese(geeseRequest);
+            System.out.println("GeeseResponse: " + geese);
+            Thread.sleep(500);
+        }
     }
 
     private static GrpcTracing grpcTracing(Sampler sampler) {

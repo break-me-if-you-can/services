@@ -22,6 +22,9 @@ public final class GrpcCensusReporter {
      * Requires {@code GCP_PROJECTID} environment variable.
      */
     public static void registerAndExportViews(int zpagesPort) throws IOException {
+        if (true) {
+            return;
+        }
 
         Stats.getViewManager().registerView(GRPC_SERVER_STARTED_RPC_VIEW);
         Stats.getViewManager().registerView(GRPC_SERVER_SERVER_LATENCY_VIEW);

@@ -96,6 +96,8 @@ task runClient(type: JavaExec) {
     mainClass = 'xyz.breakit.gateway.GatewayClient'
 }
 
+runClient.dependsOn(build)
+
 task healthCheck(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'xyz.breakit.gateway.GatewayHealthcheckClient'
@@ -104,6 +106,13 @@ task healthCheck(type: JavaExec) {
 task injectFailure(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'xyz.breakit.gateway.GatewayAdminClient'
+}
+
+task runWithJavaExec(type: JavaExec) {
+    group = "Execution"
+    description = "Run the main class with JavaExecTask"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'xyz.breakit.gateway.GatewayClient'
 }
 
 def sysprops = System.getProperties()
