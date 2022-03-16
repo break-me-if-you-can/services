@@ -56,6 +56,10 @@ shadowJar {
     mergeServiceFiles()
 }
 
+run {
+    systemProperty "java.util.logging.config.file", "${buildDir}/resources/main/logging.properties"
+}
+
 build.dependsOn 'shadowJar'
 
 apply from: '../common/common.gradle'
