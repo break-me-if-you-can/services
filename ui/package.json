@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@parcel/babel-preset-env": "^2.2.1",
-    "express": "^4.13.1",
+    "express": "^4.17.3",
     "google-protobuf": "^3.6.1",
     "grpc-web": "1.0.6",
     "node-sass": "^7.0.1",
