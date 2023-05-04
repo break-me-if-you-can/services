@@ -19,9 +19,17 @@ public class LeaderboardClientTest {
 
     @Autowired
     private LeaderboardClient client;
+    @Autowired
+    private LeaderboardAdminClient adminClient;
 
     @Autowired
     private Tracer tracer;
+
+    @Test
+    @Ignore
+    public void testBreak() {
+        adminClient.breakService();
+    }
 
     @Test
     @Ignore

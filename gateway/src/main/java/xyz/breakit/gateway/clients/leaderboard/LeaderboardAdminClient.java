@@ -3,6 +3,7 @@ package xyz.breakit.gateway.clients.leaderboard;
 import com.google.protobuf.util.Durations;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
+import io.netty.channel.ChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -10,14 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
 import xyz.breakit.admin.*;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class LeaderboardAdminClient {
@@ -43,7 +48,12 @@ public class LeaderboardAdminClient {
         String leaderboardUrl = "http://" + leaderboardHost + ":" + leaderboardPort;
         LOG.info("LB URL: {}", leaderboardUrl);
 
+        HttpClient nettyHttpClient = HttpClient
+                .create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
+
         httpClient = webClientTemplate.mutate()
+                .clientConnector(new ReactorClientHttpConnector(nettyHttpClient))
                 .baseUrl(leaderboardUrl).build();
     }
 
@@ -90,49 +100,47 @@ public class LeaderboardAdminClient {
 
     }
 
-    public CompletableFuture<String> breakService() {
-        return Failsafe
+    public void breakService() {
+        Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
                 .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/break")
-                                .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
-                                .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000), Mono.just(""))
-                                .toFuture());
+                                .toBodilessEntity()
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .toFuture().get(1L, TimeUnit.SECONDS));
     }
 
-    public CompletableFuture<String> unbreakService() {
-        return Failsafe
+    public void unbreakService() {
+        Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
                 .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/unbreak")
-                                .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
-                                .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000), Mono.just(""))
-                                .toFuture());
+                                .toBodilessEntity()
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .toFuture().get(1L, TimeUnit.SECONDS)
+                                );
     }
 
-    public CompletableFuture<String> clear() {
-        return Failsafe
+    public void clear() {
+        Failsafe
                 .with(NO_RETRY_POLICY)
                 .with(new TraceableScheduledExecutorService(beanFactory, EXECUTOR))
                 .get(() ->
                         httpClient
                                 .post()
                                 .uri("/admin/clear")
-                                .contentType(MediaType.APPLICATION_JSON)
                                 .retrieve()
-                                .bodyToMono(String.class)
-                                .timeout(Duration.ofMillis(1000), Mono.just(""))
-                                .toFuture());
+                                .toBodilessEntity()
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .toFuture().get(1L, TimeUnit.SECONDS));
     }
 
 }
