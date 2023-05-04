@@ -52,15 +52,18 @@ public class LeaderboardService {
     }
 
     public void breakService() {
+        LOG.info("leaderboard is broken");
         broken.set(true);
     }
 
     public void unbreak() {
+        LOG.info("leaderboard is unbroken");
         broken.set(false);
     }
 
     private void delayIfBroken() {
         if (broken.get() && random() < 0.5) {
+            LOG.info("An error has been simulated!");
             throw new RuntimeException("An error has been simulated!");
         }
     }
